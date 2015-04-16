@@ -1,0 +1,9 @@
+Django==1.8
+Fabric==1.10.1
+django-bootstrap3==5.3.1
+django-model-utils==2.2
+python-coveralls==2.5.0
+psycopg2==2.6
+# for better django shell_plus
+ipython
+django-extensions==1.5.2

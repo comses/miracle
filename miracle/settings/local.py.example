@@ -1,0 +1,35 @@
+# Local Development Django settings for catalog
+from .base import *
+
+DEBUG = True
+TEMPLATE_DEBUG = DEBUG
+
+DATABASES = {
+# uncomment this if you want to use sqlite to use in dev
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': os.path.join(BASE_DIR, 'miracle.sqlite3'),
+#    },
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'miracle_metadata',
+        'USER': 'miracle',
+        'PASSWORD': 'CHANGEME',
+    },
+    'data': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'miracle_data',
+        'USER': 'miracle',
+        'PASSWORD': 'CHANGEME',
+    }
+}
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# disabling i18n until we need it
+USE_I18N = False
+
+# Make this unique, and don't share it with anybody.
+SECRET_KEY = 'customize this local secret key'
+
+# Enter Zotero API key here
+ZOTERO_API_KEY = None
