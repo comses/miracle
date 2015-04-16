@@ -46,10 +46,12 @@ DJANGO_APPS = (
 THIRD_PARTY_APPS = (
     'django_extensions',
     'bootstrap3',
-#    'autocomplete_light',
+    'social.apps.django_app.default',
 )
 
-MIRACLE_APPS = ()
+MIRACLE_APPS = (
+    'miracle.core',
+)
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + MIRACLE_APPS
 
@@ -62,6 +64,18 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+)
+
+# authentication backends for python social auth
+# http://python-social-auth.readthedocs.org/en/latest/configuration/django.html
+# http://www.artandlogic.com/blog/2014/04/tutorial-adding-facebooktwittergoogle-authentication-to-a-django-application/
+# https://docs.djangoproject.com/en/1.8/topics/auth/customizing/#authentication-backends
+
+AUTHENTICATION_BACKENDS = (
+    'social.backends.facebook.FacebookOAuth2',
+    'social.backends.google.GoogleOAuth2',
+    'social.backends.twitter.TwitterOAuth',
+    'django.contrib.auth.backends.ModelBackend',
 )
 
 ROOT_URLCONF = 'miracle.urls'
@@ -202,3 +216,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 STATIC_URL = '/static/'
+
+STATIC_ROOT = "/var/www/miracle/static/"
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, 'miracle', 'static'),
+)
+
+
