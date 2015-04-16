@@ -8,6 +8,7 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
     url(r'^admin/', include(admin.site.urls)),
     url('', include('social.apps.django_app.urls', namespace='social')),
+    url(r'^', include('django.contrib.auth.urls')),
     # fallback, core.urls will catch all other unmatched urls
     url('', include('miracle.core.urls', namespace='core', app_name='core')),
 ]
