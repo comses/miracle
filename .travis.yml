@@ -1,0 +1,13 @@
+language: python
+python:
+    - "2.7"
+notifications:
+    email: comses-dev@googlegroups.com
+env: DB=postgres
+before_script:
+    - cp miracle/settings/local.py.example miracle/settings/local.py
+    - fab setup
+install: "pip install -r requirements.txt"
+script: fab coverage
+after_success:
+    - coveralls
