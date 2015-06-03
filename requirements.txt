@@ -1,10 +1,11 @@
-Django==1.8
+Django==1.8.2
 Fabric==1.10.1
-django-bootstrap3==5.3.1
+django-bootstrap3==5.4.0
 django-model-utils==2.2
 python-coveralls==2.5.0
 psycopg2==2.6
-python-social-auth==0.2.6
+python-social-auth==0.2.10
 # for better django shell_plus
-django-extensions==1.5.2
+django-extensions==1.5.5
+djangorestframework==3.1.2
 ipython
