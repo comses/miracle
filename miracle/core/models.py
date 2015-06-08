@@ -2,6 +2,13 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 
+from model_utils import Choices
+
+import logging
+import os
+
+logger = logging.getLogger(__name__)
+
 
 class PostgresJSONField(models.TextField):
 
@@ -47,7 +54,7 @@ class ProjectProvenanceMixin(models.Model):
 class Author(models.Model):
 
     user = models.OneToOneField(User)
-# FIXME: what is this for?
+# FIXME: what is this for? arbitrary profile fields?
     attributes = PostgresJSONField(blank=True)
 
 
@@ -61,3 +68,36 @@ class Dataset(MiracleMetadataMixin, ProjectProvenanceMixin):
 
     authors = models.ManyToManyField(Author)
     analyses = models.ManyToManyField(Analysis)
+    slug = models.SlugField()
+
+
+class DataTable(MiracleMetadataMixin):
+
+    dataset = models.ForeignKey(Dataset)
+    url = models.URLField(blank=True)
+
+    @property
+    def is_remote(self):
+        return self.url is not None
+
+    def get_local_path(self):
+        if self.url:
+            logger.debug("Trying to get local path for file with remote url - returning %s instead.", self.url)
+            return self.url
+        return os.path.join(self.dataset.path, self.pk)
+
+    @property
+    def path(self):
+        return self.url or self.get_local_path()
+
+
+class DataTableColumn(models.Model):
+
+    # FIXME: revisit + refine these data types
+    ColumnDataType = Choices('int', 'bool', 'float', 'text')
+
+    table = models.ForeignKey(DataTable, related_name='columns')
+    name = models.CharField(max_length=64)
+    display_name = models.CharField(max_length=128)
+    description = models.TextField()
+    data_type = models.CharField(max_length=128, choices=ColumnDataType, default=ColumnDataType.text)
