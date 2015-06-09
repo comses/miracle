@@ -43,17 +43,12 @@ from django.conf import settings as miracle_settings
 
 
 @task
-def migrate():
-    local("%(python)s manage.py migrate" % env, capture=False)
-
-
-@task
 def clean_update():
     local("git fetch --all && git reset --hard origin/master")
 
 
-@task
-def sh():
+@task(alias='sh')
+def shell_plus():
     dj('shell_plus')
 
 
@@ -78,7 +73,7 @@ def host_type():
 
 
 @roles('localhost')
-@task
+@task(alias='cov')
 def coverage():
     execute(test, coverage=True)
     ignored = ['*{0}*'.format(ignored_pkg) for ignored_pkg in env.ignored_coverage]
@@ -86,7 +81,7 @@ def coverage():
 
 
 @roles('localhost')
-@task
+@task(alias='te')
 def test(name=None, coverage=False):
     if name is not None:
         env.apps = name
@@ -98,7 +93,7 @@ def test(name=None, coverage=False):
     local('%(python)s manage.py test %(apps)s' % env)
 
 
-@task
+@task(alias='ser')
 def server(ip="127.0.0.1", port=8000):
     """
     Starts the Django development server. To bind to an external IP, run via `fab server:ip=your.external.ip`
@@ -106,13 +101,8 @@ def server(ip="127.0.0.1", port=8000):
     dj('runserver {ip}:{port}'.format(ip=ip, port=port), capture=False)
 
 
-@task
-def dev():
-    execute(staging)
-
-
 @roles('staging')
-@task
+@task(alias='dev')
 def staging():
     execute(deploy, 'develop')
 
@@ -130,22 +120,8 @@ def setup():
     execute(initialize_database_schema)
 
 
-@task
-def init_db():
-    execute(initialize_database_schema)
-
-
-@task
-def initialize_database_schema():
-    """
-    Creates the Django DB schema by running makemigrations and then a migrate.
-    """
-    local('python manage.py makemigrations')
-    local('python manage.py migrate')
-
-
 @roles('localhost')
-@task
+@task(alias='ri')
 def index():
     local('python manage.py rebuild_index')
 
@@ -155,7 +131,28 @@ def index():
 def setup_postgres():
     local("psql -c 'create user %(db_user)s CREATEDB;' -U postgres" % env)
     for db in env.databases:
-        local("psql -c 'create database {0}' -U {1}".format(db, env.db_user))
+        local("createdb {0} -U {1}".format(db, env.db_user))
+
+
+@task(aliases=['idb', 'initdb'])
+def initialize_database_schema():
+    """
+    Creates the Django DB schema by running makemigrations and then a migrate.
+    """
+    local('python manage.py makemigrations')
+    local('python manage.py migrate')
+
+
+@roles('localhost')
+@task(alias='rebs')
+def rebuild_schema():
+    if confirm("Delete existing db schemas and rerun migrations? All data in {} will be lost.".format(env.databases)):
+
+        for db in env.databases:
+            local("dropdb --if-exists {0} -U {1}".format(db, env.db_user))
+            local("createdb {0} -U {1}".format(db, env.db_user))
+        local("find . -name '00*.py' -print -delete")
+        execute(initialize_database_schema)
 
 
 def _restart_command(systemd=True):
