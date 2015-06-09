@@ -1,19 +1,15 @@
-# Created by https://www.gitignore.io
+# backup files
+*~
+# ctags index
+tags
+# ignore local settings
+miracle/settings/local.py
+# ignore database dumps, for now
+*.sql
 
-### R ###
-# History files
-.Rhistory
-.Rapp.history
-
-# Example code in package build process
-*-Ex.R
-
-# RStudio files
-.Rproj.user/
-
-# produced vignettes
-vignettes/*.html
-vignettes/*.pdf
+#
+### Auto generated ignores from https://www.gitignore.io ###
+#
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
@@ -31,6 +27,7 @@ develop-eggs/
 dist/
 downloads/
 eggs/
+.eggs/
 lib/
 lib64/
 parts/
@@ -65,8 +62,6 @@ coverage.xml
 *.pot
 
 # Django stuff:
-logs/
-miracle/settings/local.py
 *.log
 
 # Sphinx documentation
@@ -76,89 +71,22 @@ docs/_build/
 target/
 
 
-### PyCharm ###
-# Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm
+### IPythonNotebook ###
+# Temporary data
+.ipynb_checkpoints/
 
-*.iml
 
-## Directory-based project format:
-.idea/
-# if you remove the above rule, at least ignore the following:
+### R ###
+# History files
+.Rhistory
+.Rapp.history
 
-# User-specific stuff:
-# .idea/workspace.xml
-# .idea/tasks.xml
-# .idea/dictionaries
+# Example code in package build process
+*-Ex.R
 
-# Sensitive or high-churn files:
-# .idea/dataSources.ids
-# .idea/dataSources.xml
-# .idea/sqlDataSources.xml
-# .idea/dynamic.xml
-# .idea/uiDesigner.xml
+# RStudio files
+.Rproj.user/
 
-# Gradle:
-# .idea/gradle.xml
-# .idea/libraries
-
-# Mongo Explorer plugin:
-# .idea/mongoSettings.xml
-
-## File-based project format:
-*.ipr
-*.iws
-
-## Plugin-specific files:
-
-# IntelliJ
-out/
-
-# mpeltonen/sbt-idea plugin
-.idea_modules/
-
-# JIRA plugin
-atlassian-ide-plugin.xml
-
-# Crashlytics plugin (for Android Studio and IntelliJ)
-com_crashlytics_export_strings.xml
-crashlytics.properties
-crashlytics-build.properties
-
-### Eclipse ###
-*.pydevproject
-.metadata
-.gradle
-bin/
-tmp/
-*.tmp
-*.bak
-*.swp
-*~.nib
-local.properties
-.settings/
-.loadpath
-
-# External tool builders
-.externalToolBuilders/
-
-# Locally stored "Eclipse launch configurations"
-*.launch
-
-# CDT-specific
-.cproject
-
-# PDT-specific
-.buildpath
-
-# sbteclipse plugin
-.target
-
-# TeXlipse plugin
-.texlipse
-
-# vim backups and ctags
-*~
-tags
-*.patch
-# SQL dumps
-*.sql
+# produced vignettes
+vignettes/*.html
+vignettes/*.pdf
