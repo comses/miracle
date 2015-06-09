@@ -103,13 +103,13 @@ WSGI_APPLICATION = 'miracle.wsgi.application'
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
-    'metadata': {
+    'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'miracle_metadata',
         'USER': 'miracle',
         'PASSWORD': '',
     },
-    'data': {
+    'miracle_datasets': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'miracle_data',
         'USER': 'miracle',
@@ -211,6 +211,12 @@ LOGGING = {
 
 USE_TZ = True
 
+# Media files, see https://docs.djangoproject.com/en/1.8/ref/settings/#std:setting-MEDIA_ROOT for more details
+# This absolute path specifies where all uploaded datasets will be sent. Can be overridden in local.py
+MIRACLE_DATA_DIRECTORY = MEDIA_ROOT = '/opt/miracle/data/'
+
+MEDIA_URL = '/data/'
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
@@ -222,5 +228,3 @@ STATIC_ROOT = "/var/www/miracle/static/"
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'miracle', 'static'),
 )
-
-

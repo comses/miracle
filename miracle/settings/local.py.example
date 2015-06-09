@@ -33,3 +33,11 @@ SECRET_KEY = 'customize this local secret key'
 
 # Enter Zotero API key here
 ZOTERO_API_KEY = None
+
+if not os.path.exists(MEDIA_ROOT):
+    print("MEDIA_ROOT path '{}' does not exist, trying to create it now.".format(MEDIA_ROOT))
+    try:
+        os.makedirs(MEDIA_ROOT)
+    except:
+        print("Unable to create path {}, user uploads will not work properly.".format(MEDIA_ROOT))
+
