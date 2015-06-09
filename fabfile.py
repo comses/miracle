@@ -129,7 +129,7 @@ def index():
 @roles('localhost')
 @task
 def setup_postgres():
-    local("psql -c 'create user %(db_user)s CREATEDB;' -U postgres" % env)
+    local("createuser %(db_user)s -e --createdb -U postgres" % env)
     for db in env.databases:
         local("createdb {0} -U {1}".format(db, env.db_user))
 
@@ -147,10 +147,8 @@ def initialize_database_schema():
 @task(alias='rebs')
 def rebuild_schema():
     if confirm("Delete existing db schemas and rerun migrations? All data in {} will be lost.".format(env.databases)):
-
         for db in env.databases:
-            local("dropdb --if-exists {0} -U {1}".format(db, env.db_user))
-            local("createdb {0} -U {1}".format(db, env.db_user))
+            local("dropdb --if-exists {0} -U {1} && createdb {0} -U {1}".format(db, env.db_user))
         local("find . -name '00*.py' -print -delete")
         execute(initialize_database_schema)
 
