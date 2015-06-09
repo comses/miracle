@@ -1,6 +1,8 @@
 language: python
 python:
     - "2.7"
+addons:
+    postgresql: "9.4"
 notifications:
     email: comses-dev@googlegroups.com
 env: DB=postgres
