@@ -44,7 +44,7 @@ class MetadataTest(BaseMiracleTest):
 
 class DatasetTest(BaseMiracleTest):
 
-    def test_datatable_columns(self):
+    def test_create_datatable_schema(self):
         dataset = self.default_project.datasets.create(name='Test Miracle Dataset')
         datatable = dataset.tables.create(name='Tabular Table')
         column = datatable.columns.create(name='Column A', data_type=DataTableColumn.DataType.bigint)
@@ -52,4 +52,4 @@ class DatasetTest(BaseMiracleTest):
         self.assertEqual(datatable.columns.get(name='Column A'), column)
         datatable.columns.create(name='Column B', data_type=DataTableColumn.DataType.boolean)
         self.assertEqual(datatable.columns.count(), 2)
-        datatable.columns.create(name='Column B', data_type=DataTableColumn.DataType.boolean)
+        datatable.columns.create(name='Column C', data_type=DataTableColumn.DataType.text)

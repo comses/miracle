@@ -32,7 +32,12 @@ class PostgresJSONField(models.TextField):
 
 class DatasetConnectionMixin(object):
 
-    connection = connections['miracle_datasets']
+    connection = connections['datasets']
+
+    def sanitize_table_name(self, name):
+        if not name:
+            raise ValidationError("Invalid name")
+        return name.replace('')
 
     @property
     def cursor(self):
@@ -103,7 +108,7 @@ class DatasetManager(PassThroughManager):
 
 
 def _local_dataset_path(dataset, filename):
-    return os.path.join(dataset.project.path, 'dataset/')
+    return os.path.join(dataset.project.path, 'dataset', filename)
 
 
 class Dataset(MiracleMetadataMixin):
@@ -146,18 +151,25 @@ class DataTableManager(PassThroughManager):
 class DataTable(MiracleMetadataMixin, DatasetConnectionMixin):
 
     """
-    DataTable.name is the internal RDBMS table name in the miracle_data database
+    DataTable.name will be used for the internal RDBMS table name in the miracle_data database
     DataTable.full_name is the user assigned data table name (e.g., CSV filename, Excel sheet name, user supplied name)
     """
 
     dataset = models.ForeignKey(Dataset, related_name='tables')
     objects = DataTableManager.for_queryset_class(DataTableQuerySet)()
 
-    def all_values(self, **kwargs):
-        """ TODO: use kwargs as where clause values """
+    def select_all(self):
         cursor = self.cursor
         cursor.execute("SELECT * FROM {}".format(self.name))
         return cursor.fetchall()
+
+    @property
+    def table_name(self):
+        return self.sanitize_table_name(self.name)
+
+    def create_schema(self):
+        cursor = self.cursor
+        cursor.execute("CREATE TABLE {} ({})".format(self.table_name, self.attributes))
 
 
 class DataTableColumn(models.Model, DatasetConnectionMixin):
@@ -179,7 +191,8 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
     description = models.TextField()
     data_type = models.CharField(max_length=128, choices=DataType, default=DataType.text)
 
-    def all_values(self):
+    def all_values(self, distinct=False):
         ''' returns a list resulting from select name from data table using miracle_data database '''
-        self.cursor.execute("SELECT {} FROM {}".format(self.name, self.table.name))
+        statement = "SELECT {} {} FROM {}".format('DISTINCT' if distinct else '', self.name, self.table.name)
+        self.cursor.execute(statement)
         return self.cursor.fetchall()

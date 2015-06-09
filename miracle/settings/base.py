@@ -109,7 +109,7 @@ DATABASES = {
         'USER': 'miracle',
         'PASSWORD': '',
     },
-    'miracle_datasets': {
+    'datasets': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'miracle_data',
         'USER': 'miracle',
