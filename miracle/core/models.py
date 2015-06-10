@@ -36,6 +36,18 @@ class DatasetConnectionMixin(object):
     MAX_NAME_LENGTH = 63
     connection = connections['datasets']
 
+    def _is_valid_identifier(self, value, prefix='m'):
+        regex = r'^' + prefix + '\d+\w+$'
+        return len(value) <= 63 and re.match(regex, value)
+
+    def sanitize_name(self, name):
+        if not self._is_valid_identifier(name):
+            original_name = name
+            self.name = self.sanitize_identifier(original_name)
+            if not self.full_name:
+                self.full_name = original_name
+            self.save()
+
     def sanitize_identifier(self, name, prefix='m'):
         """
         Returns a normalized string that can be used as a valid Postgres identifier (e.g., table or column name), see
@@ -77,6 +89,9 @@ class MiracleMetadataMixin(models.Model):
     deleted_on = models.DateTimeField(null=True, blank=True)
     deleted_by = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_deleted_by_set", null=True, blank=True)
     creator = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_creator_set")
+
+    def __unicode__(self):
+        return u'{} (internal: {})'.format(self.full_name, self.name)
 
     class Meta:
         abstract = True
@@ -162,15 +177,7 @@ class DataTableManager(PassThroughManager):
         if dataset is None:
             raise ValidationError("DataTables must be associated with a Dataset")
         kwargs.setdefault('creator', dataset.creator)
-        # assign a pk, and then append pk to
-        obj = super(DataTableManager, self).create(*args, **kwargs)
-        if 'name' in kwargs:
-            original_name = obj.name
-            if not obj.full_name:
-                obj.full_name = original_name
-            obj.name = obj.sanitize_identifier(original_name)
-            obj.save()
-        return obj
+        return super(DataTableManager, self).create(*args, **kwargs)
 
 
 class DataTable(MiracleMetadataMixin, DatasetConnectionMixin):
@@ -195,24 +202,15 @@ class DataTable(MiracleMetadataMixin, DatasetConnectionMixin):
         return cursor.fetchall()
 
     def create_schema(self):
+        """
+        Generates DDL and updates this model's name and full_name fields as well as its child columns.
+        """
+        self.sanitize_name(self.name)
+        for c in self.columns.all():
+            c.sanitize_name(c.name)
         create_table_statement = "CREATE TABLE {} ({})".format(self.name, self.attributes)
         logger.debug("create table statement: %s", create_table_statement)
         return create_table_statement
-
-
-class DataTableColumnManager(models.Manager):
-
-    use_for_related_fields = True
-
-    def create(self, *args, **kwargs):
-        obj = super(DataTableColumnManager, self).create(*args, **kwargs)
-        if 'name' in kwargs:
-            original_name = obj.name
-            if not obj.full_name:
-                obj.full_name = original_name
-                obj.name = obj.sanitize_identifier(original_name)
-                obj.save()
-        return obj
 
 
 class DataTableColumn(models.Model, DatasetConnectionMixin):
@@ -234,10 +232,11 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
     description = models.TextField()
     data_type = models.CharField(max_length=128, choices=DataType, default=DataType.text)
 
-    objects = DataTableColumnManager()
-
     def all_values(self, distinct=False):
         ''' returns a list resulting from select name from data table using miracle_data database '''
         statement = "SELECT {} {} FROM {}".format('DISTINCT' if distinct else '', self.name, self.table.name)
         self.cursor.execute(statement)
         return self.cursor.fetchall()
+
+    def __unicode__(self):
+        return u'{} (internal: {})'.format(self.full_name, self.name)
