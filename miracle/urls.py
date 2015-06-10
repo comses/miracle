@@ -18,6 +18,6 @@ urlpatterns = [
 # add user uploaded files to handled urlpatterns in development mode.
 # NOTE: never allow this in production, see
 # https://docs.djangoproject.com/en/1.8/howto/static-files/#serving-uploaded-files-in-development for more details
-# otherwise this can become a security risk.
+# otherwise this can be a security risk.
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

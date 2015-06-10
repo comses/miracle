@@ -1,10 +1,11 @@
 from django.core.exceptions import ValidationError
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import models, connections
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import AutoSlugField
 
+from datetime import datetime
 from model_utils import Choices
 from model_utils.managers import PassThroughManager
 
@@ -44,7 +45,7 @@ class DatasetConnectionMixin(object):
         if not self._is_valid_identifier(name):
             original_name = name
             self.name = self.sanitize_identifier(original_name)
-            if not self.full_name:
+            if not getattr(self, 'full_name', None):
                 self.full_name = original_name
             self.save()
 
@@ -86,9 +87,27 @@ class MiracleMetadataMixin(models.Model):
     description = models.TextField(blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
+    published_on = models.DateTimeField(null=True, blank=True)
+    published_by = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_publisher_set", null=True, blank=True)
     deleted_on = models.DateTimeField(null=True, blank=True)
     deleted_by = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_deleted_by_set", null=True, blank=True)
     creator = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_creator_set")
+
+    @property
+    def public(self):
+        return self.published_on is not None
+
+    def publish(self, user):
+        if not self.published_on:
+            self.published_on = datetime.now()
+            self.published_by = user
+            self.save()
+
+    def delete(self, user):
+        if not self.deleted_on:
+            self.deleted_on = datetime.now()
+            self.deleted_by = user
+            self.save()
 
     def __unicode__(self):
         return u'{} (internal: {})'.format(self.full_name, self.name)
@@ -97,13 +116,41 @@ class MiracleMetadataMixin(models.Model):
         abstract = True
 
 
+class ProjectQuerySet(models.query.QuerySet):
+
+    def active(self, *args, **kwargs):
+        return self.filter(deleted_on__isnull=True)
+
+    def published(self, *args, **kwargs):
+        return self.filter(published_on__isnull=True)
+
+
 class Project(MiracleMetadataMixin):
 
     slug = AutoSlugField(populate_from='name', unique=True)
 
+    class Meta:
+        permissions = (
+            ('view_project', 'Can view this project'),
+            ('edit_project', 'Can edit this project'),
+            ('admin_project', 'Full admin over this project'),
+            ('create_projects', 'Can create projects'),
+        )
+
     @property
     def path(self):
         return os.path.join(settings.MIRACLE_DATA_DIRECTORY, 'project', self.pk)
+
+    @property
+    def group_name(self):
+        ''' unique name to manage permissions for this project '''
+        return u'Project {} Group'.format(self.pk)
+
+    def get_group(self):
+        return Group.objects.get_or_create(name=self.group_name)
+
+    def has_group_member(self, user):
+        return user.groups.filter(name=self.group_name)
 
     def get_absolute_url(self):
         return u"/project/{}".format(self.slug)
@@ -240,3 +287,8 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
 
     def __unicode__(self):
         return u'{} (internal: {})'.format(self.full_name, self.name)
+
+
+class MiracleUser(models.Model):
+    user = models.OneToOneField(User)
+    institution = models.CharField(max_length=512)
