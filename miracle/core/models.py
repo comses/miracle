@@ -103,7 +103,7 @@ class MiracleMetadataMixin(models.Model):
             self.published_by = user
             self.save()
 
-    def delete(self, user):
+    def deactivate(self, user):
         if not self.deleted_on:
             self.deleted_on = datetime.now()
             self.deleted_by = user
@@ -112,24 +112,25 @@ class MiracleMetadataMixin(models.Model):
     def __unicode__(self):
         return u'{} (internal: {})'.format(self.full_name, self.name)
 
-    class Meta:
+    class Meta(object):
         abstract = True
 
 
 class ProjectQuerySet(models.query.QuerySet):
 
     def active(self, *args, **kwargs):
-        return self.filter(deleted_on__isnull=True)
+        return self.filter(deleted_on__isnull=True, *args, **kwargs)
 
     def published(self, *args, **kwargs):
-        return self.filter(published_on__isnull=True)
+        return self.filter(published_on__isnull=True, *args, **kwargs)
 
 
 class Project(MiracleMetadataMixin):
 
     slug = AutoSlugField(populate_from='name', unique=True)
+    objects = PassThroughManager.for_queryset_class(ProjectQuerySet)()
 
-    class Meta:
+    class Meta(object):
         permissions = (
             ('view_project', 'Can view this project'),
             ('edit_project', 'Can edit this project'),
