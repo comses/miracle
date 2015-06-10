@@ -1,5 +1,5 @@
 from .common import BaseMiracleTest, logger
-from ..models import (Dataset, DataTable, DataTableColumn)
+from ..models import (Dataset, DataTable, DataTableColumn, DatasetConnectionMixin)
 
 """
 Miracle core metadata app model tests
@@ -44,12 +44,29 @@ class MetadataTest(BaseMiracleTest):
 
 class DatasetTest(BaseMiracleTest):
 
-    def test_create_datatable_schema(self):
+    test_identifiers = (
+        ' this is a very long, harrowing name...111!!!111 and how. ',
+        " good gravy! it's a space kaiser! ",
+        "lots of spaces towards the end?  ",
+        "?!?!@#!@#!@#!#&)!@#!@#@#!@#!@#!%&)&)&(*!)(#!#!@#http://www.postgresql.org/docs/9.4/static/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS",
+        ")(*&&^%$#@!\w",
+        "normal",
+        u'ko\u017eu\u0161\u010dek',
+    )
+
+    def test_datatable_column_identifiers(self):
         dataset = self.default_project.datasets.create(name='Test Miracle Dataset')
-        datatable = dataset.tables.create(name='Tabular Table')
-        column = datatable.columns.create(name='Column A', data_type=DataTableColumn.DataType.bigint)
-        self.assertEqual(datatable.columns.count(), 1)
-        self.assertEqual(datatable.columns.get(name='Column A'), column)
-        datatable.columns.create(name='Column B', data_type=DataTableColumn.DataType.boolean)
-        self.assertEqual(datatable.columns.count(), 2)
-        datatable.columns.create(name='Column C', data_type=DataTableColumn.DataType.text)
+        for identifier in self.test_identifiers:
+            datatable = dataset.tables.create(name=identifier)
+            sanitized_identifier = datatable.name
+            self.assertTrue(sanitized_identifier[0].isalpha())
+            self.assertTrue(len(sanitized_identifier) <= DatasetConnectionMixin.MAX_NAME_LENGTH)
+            logger.debug("sanitized identifier: %s", sanitized_identifier)
+            self.assertEqual(datatable.full_name, identifier)
+            column = datatable.columns.create(name='Column A', data_type=DataTableColumn.DataType.bigint)
+            self.assertEqual(datatable.columns.count(), 1)
+            self.assertEqual(datatable.columns.get(full_name='Column A'), column)
+            self.assertEqual(datatable.columns.get(name__contains='column_a'), column)
+            datatable.columns.create(name='Column B', data_type=DataTableColumn.DataType.boolean)
+            self.assertEqual(datatable.columns.count(), 2)
+            datatable.columns.create(name='Column C', data_type=DataTableColumn.DataType.text)

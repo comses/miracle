@@ -10,6 +10,7 @@ from model_utils.managers import PassThroughManager
 
 import logging
 import os
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -32,12 +33,32 @@ class PostgresJSONField(models.TextField):
 
 class DatasetConnectionMixin(object):
 
+    MAX_NAME_LENGTH = 63
     connection = connections['datasets']
 
-    def sanitize_table_name(self, name):
+    def sanitize_identifier(self, name, prefix='m'):
+        """
+        Returns a normalized string that can be used as a valid Postgres identifier (e.g., table or column name), see
+        http://www.postgresql.org/docs/9.4/static/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
+
+        Assumes that this entity has already been assigned a PK and is persistent in the database.
+        """
         if not name:
-            raise ValidationError("Invalid name")
-        return name.replace('')
+            name = 'blank'
+        # convert to lowercase, replace all non-alphabetic characters with underscore and truncate repeated non-word
+        # characters into a single underscore
+        sanitized_name = re.sub('[^\w]+', '_', name.lower())
+        # ensure leading character is alphabetic and append pk for relative uniqueness across DataTables and
+        # DataTableColumns (i.e., DataTable names must be unique across all DataTables, DataTableColumn names must be
+        # unique within the given DataTable).
+        prefix += str(self.pk)
+        if sanitized_name[0].isalpha():
+            prefix = prefix + '_'
+        sanitized_name = prefix + sanitized_name
+        # identifier must be < NAMEDATALEN, (63 characters by default unless using custom compiled postgres)
+        sanitized_name = sanitized_name[:self.MAX_NAME_LENGTH]
+        logger.debug("sanitized name: %s", sanitized_name)
+        return sanitized_name
 
     @property
     def cursor(self):
@@ -56,10 +77,6 @@ class MiracleMetadataMixin(models.Model):
     deleted_on = models.DateTimeField(null=True, blank=True)
     deleted_by = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_deleted_by_set", null=True, blank=True)
     creator = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_creator_set")
-
-    def clean(self):
-        if not self.name:
-            raise ValidationError("Please enter a project name")
 
     class Meta:
         abstract = True
@@ -145,7 +162,15 @@ class DataTableManager(PassThroughManager):
         if dataset is None:
             raise ValidationError("DataTables must be associated with a Dataset")
         kwargs.setdefault('creator', dataset.creator)
-        return super(DataTableManager, self).create(*args, **kwargs)
+        # assign a pk, and then append pk to
+        obj = super(DataTableManager, self).create(*args, **kwargs)
+        if 'name' in kwargs:
+            original_name = obj.name
+            if not obj.full_name:
+                obj.full_name = original_name
+            obj.name = obj.sanitize_identifier(original_name)
+            obj.save()
+        return obj
 
 
 class DataTable(MiracleMetadataMixin, DatasetConnectionMixin):
@@ -158,18 +183,36 @@ class DataTable(MiracleMetadataMixin, DatasetConnectionMixin):
     dataset = models.ForeignKey(Dataset, related_name='tables')
     objects = DataTableManager.for_queryset_class(DataTableQuerySet)()
 
+    @property
+    def attributes(self):
+        return {
+            'column_a': 'bigint'
+        }
+
     def select_all(self):
         cursor = self.cursor
         cursor.execute("SELECT * FROM {}".format(self.name))
         return cursor.fetchall()
 
-    @property
-    def table_name(self):
-        return self.sanitize_table_name(self.name)
-
     def create_schema(self):
-        cursor = self.cursor
-        cursor.execute("CREATE TABLE {} ({})".format(self.table_name, self.attributes))
+        create_table_statement = "CREATE TABLE {} ({})".format(self.name, self.attributes)
+        logger.debug("create table statement: %s", create_table_statement)
+        return create_table_statement
+
+
+class DataTableColumnManager(models.Manager):
+
+    use_for_related_fields = True
+
+    def create(self, *args, **kwargs):
+        obj = super(DataTableColumnManager, self).create(*args, **kwargs)
+        if 'name' in kwargs:
+            original_name = obj.name
+            if not obj.full_name:
+                obj.full_name = original_name
+                obj.name = obj.sanitize_identifier(original_name)
+                obj.save()
+        return obj
 
 
 class DataTableColumn(models.Model, DatasetConnectionMixin):
@@ -190,6 +233,8 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
     full_name = models.CharField(max_length=255, blank=True)
     description = models.TextField()
     data_type = models.CharField(max_length=128, choices=DataType, default=DataType.text)
+
+    objects = DataTableColumnManager()
 
     def all_values(self, distinct=False):
         ''' returns a list resulting from select name from data table using miracle_data database '''
