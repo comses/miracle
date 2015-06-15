@@ -1,5 +1,5 @@
 from .common import BaseMiracleTest, logger
-from ..models import (Dataset, DataTable, DataTableColumn, DatasetConnectionMixin)
+from ..models import (Project, Dataset, DataTable, DataTableColumn, DatasetConnectionMixin, Group)
 import string
 
 """
@@ -43,6 +43,28 @@ class MetadataTest(BaseMiracleTest):
         self.assertTrue(dataset.slug)
 
 
+class ProjectGroupMembershipTest(BaseMiracleTest):
+
+    def test_project_group(self):
+        project = self.default_project
+        group = project.get_group()
+        self.assertTrue(group)
+        self.assertEqual(group.name, project.group_name)
+        self.assertEqual(Group.objects.get(name=project.group_name), group)
+
+    def test_group_membership(self):
+        users = [self.create_user(username='testuser' + str(i)) for i in xrange(0, 15)]
+        project = self.default_project
+        for user in users:
+            self.assertFalse(project.has_group_member(user))
+            project.add_group_member(user)
+            self.assertTrue(project.has_group_member(user))
+
+        second_group = [self.create_user(username='externaltestuser' + str(i)) for i in xrange(0, 15)]
+        for user in second_group:
+            self.assertFalse(project.has_group_member(user))
+
+
 class DatasetTest(BaseMiracleTest):
 
     test_identifiers = (
@@ -81,3 +103,25 @@ class DatasetTest(BaseMiracleTest):
                 column_name = 'Column ' + string.ascii_uppercase[i]
                 column = datatable.columns.get(full_name=column_name)
                 self.assertEqual(column.data_type, self.data_types[i % number_of_data_types])
+
+
+class BookmarkedProjectTest(BaseMiracleTest):
+
+    def test_bookmarks(self):
+        # check default user bookmark
+        project = self.default_project
+        user = self.default_user
+        self.assertFalse(user.bookmarked_projects.exists())
+        project.bookmark_for(user)
+        self.assertEqual(user.bookmarked_projects.all()[0].project, project)
+        self.assertEqual(user.bookmarked_projects.count(), 1)
+
+        second_user = self.create_user(username='secondtestuser')
+        second_project = self.create_project(name='second test project')
+        self.assertFalse(second_user.bookmarked_projects.exists())
+        second_project.bookmark_for(second_user)
+        # second bookmarked project should not affect first
+        self.assertEqual(user.bookmarked_projects.count(), 1)
+        self.assertEqual(user.bookmarked_projects.all()[0].project, project)
+        self.assertEqual(second_user.bookmarked_projects.all()[0].project, second_project)
+        self.assertEqual(second_user.bookmarked_projects.count(), 1)

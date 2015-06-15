@@ -70,7 +70,6 @@ class DatasetConnectionMixin(object):
         sanitized_name = prefix + sanitized_name
         # identifier must be < NAMEDATALEN, (63 characters by default unless using custom compiled postgres)
         sanitized_name = sanitized_name[:self.MAX_NAME_LENGTH]
-        logger.debug("sanitized name: %s", sanitized_name)
         return sanitized_name
 
     @property
@@ -148,13 +147,31 @@ class Project(MiracleMetadataMixin):
         return u'Project {} Group'.format(self.pk)
 
     def get_group(self):
-        return Group.objects.get_or_create(name=self.group_name)
+        return Group.objects.get_or_create(name=self.group_name)[0]
 
     def has_group_member(self, user):
         return user.groups.filter(name=self.group_name)
 
+    def add_group_member(self, user):
+        user.groups.add(self.get_group())
+
+    def remove_group_member(self, user):
+        user.groups.remove(self.get_group())
+
+    def bookmark_for(self, user):
+        return BookmarkedProject.objects.get_or_create(project=self, user=user)[0]
+
     def get_absolute_url(self):
         return u"/project/{}".format(self.slug)
+
+
+class BookmarkedProject(models.Model):
+
+    project = models.ForeignKey(Project)
+    user = models.ForeignKey(User, related_name='bookmarked_projects')
+
+    class Meta:
+        unique_together = ('project', 'user')
 
 
 class Author(models.Model):
