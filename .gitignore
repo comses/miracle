@@ -7,6 +7,9 @@ miracle/settings/local.py
 # ignore database dumps, for now
 *.sql
 
+# Google Drive
+*.DS_Store
+
 #
 ### Auto generated ignores from https://www.gitignore.io ###
 #
@@ -75,6 +78,8 @@ target/
 # Temporary data
 .ipynb_checkpoints/
 
+### IDEA ###
+.idea
 
 ### R ###
 # History files
@@ -90,3 +95,6 @@ target/
 # produced vignettes
 vignettes/*.html
 vignettes/*.pdf
+
+# Vagrant
+.vagrant
