@@ -211,6 +211,15 @@ LOGGING = {
 
 USE_TZ = True
 
+# Django REST Framework configuration, see http://www.django-rest-framework.org/api-guide/settings/
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.TemplateHTMLRenderer',
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    )
+}
+
 # Media files, see https://docs.djangoproject.com/en/1.8/ref/settings/#std:setting-MEDIA_ROOT for more details
 # This absolute path specifies where all uploaded datasets will be sent. Can be overridden in local.py
 MIRACLE_DATA_DIRECTORY = MEDIA_ROOT = '/opt/miracle/data/'

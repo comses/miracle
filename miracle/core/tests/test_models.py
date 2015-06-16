@@ -60,6 +60,11 @@ class ProjectGroupMembershipTest(BaseMiracleTest):
             project.add_group_member(user)
             self.assertTrue(project.has_group_member(user))
 
+        for user in users:
+            self.assertTrue(project.has_group_member(user))
+            project.remove_group_member(user)
+            self.assertFalse(project.has_group_member(user))
+
         second_group = [self.create_user(username='externaltestuser' + str(i)) for i in xrange(0, 15)]
         for user in second_group:
             self.assertFalse(project.has_group_member(user))

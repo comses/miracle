@@ -2,10 +2,12 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.db import models, connections
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import AutoSlugField
 
-from datetime import datetime
 from model_utils import Choices
 from model_utils.managers import PassThroughManager
 
@@ -98,15 +100,37 @@ class MiracleMetadataMixin(models.Model):
 
     def publish(self, user):
         if not self.published_on:
-            self.published_on = datetime.now()
+            self.published_on = timezone.now()
             self.published_by = user
             self.save()
+            ActivityLog.objects.log_user(
+                user, 'Published {} on {}'.format(unicode(self), self.published_on))
+
+    def unpublish(self, user):
+        original_published_on = self.published_on
+        if original_published_on:
+            self.published_on = None
+            self.published_by = None
+            self.save()
+            ActivityLog.objects.log_user(
+                user, 'Unpublished {}, originally published on {}'.format(unicode(self), original_published_on))
 
     def deactivate(self, user):
         if not self.deleted_on:
-            self.deleted_on = datetime.now()
+            self.deleted_on = timezone.now()
             self.deleted_by = user
             self.save()
+            ActivityLog.objects.log_user(
+                user, 'Deactivating {} on {}'.format(unicode(self), self.deleted_on))
+
+    def activate(self, user):
+        original_deleted_on = self.deleted_on
+        if original_deleted_on:
+            self.deleted_on = None
+            self.deleted_by = None
+            self.save()
+            ActivityLog.objects.log_user(
+                user, 'Reactivating {}, originally deactivated on {}'.format(unicode(self), original_deleted_on))
 
     def __unicode__(self):
         return u'{} (internal: {})'.format(self.full_name, self.name)
@@ -121,13 +145,63 @@ class ProjectQuerySet(models.query.QuerySet):
         return self.filter(deleted_on__isnull=True, *args, **kwargs)
 
     def published(self, *args, **kwargs):
-        return self.filter(published_on__isnull=True, *args, **kwargs)
+        return self.filter(published_on__isnull=False, *args, **kwargs)
+
+    def viewable(self, user, *args, **kwargs):
+        """
+        Projects are viewable when they:
+        1. are active
+        2. are published
+        3. are created by the given user
+        4. have the given user as a member of the project's group
+        """
+        if not user.is_authenticated():
+            return self.active().published()
+        return self.filter(models.Q(creator=user) |
+                           models.Q(deleted_on__isnull=True) |
+                           models.Q(published_on__isnull=True) |
+                           models.Q(group__user=user))
 
 
 class Project(MiracleMetadataMixin):
 
     slug = AutoSlugField(populate_from='name', unique=True)
+    group = models.OneToOneField(Group, editable=False,
+                                 help_text=_("Members of this group can edit this project's datasets and metadata"),
+                                 null=True)
     objects = PassThroughManager.for_queryset_class(ProjectQuerySet)()
+
+    @property
+    def path(self):
+        return os.path.join(settings.MIRACLE_DATA_DIRECTORY, 'project', self.pk)
+
+    @property
+    def group_name(self):
+        ''' unique name to manage permissions for this project '''
+        return u'{} Group #{}'.format(self.name, self.pk)
+
+    @property
+    def group_members(self):
+        return [{'username': u.username} for u in self.group.user_set.all()]
+
+    def has_group_member(self, user):
+        return user.groups.filter(name=self.group_name)
+
+    def add_group_member(self, user):
+        return user.groups.add(self.group)
+
+    def set_group_members(self, users):
+        self.group.user_set = users
+
+    def remove_group_member(self, user):
+        return user.groups.remove(self.group)
+
+    def bookmark_for(self, user):
+        bookmarked_project, created = BookmarkedProject.objects.get_or_create(project=self, user=user)
+        return bookmarked_project
+
+    def get_absolute_url(self):
+        return u"/project/{}".format(self.slug)
 
     class Meta(object):
         permissions = (
@@ -137,32 +211,16 @@ class Project(MiracleMetadataMixin):
             ('create_projects', 'Can create projects'),
         )
 
-    @property
-    def path(self):
-        return os.path.join(settings.MIRACLE_DATA_DIRECTORY, 'project', self.pk)
 
-    @property
-    def group_name(self):
-        ''' unique name to manage permissions for this project '''
-        return u'Project {} Group'.format(self.pk)
-
-    def get_group(self):
-        return Group.objects.get_or_create(name=self.group_name)[0]
-
-    def has_group_member(self, user):
-        return user.groups.filter(name=self.group_name)
-
-    def add_group_member(self, user):
-        user.groups.add(self.get_group())
-
-    def remove_group_member(self, user):
-        user.groups.remove(self.get_group())
-
-    def bookmark_for(self, user):
-        return BookmarkedProject.objects.get_or_create(project=self, user=user)[0]
-
-    def get_absolute_url(self):
-        return u"/project/{}".format(self.slug)
+@receiver(post_save, sender=Project)
+def project_group_creator(sender, instance, created, raw, using, update_fields, **kwargs):
+    if created:
+        group, created = Group.objects.get_or_create(name=instance.group_name)
+        group.user_set.add(instance.creator)
+        instance.group = group
+        instance.save()
+    else:
+        assert instance.group is not None
 
 
 class BookmarkedProject(models.Model):
@@ -310,3 +368,30 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
 class MiracleUser(models.Model):
     user = models.OneToOneField(User)
     institution = models.CharField(max_length=512)
+
+
+class ActivityLogManager(models.Manager):
+
+    def scheduled(self, message):
+        return self.create(message=message, action=ActivityLog.ActionType.SCHEDULED)
+
+    def log(self, message):
+        return self.create(message=message)
+
+    def log_user(self, user, message):
+        return self.create(creator=user, message=message, action=ActivityLog.ActionType.USER)
+
+
+class ActivityLog(models.Model):
+
+    ActionType = Choices(
+        ('SYSTEM', _('System Activity')),
+        ('USER', _('User Activity')),
+        ('SCHEDULED', _('Scheduled System Activity')),
+    )
+    message = models.TextField()
+    date_created = models.DateTimeField(auto_now_add=True)
+    creator = models.ForeignKey(User, blank=True, null=True)
+    action = models.CharField(max_length=32, choices=ActionType, default=ActionType.SYSTEM)
+
+    objects = ActivityLogManager()
