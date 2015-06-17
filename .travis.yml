@@ -3,13 +3,17 @@ python:
     - "2.7"
 addons:
     postgresql: "9.4"
+    apt:
+        packages:
+            - python-gdal
 notifications:
     email: comses-dev@googlegroups.com
 env: DB=postgres
 before_script:
     - cp miracle/settings/local.py.example miracle/settings/local.py
     - fab setup
-install: "pip install -r requirements.txt"
+install: 
+    - pip install -r requirements.txt
 script: fab coverage
 after_success:
     - coveralls

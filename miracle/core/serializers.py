@@ -34,7 +34,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        logger.debug("updating group members for %s from %s to %s", instance, instance.get_group().user_set.all(),
+        logger.debug("updating group members for %s from %s to %s", instance, instance.group.user_set.all(),
                      group_members)
         instance.set_group_members(User.objects.filter(username__in=group_members))
         return instance

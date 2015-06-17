@@ -1,5 +1,6 @@
+from django.core.exceptions import ValidationError
 from .common import BaseMiracleTest, logger
-from ..models import (Project, Dataset, DataTable, DataTableColumn, DatasetConnectionMixin, Group)
+from ..models import (DataTableColumn, DatasetConnectionMixin, Group)
 import string
 
 """
@@ -13,28 +14,17 @@ class MetadataTest(BaseMiracleTest):
         """
         Do not allow blank names in Projects, Datasets, DataTables, or DataTableColumns
         """
-        try:
+        project = self.default_project
+        with self.assertRaises(ValidationError):
             self.create_project(name='')
-            self.fail("Allowed empty Project.name")
-        except:
-            pass
-        try:
-            self.default_project.datasets.create('')
-            self.fail("Allowed empty Dataset.name")
-        except:
-            pass
-        dataset = self.default_project.datasets.create(name='Test Dataset')
-        try:
-            dataset.tables.create(name='')
-            self.fail("Allowed empty DataTable.name")
-        except:
-            pass
+        with self.assertRaises(ValidationError):
+            self.create_dataset(project)
+        dataset = self.create_dataset(name='Valid Test Dataset')
+        with self.assertRaises(ValidationError):
+            self.create_table(dataset)
         datatable = dataset.tables.create(name='Tabular Table')
-        try:
-            datatable.columns.create(name='')
-            self.fail("Allowed empty DataTableColumn.name")
-        except:
-            pass
+        with self.assertRaises(ValidationError):
+            self.create_column(datatable)
 
     def test_slugs(self):
         project = self.default_project
@@ -47,7 +37,7 @@ class ProjectGroupMembershipTest(BaseMiracleTest):
 
     def test_project_group(self):
         project = self.default_project
-        group = project.get_group()
+        group = project.group
         self.assertTrue(group)
         self.assertEqual(group.name, project.group_name)
         self.assertEqual(Group.objects.get(name=project.group_name), group)
