@@ -5,7 +5,7 @@ addons:
     postgresql: "9.4"
     apt:
         packages:
-            - python-gdal
+            - libgdal-dev
 notifications:
     email: comses-dev@googlegroups.com
 env: DB=postgres
