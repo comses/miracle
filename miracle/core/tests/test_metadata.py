@@ -6,7 +6,6 @@ import os
 class MetadataTest(BaseMiracleTest):
 
     def test_shp(self):
-        logger.debug("current working directory: %s", os.getcwd())
         data = Metadata(self.get_test_data("cities.shp"))
         self.assertEqual(data.layers,
                          [{u'Density': 'OFTReal', u'Name': 'OFTString',
