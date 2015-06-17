@@ -101,8 +101,16 @@ class BaseMiracleTest(TestCase):
             return '%s?%s' % (reversed_url, urlencode(query_parameters))
         return reversed_url
 
-    def login(self, *args, **kwargs):
-        return self.client.login(*args, **kwargs)
+    def login(self, username=None, password=None, user=None):
+        if username is None or password is None:
+            if user is None:
+                user = self.default_user
+            username = user.username
+            password = 'test'
+        return self.client.login(username=username, password=password)
+
+    def logout(self):
+        return self.client.logout()
 
     def post(self, url, *args, **kwargs):
         if ':' in url:

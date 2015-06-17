@@ -19,6 +19,6 @@ urlpatterns = [
 ]
 
 urlpatterns += format_suffix_patterns([
-    url(r'^projects/?$', views.ProjectListView.as_view()),
-    url(r'^projects/(?P<pk>[\d]+)/$', views.ProjectDetailView.as_view()),
+    url(r'^projects/?$', views.ProjectListView.as_view(), name='project_list'),
+    url(r'^projects/(?P<pk>[\d]+)/$', views.ProjectDetailView.as_view(), name='project_detail'),
 ])

@@ -13,6 +13,7 @@ class GroupMemberSerializer(serializers.Serializer):
 
 class ProjectSerializer(serializers.ModelSerializer):
     group_members = GroupMemberSerializer(many=True)
+    group = serializers.StringRelatedField()
     creator = serializers.SlugRelatedField(slug_field='email', read_only=True)
 
     def validate_group_members(self, group_members):

@@ -155,12 +155,13 @@ class ProjectQuerySet(models.query.QuerySet):
         3. are created by the given user
         4. have the given user as a member of the project's group
         """
-        if not user.is_authenticated():
+        if not user or not user.is_authenticated():
             return self.active().published()
+        # FIXME: figure out why distinct() is necessary here
         return self.filter(models.Q(creator=user) |
                            models.Q(deleted_on__isnull=True) |
-                           models.Q(published_on__isnull=True) |
-                           models.Q(group__user=user))
+                           models.Q(published_on__isnull=False) |
+                           models.Q(group__user=user)).distinct()
 
 
 class Project(MiracleMetadataMixin):
