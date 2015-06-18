@@ -9,10 +9,12 @@ urlpatterns = [
     # url(r'^$', 'miracle.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
     url(r'^admin/', include(admin.site.urls)),
-    url('', include('social.apps.django_app.urls', namespace='social')),
-    url(r'^', include('django.contrib.auth.urls')),
+    url(r'', include('social.apps.django_app.urls', namespace='social')),
+    # need to change this
+    #url(r'^login/$', 'django.contrib.auth.views.login'),
+    url(r'', include('django.contrib.auth.urls')),
     # fallback, core.urls will catch all other unmatched urls
-    url('', include('miracle.core.urls', namespace='core', app_name='core')),
+    url(r'', include('miracle.core.urls', namespace='core', app_name='core')),
 ]
 
 # add user uploaded files to handled urlpatterns in development mode.

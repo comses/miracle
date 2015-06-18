@@ -7,6 +7,9 @@ miracle/settings/local.py
 # ignore database dumps, for now
 *.sql
 
+# ignore migrations
+miracle/core/migrations/*
+
 # Google Drive
 *.DS_Store
 

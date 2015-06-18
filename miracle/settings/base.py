@@ -72,11 +72,20 @@ MIDDLEWARE_CLASSES = (
 # https://docs.djangoproject.com/en/1.8/topics/auth/customizing/#authentication-backends
 
 AUTHENTICATION_BACKENDS = (
+    'social.backends.github.GithubOAuth2',
     'social.backends.facebook.FacebookOAuth2',
     'social.backends.google.GoogleOAuth2',
     'social.backends.twitter.TwitterOAuth',
     'django.contrib.auth.backends.ModelBackend',
 )
+
+#TEMPLATE_CONTEXT_PROCESSORS = (
+#    'social.apps.django_app.context_processors.backends',
+#    'social.apps.django_app.context_processors.login_redirect',
+#)
+
+
+LOGIN_REDIRECT_URL = '/'
 
 ROOT_URLCONF = 'miracle.urls'
 
@@ -87,10 +96,22 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
+
+                #'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                #'django.contrib.auth.context_processors.auth',
+                #'django.contrib.messages.context_processors.messages',
+
+
+                'social.apps.django_app.context_processors.backends',
+                'social.apps.django_app.context_processors.login_redirect',
             ],
         },
     },
