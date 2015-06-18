@@ -1,21 +1,24 @@
-# Digging into Data: Mining Relationship Among Variables in Large Datasets from Complex Systems
+# Digging into Data: Mining relationships among variables in large datasets from complex systems
 
-### Developer Setup
+### Developer Linux Setup
+- install virtualenv via `pip install virtualenv` or via  Linux package manager, e.g, `apt-get install python-virtualenv virtualenvwrapper`
+- create a virtualenv via `virtualenv miracle` (or `mkvirtualenv miracle` if using virtualenvwrapper which provides
+  aliases for manipulating virtualenvs, `mkvirtualenv <virtualenv-name>` and `workon <virtualenv-name>`)
+- run `pip install -U pip` inside your virtualenv (avoids a bug in Ubuntu's packaged pip, may now be fixed)
+- run `pip install -Ur requirements.txt` to install Python dependencies. Add any additional python dependencies to this
+  file, preferably with frozen version numbers
+- copy and customize the `local.py` settings file, e.g., `% cp miracle/settings/local.py.example miracle/settings/local.py`
 
-Steps to set up a development environment:
-
-- install virtualenv via `pip install virtualenv` or via a Linux package manager, e.g, `apt-get install python-virtualenv virtualenvwrapper`
-- create your virtualenv via `virtualenv miracle` or `mkvirtualenv miracle` if you're using virtualenvwrapper, which
-  provides convenient aliases for manipulating virtualenvs:  `mkvirtualenv <virtualenv-name>` and `workon <virtualenv-name>`
-- run `pip install -U pip` inside your virtualenv (avoid a bug in Ubuntu's packaged pip, may now be fixed)
-- run `pip install -Ur requirements.txt` to install Python dependencies. Anytime we pull in additional frameworks or
-  dependencies, add them to this file
-- customize the `local.py` settings file, `cp miracle/settings/local.py.example miracle/settings/local.py`
+### Setup the databases
 - If you have `trust` permissions setup in your `pg_hba.conf` file, `fab setup` will setup and initialize the database. 
-  Otherwise, create the postgres databases and users manually and then run `fab initdb` to initialize and create the
-  schema.
-- If the schema changes you can always rerun `fab rebuild_schema` to drop the database, delete any generated migrations,
-  and rebuild the schema. This will destroy all data however.
+  Otherwise, create the postgres databases `miracle_metadata` and `miracle_data` and the `miracle` postgres user
+  manually and then run `fab initdb` to initialize and create the schema.
+- **NOTE:** Schema is still evolving. Run `fab rebuild_schema` to drop the database, delete any generated migrations, and
+  rebuild the schema. If you have local data that you'd like to preserve, use `dumpdata` or use `makemigrations` and
+  `migrate` to try to migrate it to the new schema.
+  
+### load test data
+Data fixtures in `miracle/core/fixtures` can be loaded via `%./manage.py loaddata <fixture-name-without-file-extension>`. 
 
 
 ### Codebase Status

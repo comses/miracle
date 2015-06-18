@@ -211,6 +211,8 @@ LOGGING = {
 
 USE_TZ = True
 
+LOGIN_REDIRECT_URL = '/dashboard/'
+
 # Django REST Framework configuration, see http://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (

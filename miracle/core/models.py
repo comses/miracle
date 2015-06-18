@@ -202,7 +202,7 @@ class Project(MiracleMetadataMixin):
         return bookmarked_project
 
     def get_absolute_url(self):
-        return u"/project/{}".format(self.slug)
+        return u"/project/{}".format(self.pk)
 
     class Meta(object):
         permissions = (
@@ -371,7 +371,13 @@ class MiracleUser(models.Model):
     institution = models.CharField(max_length=512)
 
 
-class ActivityLogManager(models.Manager):
+class ActivityLogQuerySet(models.query.QuerySet):
+
+    def for_user(self, user, **kwargs):
+        return self.filter(creator=user, **kwargs)
+
+
+class ActivityLogManager(PassThroughManager):
 
     def scheduled(self, message):
         return self.create(message=message, action=ActivityLog.ActionType.SCHEDULED)
@@ -395,4 +401,4 @@ class ActivityLog(models.Model):
     creator = models.ForeignKey(User, blank=True, null=True)
     action = models.CharField(max_length=32, choices=ActionType, default=ActionType.SYSTEM)
 
-    objects = ActivityLogManager()
+    objects = ActivityLogManager.for_queryset_class(ActivityLogQuerySet)()

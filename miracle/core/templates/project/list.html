@@ -1,26 +1,25 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class='row'>
-    <div class='col-md-12'>
-        <table class='table striped'>
-            <thead>
-                <th>Project</th>
-                <th>Owner</th>
-                <th>Date created</th>
-            </thead>
-            <tbody data-bind='foreach: projects'>
-            <tr>
-                <td data-bind='text: name'></td>
-                <td data-bind='text: creator'></td>
-                <td data-bind='text: date_created'></td>
-            </tr>
-            </tbody>
-        </table>
-    </div>
+    <h4>Projects</h4>
+    <table class='table striped'>
+        <thead>
+            <th class='col-md-4'>Name</th>
+            <th class='col-md-4'>Description</th>
+            <th class='col-md-2'>Owner</th>
+            <th class='col-md-2'>Date created</th>
+        </thead>
+        <tbody data-bind='foreach: projects'>
+        <tr>
+            <td><a data-bind='attr: {href: detail_url}, text: name'></a></td>
+            <td data-bind='text: description'></td>
+            <td data-bind='text: creator'></td>
+            <td data-bind='text: date_created'></td>
+        </tr>
+        </tbody>
+    </table>
 </div>
-
 {% endblock content %}
 
 {% block javascript %}

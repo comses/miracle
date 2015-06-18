@@ -12,13 +12,15 @@ urlpatterns = [
     # url(r'^blog/', include('blog.urls')),
     url(r'^$', TemplateView.as_view(template_name='index.html'), name='home'),
     # FIXME: replace these with forms if needed
-    url(r'^contact$', RedirectView.as_view(url='https://groups.google.com/forum/#!forum/comses-dev', permanent=False),
+    url(r'^contact/$', RedirectView.as_view(url='https://groups.google.com/forum/#!forum/comses-dev', permanent=False),
         name='contact'),
-    url(r'^report-bug$', RedirectView.as_view(url='https://github.com/comses/miracle/issues/new', permanent=False),
+    url(r'^report-bug/$', RedirectView.as_view(url='https://github.com/comses/miracle/issues/new', permanent=False),
         name='report_bug'),
+    url(r'^dashboard/$', views.DashboardView.as_view(), name='dashboard'),
+    url(r'^search/$', TemplateView.as_view(template_name='search.html'), name='search'),
 ]
 
 urlpatterns += format_suffix_patterns([
-    url(r'^projects/?$', views.ProjectListView.as_view(), name='project_list'),
-    url(r'^projects/(?P<pk>[\d]+)/$', views.ProjectDetailView.as_view(), name='project_detail'),
+    url(r'^projects/$', views.ProjectListView.as_view(), name='project_list'),
+    url(r'^project/(?P<pk>[\d]+)/$', views.ProjectDetailView.as_view(), name='project_detail'),
 ])

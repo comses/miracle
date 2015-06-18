@@ -1,0 +1,45 @@
+<template id='project-detail-template'>
+<h4><span data-bind='text: name'></span> <mark class='pull-right' data-bind='text: status'></mark></h4>
+<div class='well'>
+    <form class='form-horizontal'>
+        <div class='form-group'>
+            <label for='name' class='control-label'>Short name</label>
+            <input type='text' data-bind='value: name' class='form-control col-sm-6' id='name' placeholder='Short name'>
+        </div>
+        <div class='form-group'>
+            <label for='fullName' class='control-label'>Full name</label>
+            <input type='text' data-bind='value: full_name' class='form-control' id='fullName' placeholder='Full name'>
+        </div>
+        <div class='form-group'>
+            <label for='description' class='control-label'>Description</label>
+            <textarea class='form-control' rows="6" data-bind='value: description'></textarea>
+        </div>
+        <div data-bind='ifnot: is_published'>
+            <div class='checkbox'>
+                <label>
+                    <input type='checkbox' data-bind='value: is_published'>
+                    Published?
+                </label>
+            </div>
+        </div>
+        <div data-bind='if: is_published()'>
+            Published on <mark data-bind='text: published_on'></mark>
+        </div>
+    </form>
+</div>
+</template>
+<script>
+function ProjectModel(params) {
+    console.log("constructing project view model from params");
+    console.log(params);
+    var model = ko.mapping.fromJS(params.data);
+    model.status = ko.computed(function() {
+        return model.is_published() ? "Published" : "Draft";
+    });
+    return model;
+}
+ko.components.register('project-detail', {
+    viewModel: ProjectModel,
+    template: { element: 'project-detail-template' }
+});
+</script>
