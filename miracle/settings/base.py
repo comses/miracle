@@ -79,14 +79,6 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
 )
 
-#TEMPLATE_CONTEXT_PROCESSORS = (
-#    'social.apps.django_app.context_processors.backends',
-#    'social.apps.django_app.context_processors.login_redirect',
-#)
-
-
-LOGIN_REDIRECT_URL = '/'
-
 ROOT_URLCONF = 'miracle.urls'
 
 TEMPLATES = [

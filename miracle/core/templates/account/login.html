@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% load bootstrap3 %}
+{% load static %}
+
+{% block content %}
+
+<div class="row">
+    <div class='col-md-6'>
+        <h3>Returning User</h3>
+        <p>If you've forgotten your password, you can <a href='{% url "password_reset" %}'>request a new one</a>.</p>
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            {% bootstrap_form form %}
+            {% buttons %}
+            <button type='submit' class='btn btn-primary'>
+                <i class='fa fa-sign-in'></i> Sign in
+            </button>
+            {% endbuttons %}
+        </form>
+    </div>
+    <div class='col-md-6'>
+        <h3>External Sign In</h3>
+        <p>
+        {# FIXME: should we pick the top two of these (FB, Google?) #}
+        </p>
+        <div class='btn-group-vertical' role='group'>
+            <a style='background-color: #3B5999' class='btn btn-default' href="{% url 'social:begin' 'facebook' %}"><i class='fa fa-facebook'></i> Sign in with Facebook</a>
+            <a class='btn btn-warning' href="{% url 'social:begin' 'google-oauth2' %}"><i class='fa fa-google'></i> Sign in with Google</a>
+            <a class='btn btn-primary' href="{% url 'social:begin' 'github' %}"><i class='fa fa-github-square'></i> Sign in with GitHub</a>
+            <a class='btn btn-info' href="{% url 'social:begin' 'twitter' %}"><i class='fa fa-twitter'></i> Sign in with Twitter</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
