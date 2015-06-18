@@ -1,6 +1,5 @@
 from .common import BaseMiracleTest, logger
 from ..metadata import Metadata, MetadataFileExtNotFoundError
-import os
 
 
 class MetadataTest(BaseMiracleTest):
