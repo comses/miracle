@@ -171,10 +171,10 @@ class ProjectQuerySet(models.query.QuerySet):
         if not user or not user.is_authenticated():
             return self.active().published()
         # FIXME: figure out why distinct() is necessary here
-        return self.filter(models.Q(creator=user) |
-                           models.Q(deleted_on__isnull=True) |
-                           models.Q(published_on__isnull=False) |
-                           models.Q(group__user=user)).distinct()
+        return self.filter(models.Q(creator=user)
+                           | models.Q(group__user=user)
+                           | (models.Q(deleted_on__isnull=True) & models.Q(published_on__isnull=False))
+                           ).distinct()
 
 
 class Project(MiracleMetadataMixin):

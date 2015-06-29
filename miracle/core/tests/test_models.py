@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from .common import BaseMiracleTest, logger
-from ..models import (DataTableColumn, DatasetConnectionMixin, Group)
+from ..models import (DataTableColumn, DatasetConnectionMixin, Group, Project)
 import string
 
 """
@@ -49,11 +49,15 @@ class ProjectGroupMembershipTest(BaseMiracleTest):
             self.assertFalse(project.has_group_member(user))
             project.add_group_member(user)
             self.assertTrue(project.has_group_member(user))
+            viewable_projects = Project.objects.viewable(user)
+            self.assertEqual(project, viewable_projects[0])
 
         for user in users:
             self.assertTrue(project.has_group_member(user))
             project.remove_group_member(user)
             self.assertFalse(project.has_group_member(user))
+            viewable_projects = Project.objects.viewable(user)
+            self.assertFalse(viewable_projects)
 
         second_group = [self.create_user(username='externaltestuser' + str(i)) for i in xrange(0, 15)]
         for user in second_group:
@@ -66,7 +70,7 @@ class DatasetTest(BaseMiracleTest):
         ' this is a very long, harrowing name...111!!!111 and how. ',
         " good gravy! it's a space kaiser! ",
         "lots of spaces towards the end?                ",
-        "?!?!@#!@#!@#!#&)!@#!@#@#!@#!@#!%&)&)&(*!)(#!#!@#http://www.postgresql.org/docs/9.4/static/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS",
+        "?!?!@#!&)&(*!)(#!#!@#http://www.postgresql.org/docs/9.4/static/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS",
         ")(*&&^%$#@!\w",
         "normal",
         u'ko\u017eu\u0161\u010dek',

@@ -5,7 +5,6 @@ from django.views.generic import TemplateView
 from extra_views import InlineFormSet, UpdateWithInlinesView
 from json import dumps
 from rest_framework import generics, renderers, permissions
-from rest_framework.response import Response
 
 from .models import Project, ActivityLog, MiracleUser
 from .serializers import ProjectSerializer
@@ -53,17 +52,20 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
         return self.request.user
 
 
-class ProjectListView(generics.GenericAPIView):
-    queryset = Project.objects.all()
+class ProjectListView(generics.ListCreateAPIView):
     serializer_class = ProjectSerializer
     template_name = 'project/list.html'
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
-    def get(self, request, format=None):
-        projects = Project.objects.viewable(request.user)
-        serializer = ProjectSerializer(projects, many=True)
-        return Response({'project_list_json': dumps(serializer.data)})
+    def get_queryset(self):
+        return Project.objects.viewable(self.request.user)
+
+    def get(self, request, *args, **kwargs):
+        response = super(ProjectListView, self).get(request, *args, **kwargs)
+        original_response_data = response.data
+        response.data = {'project_list_json': dumps(original_response_data)}
+        return response
 
 
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):

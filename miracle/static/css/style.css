@@ -33,3 +33,6 @@ input#id_contact_number {
     color: #FFF;
     background-color: #3B5999;
 }
+.no-js .dynamic-content {
+    display: none;
+}
