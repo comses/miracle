@@ -1,10 +1,13 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse_lazy
 from django.views.generic import TemplateView
+from extra_views import InlineFormSet, UpdateWithInlinesView
 from json import dumps
 from rest_framework import generics, renderers, permissions
 from rest_framework.response import Response
 
-from .models import Project, ActivityLog
+from .models import Project, ActivityLog, MiracleUser
 from .serializers import ProjectSerializer
 from .permissions import CanEditProject
 
@@ -31,6 +34,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class MiracleUserInline(InlineFormSet):
+    model = MiracleUser
+    can_delete = False
+
+    def get_object(self):
+        return MiracleUser.objects.get(user=self.request.user)
+
+
+class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
+    template_name = 'account/profile.html'
+    model = User
+    inlines = [MiracleUserInline]
+    fields = ('username', 'first_name', 'last_name', 'email')
+    success_url = reverse_lazy('core:profile')
+
+    def get_object(self):
+        return self.request.user
+
+
 class ProjectListView(generics.GenericAPIView):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
@@ -54,7 +76,7 @@ class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     def get(self, request, *args, **kwargs):
         response = super(ProjectDetailView, self).get(request, *args, **kwargs)
         original_response_data = response.data
-        response.data = {'project_json': dumps(original_response_data)}
+        response.data = {'project': self.get_object(), 'project_json': dumps(original_response_data)}
         return response
 
     def perform_create(self, serializer):
@@ -64,10 +86,9 @@ class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_update(self, serializer):
         project = serializer.save()
-        ActivityLog.objects.log_user(self.request.user,
-                                     'Updating project {} with serializer {}'.format(
-                                         project,
-                                         serializer.errors))
+        ActivityLog.objects.log_user(self.request.user, 'Updating project {} with serializer {}'.format(
+            project,
+            serializer.errors))
 
     def perform_destroy(self, instance):
         instance.deactivate(self.request.user)

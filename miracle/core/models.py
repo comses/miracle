@@ -95,8 +95,21 @@ class MiracleMetadataMixin(models.Model):
     creator = models.ForeignKey(User, related_name="%(app_label)s_%(class)s_creator_set")
 
     @property
-    def public(self):
+    def published(self):
         return self.published_on is not None
+
+    @property
+    def deleted(self):
+        return self.deleted_on is not None
+
+    @property
+    def status(self):
+        if self.deleted:
+            return "Deleted"
+        elif self.published:
+            return "Published"
+        else:
+            return "Draft"
 
     def publish(self, user):
         if not self.published_on:
@@ -200,6 +213,10 @@ class Project(MiracleMetadataMixin):
     def bookmark_for(self, user):
         bookmarked_project, created = BookmarkedProject.objects.get_or_create(project=self, user=user)
         return bookmarked_project
+
+    @property
+    def title(self):
+        return self.full_name or self.name
 
     def get_absolute_url(self):
         return u"/project/{}".format(self.pk)
@@ -367,8 +384,14 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
 
 
 class MiracleUser(models.Model):
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='miracle_user')
     institution = models.CharField(max_length=512)
+
+    def get_absolute_url(self):
+        return '/account/profile/'
+
+    def __unicode__(self):
+        return u'{} {}'.format(self.user, self.institution)
 
 
 class ActivityLogQuerySet(models.query.QuerySet):

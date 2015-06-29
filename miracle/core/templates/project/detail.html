@@ -1,14 +1,55 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div data-bind='component: {name: "project-detail", params: {data: $.parseJSON("{{ project_json|escapejs }}")}}' class='row'>
-</div>
+
+<div class='row'>
+    <div class='col-md-3'>
+        {# sidebar #}
+        <ul class='nav nav-pills nav-stacked' role='tablist'>
+            <li role='presentation' class='active'>
+                <a href='#overview' aria-controls='overview' role='tab' data-toggle='tab'><i class='fa fa-table'></i> Overview</a>
+            </li>
+            <li role='presentation'>
+                <a href='#explorer' aria-controls='explorer' role='tab' data-toggle='tab'><i class='fa fa-binoculars'></i> Data explorer</a>
+            </li>
+            <li role='presentation'>
+                <a href='#analysis' aria-controls='analysis' role='tab' data-toggle='tab'><i class='fa fa-terminal'></i> Analysis and scripts</a>
+            </li>
+            <li role='presentation'>
+                <a href='#upload' aria-controls='upload' role='tab' data-toggle='tab'><i class='fa fa-cloud-upload'></i> Upload datasets</a>
+            </li>
+        </ul>
+    </div>
+    <div class='col-md-9'>
+        <div class='panel panel-default'>
+            <div class='panel-heading'>
+                <h2 class='panel-title'>{{project.name}} <span class='label label-badge label-primary pull-right'>{{project.status}}</span></h2>
+            </div>
+            <div class='panel-body'>
+                <div class='tab-content'>
+                    <div role='tabpanel' class='tab-pane active' id='overview'>
+                        <div data-bind='component: {name: "project-detail-form", params: {data: $.parseJSON("{{ project_json|escapejs }}")}}'>
+                        </div>
+                    </div>
+                    <div role='tabpanel' class='tab-pane' id='explorer'>
+                        Data explorer
+                    </div>
+                    <div role='tabpanel' class='tab-pane' id='analysis'>
+                        Data analysis and scripts
+                    </div>
+                    <div role='tabpanel' class='tab-pane' id='upload'>
+                        Add dataset upload for project {{project}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock content %}
 
 {% block javascript %}
 <script src='//cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js'></script>
 <script src='//cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.4.1/knockout.mapping.min.js'></script>
-{% include "includes/project-detail.html" %}
+{% include "project/includes/detail-form.html" %}
 <script>
 $(function() {
     ko.applyBindings();

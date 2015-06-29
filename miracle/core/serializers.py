@@ -15,7 +15,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     group_members = GroupMemberSerializer(many=True)
     group = serializers.StringRelatedField()
     creator = serializers.SlugRelatedField(slug_field='email', read_only=True)
-    is_published = serializers.BooleanField(source='public')
+    is_published = serializers.BooleanField(source='published')
     date_created = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S')
     detail_url = serializers.CharField(source='get_absolute_url', read_only=True)
 

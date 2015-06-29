@@ -18,17 +18,14 @@
             {% endbuttons %}
         </form>
     </div>
-    <div class='col-md-6'>
+    <div class='col-md-3'>
         <h3>External Sign In</h3>
-        <p>
-        {# FIXME: should we pick the top two of these (FB, Google?) #}
-        </p>
-        <div class='btn-group-vertical' role='group'>
-            <a style='background-color: #3B5999' class='btn btn-default' href="{% url 'social:begin' 'facebook' %}"><i class='fa fa-facebook'></i> Sign in with Facebook</a>
-            <a class='btn btn-warning' href="{% url 'social:begin' 'google-oauth2' %}"><i class='fa fa-google'></i> Sign in with Google</a>
-            <a class='btn btn-primary' href="{% url 'social:begin' 'github' %}"><i class='fa fa-github-square'></i> Sign in with GitHub</a>
-            <a class='btn btn-info' href="{% url 'social:begin' 'twitter' %}"><i class='fa fa-twitter'></i> Sign in with Twitter</a>
-        </div>
+        <ul class='nav nav-pills nav-stacked'>
+            <li role='presentation'><a class='btn-fb btn btn-default' href="{% url 'social:begin' 'facebook' %}"><i class='fa fa-facebook'></i> Sign in with Facebook</a></li>
+            <li role='presentation'><a class='btn btn-warning' href="{% url 'social:begin' 'google-oauth2' %}"><i class='fa fa-google'></i> Sign in with Google</a></li>
+            <li role='presentation'><a class='btn btn-primary' href="{% url 'social:begin' 'github' %}"><i class='fa fa-github-square'></i> Sign in with GitHub</a></li>
+            <li role='presentation'><a class='btn btn-info' href="{% url 'social:begin' 'twitter' %}"><i class='fa fa-twitter'></i> Sign in with Twitter</a></li>
+        </ul>
     </div>
 </div>
 {% endblock %}

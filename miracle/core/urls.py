@@ -18,6 +18,7 @@ urlpatterns = [
         name='report_bug'),
     url(r'^dashboard/$', views.DashboardView.as_view(), name='dashboard'),
     url(r'^search/$', TemplateView.as_view(template_name='search.html'), name='search'),
+    url(r'^account/profile/$', views.UserProfileView.as_view(), name='profile'),
 ]
 
 urlpatterns += format_suffix_patterns([

@@ -8,13 +8,14 @@
 {% url 'core:dashboard' as dashboard_url %}
 {% url 'core:project_list' as projects_url %}
 {% url 'core:search' as search_url %}
+{% url 'core:profile' as profile_url %}
 
 <!doctype html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang=""> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang=""> <!--<![endif]-->
-{% with RAVENJS_VERSION="1.1.16" BOOTSWATCH_THEME="flatly" JQUERY_VERSION="1.11.3" BOOTSTRAP_VERSION="3.3.4" FONTAWESOME_VERSION="4.3.0" %}
+{% with RAVENJS_VERSION="1.1.16" BOOTSWATCH_THEME="paper" JQUERY_VERSION="1.11.3" BOOTSTRAP_VERSION="3.3.4" FONTAWESOME_VERSION="4.3.0" %}
     <head>
     {% block head %}
         <meta charset="utf-8">
@@ -38,7 +39,7 @@
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
         {% block header %}
-            <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
                 <div class="container">
                     <div class="navbar-header">
                         <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target=".bs-navbar-collapse">
@@ -52,8 +53,8 @@
                     <ul class='nav navbar-nav'>
                         {% if user.is_authenticated %}
                             <li class='{{ request|active_re:dashboard_url }}'><a href='{{ dashboard_url }}'><i class='fa fa-tachometer'></i> Dashboard</a></li>
-                            <li class='{{ request|active_re:search_url }}'><a href='{{ search_url }}'><i class='fa fa-search'></i> Search</a></li>
                             <li class='{{ request|active_re:projects_url }}'><a href='{{ projects_url }}'><i class='fa fa-newspaper-o'></i> Projects</a></li>
+                            <li class='{{ request|active_re:search_url }}'><a href='{{ search_url }}'><i class='fa fa-search'></i> Search</a></li>
                         {% endif %}
                         <li class='{{ request|active_re:contact_url }}'><a href='{{ contact_url }}'><i class='fa fa-bell-o'></i> Contact us</a></li>
                         <li><a target='_blank' href='{{ issues_url }}'><i class='fa fa-bullhorn'></i> Report a bug</a></li>
@@ -62,12 +63,12 @@
                         {% if user.is_authenticated %}
                             <li class="dropdown pull-right">
                                 <a data-toggle="dropdown" class="dropdown-toggle" href="#">
-                                <i class="fa fa-user"></i> {{ user.username }}<b class="caret"></b>
+                                {{ user.username }}<b class="caret"></b>
                                 </a>
                                 <!-- Dropdown menu -->
                                 <ul class="dropdown-menu">
                                     <li><a href="{{ profile_url }}"><i class="fa fa-user"></i> Profile</a></li>
-                                    <li><a href="{{ logout_url }}"><i class="fa fa-sign-out"></i> Logout</a></li>
+                                    <li><a href="{{ logout_url }}"><i class="fa fa-sign-out"></i> Sign out</a></li>
                                 </ul>
                             </li>
                         {% else %}
@@ -82,7 +83,6 @@
 
         <section id="content" class="container">
             {% block content %}
-                <p>Default base content</p>
             {% endblock content %}
         </section>
 
