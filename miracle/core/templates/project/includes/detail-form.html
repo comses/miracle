@@ -44,19 +44,24 @@ function ProjectModel(params) {
     console.log("constructing project view model from params");
     console.log(params);
     var model = ko.mapping.fromJS(params.data);
+    model.saveRequestType = ko.pureComputed(function() {
+        return model.pk() > -1 ? "PUT" : "POST";
+    });
+    model.saveUrl = ko.pureComputed(function() {
+        return model.pk() == -1 ? "/projects/" : "/project/" + model.pk();
+    });
     model.saveProjectDetails = function() {
         var json = ko.toJSON(model);
-        console.debug("submitting json %s", json);
         $.ajax({
-            url: '{% url "core:project_detail" project.pk %}',
-            type: 'PUT',
+            url: model.saveUrl(),
+            type: model.saveRequestType(),
             data: json,
         }).done(function(response) {
             console.debug("SUCCESS");
             console.debug(response);
-        }).fail(function(response) {
-            console.debug("FAILED");
-            console.debug(response);
+        }).fail(function(jqxhr, textStatus, errorThrown) {
+            console.debug("failed %s (%s)", textStatus, errorThrown);
+
         });
         return false;
     }

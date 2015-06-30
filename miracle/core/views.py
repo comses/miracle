@@ -67,6 +67,11 @@ class ProjectListView(generics.ListCreateAPIView):
         response.data = {'project_list_json': dumps(original_response_data)}
         return response
 
+    def perform_create(self, serializer):
+        user = self.request.user
+        project = serializer.save(creator=user)
+        ActivityLog.objects.log_user(user, 'Created project {}'.format(project))
+
 
 class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Project.objects.all()
@@ -80,11 +85,6 @@ class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
         original_response_data = response.data
         response.data = {'project': self.get_object(), 'project_json': dumps(original_response_data)}
         return response
-
-    def perform_create(self, serializer):
-        user = self.request.user
-        project = serializer.save(creator=user)
-        ActivityLog.objects.log_user(user, 'Created project {}'.format(project))
 
     def perform_update(self, serializer):
         project = serializer.save()
