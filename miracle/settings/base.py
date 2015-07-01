@@ -29,7 +29,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(os.path.join(os.path.dirname(__file__
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['borgesc']
 
 
 # Application definition
@@ -47,6 +47,7 @@ THIRD_PARTY_APPS = (
     'django_extensions',
     'bootstrap3',
     'social.apps.django_app.default',
+    'debug_toolbar',
 )
 
 MIRACLE_APPS = (

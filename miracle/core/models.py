@@ -111,11 +111,12 @@ class MiracleMetadataMixin(models.Model):
         else:
             return "Draft"
 
-    def publish(self, user):
+    def publish(self, user, defer=False):
         if not self.published_on:
             self.published_on = timezone.now()
             self.published_by = user
-            self.save()
+            if not defer:
+                self.save()
             ActivityLog.objects.log_user(
                 user, 'Published {} on {}'.format(unicode(self), self.published_on))
 
@@ -124,7 +125,8 @@ class MiracleMetadataMixin(models.Model):
         if original_published_on:
             self.published_on = None
             self.published_by = None
-            self.save()
+            if not defer:
+                self.save()
             ActivityLog.objects.log_user(
                 user, 'Unpublished {}, originally published on {}'.format(unicode(self), original_published_on))
 
@@ -196,10 +198,10 @@ class Project(MiracleMetadataMixin):
 
     @property
     def group_members(self):
-        return [{'username': u.username} for u in self.group.user_set.all()]
+        return [u.username for u in self.group.user_set.all()]
 
     def has_group_member(self, user):
-        return user.groups.filter(name=self.group_name)
+        return user.groups.filter(name=self.group_name).exists()
 
     def add_group_member(self, user):
         return user.groups.add(self.group)
@@ -219,7 +221,7 @@ class Project(MiracleMetadataMixin):
         return self.full_name or self.name
 
     def get_absolute_url(self):
-        return u"/project/{}".format(self.pk)
+        return u"/projects/{}".format(self.pk)
 
     class Meta(object):
         permissions = (

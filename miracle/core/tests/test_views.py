@@ -9,7 +9,7 @@ class ProjectListTest(BaseMiracleTest):
     fixtures = ['test-projects.json']
 
     def _get_project_list(self):
-        response = self.get('core:project_list', {'format': 'json'})
+        response = self.get('core:project-list', {'format': 'json'})
         projects = json.loads(response.content)
         project_list = json.loads(projects['project_list_json'])
         return project_list

@@ -1,10 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse_lazy
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from extra_views import InlineFormSet, UpdateWithInlinesView
 from json import dumps
-from rest_framework import generics, renderers, permissions
+from rest_framework import renderers, viewsets
+from rest_framework.response import Response
 
 from .models import Project, ActivityLog, MiracleUser
 from .serializers import ProjectSerializer
@@ -52,45 +54,51 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
         return self.request.user
 
 
-class ProjectListView(generics.ListCreateAPIView):
+class ProjectViewSet(viewsets.ModelViewSet):
+    """ Project controller """
+    queryset = Project.objects.all()
     serializer_class = ProjectSerializer
-    template_name = 'project/list.html'
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (CanEditProject,)
+
+    @property
+    def template_filename(self):
+        _action = self.action
+        if _action == 'retrieve':
+            _action = 'detail'
+        return '{}.html'.format(_action)
+
+    @property
+    def template_name(self):
+        return 'project/{}'.format(self.template_filename)
 
     def get_queryset(self):
         return Project.objects.viewable(self.request.user)
 
-    def get(self, request, *args, **kwargs):
-        response = super(ProjectListView, self).get(request, *args, **kwargs)
-        original_response_data = response.data
-        response.data = {'project_list_json': dumps(original_response_data)}
-        return response
+    def list(self, request):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response({
+            'project_list_json': dumps(serializer.data)
+        })
 
-    def perform_create(self, serializer):
-        user = self.request.user
-        project = serializer.save(creator=user)
-        ActivityLog.objects.log_user(user, 'Created project {}'.format(project))
+    def retrieve(self, request, pk=None):
+        project = get_object_or_404(Project, pk=pk)
+        serializer = self.get_serializer(project)
+        return Response({
+            'project': project,
+            'project_json': dumps(serializer.data),
+        })
 
-
-class ProjectDetailView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Project.objects.all()
-    serializer_class = ProjectSerializer
-    template_name = 'project/detail.html'
-    renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
-    permission_classes = (CanEditProject,)
-
-    def get(self, request, *args, **kwargs):
-        response = super(ProjectDetailView, self).get(request, *args, **kwargs)
-        original_response_data = response.data
-        response.data = {'project': self.get_object(), 'project_json': dumps(original_response_data)}
-        return response
-
-    def perform_update(self, serializer):
-        project = serializer.save()
-        ActivityLog.objects.log_user(self.request.user, 'Updating project {} with serializer {}'.format(
-            project,
-            serializer.errors))
-
-    def perform_destroy(self, instance):
-        instance.deactivate(self.request.user)
+    def update(self, request, pk=None):
+        project = get_object_or_404(Project, pk=pk)
+        serializer = self.get_serializer(project, request.data)
+        logger.debug("serializer: %s", serializer)
+        if serializer.is_valid():
+            project = serializer.save(user=self.request.user)
+            ActivityLog.objects.log_user(self.request.user, 'Updating project {} with serializer {}'.format(
+                project,
+                serializer))
+            return Response(serializer.data)
+        else:
+            logger.debug("serializer invalid, errors: %s", serializer.errors)
+            return Response(serializer.errors)

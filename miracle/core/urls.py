@@ -1,7 +1,7 @@
 from django.conf.urls import url
 from django.views.generic import TemplateView, RedirectView
 
-from rest_framework.urlpatterns import format_suffix_patterns
+from rest_framework import routers
 
 from . import views
 
@@ -21,7 +21,6 @@ urlpatterns = [
     url(r'^account/profile/$', views.UserProfileView.as_view(), name='profile'),
 ]
 
-urlpatterns += format_suffix_patterns([
-    url(r'^projects/$', views.ProjectListView.as_view(), name='project_list'),
-    url(r'^project/(?P<pk>[\d]+)/$', views.ProjectDetailView.as_view(), name='project_detail'),
-])
+router = routers.DefaultRouter()
+router.register(r'projects', views.ProjectViewSet, base_name='project')
+urlpatterns += router.urls
