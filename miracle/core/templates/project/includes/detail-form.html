@@ -28,12 +28,57 @@
 </template>
 <script>
 function ProjectModel(params) {
-    if (params.model) {
+    console.debug("creating project model");
+    if (params === undefined) {
+        params = {
+            data: {
+                id: -1,
+                name: "",
+                description: "",
+                group_members: [],
+                published: false,
+                published_on: null,
+                published_by: null,
+                deleted_on: null,
+                deleted_by: null,
+            }
+        }
+    }
+    else if (params.model) {
         return params.model;
     }
-    else {
-        return ko.mapping.fromJS(params.data);
+    console.debug("created project model with data");
+    console.debug(params.data);
+    model = ko.mapping.fromJS(params.data);
+    model.saveUrl = ko.pureComputed(function() {
+        var projectId = model.id();
+        return (projectId === -1) ? "/projects/" : "/projects/" + projectId + "/";
+    });
+    model.toJSON = ko.pureComputed(function() {
+        return ko.mapping.toJSON(model, {
+            ignore: ["saveUrl", "requestType", "toJSON"]
+        });
+    });
+    model.requestType = ko.pureComputed(function() {
+        return model.id() === -1 ? "POST" : "PUT";
+    });
+    model.save = function() {
+        $.ajax({
+            url: model.saveUrl(),
+            type: model.requestType(),
+            data: model.toJSON(),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            crossDomain: false,
+        }).done(function(data) {
+            console.debug("SUCCESS");
+            console.debug(data);
+            ko.mapping.fromJS(data, model);
+        }).fail(function(jqxhr) {
+            console.debug("FAIL");
+        });
     }
+    return model;
 }
 ko.components.register('project-detail-form', {
     viewModel: ProjectModel,

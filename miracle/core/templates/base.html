@@ -31,7 +31,9 @@
         <link rel="stylesheet" href="{% static 'css/style.css' %}" media="screen" />
 
         <script src="//ajax.googleapis.com/ajax/libs/jquery/{{JQUERY_VERSION}}/jquery.min.js"></script>
-        <script>window.jQuery || document.write('<script src="{% static 'js/jquery-{{JQUERY_VERSION}}.min.js'%}"><\/script>')</script>
+        {% with 'js/jquery-'|add:JQUERY_VERSION|add:'.min.js' as jquery_static %}
+        <script>window.jQuery || document.write('<script src="{% static jquery_static %}"><\/script>')</script>
+        {% endwith %}
     {% endblock head %}
     </head>
     <body>

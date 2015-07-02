@@ -112,6 +112,7 @@ class MiracleMetadataMixin(models.Model):
             return "Draft"
 
     def publish(self, user, defer=False):
+        logger.debug("%s publishing %s", user, self)
         if not self.published_on:
             self.published_on = timezone.now()
             self.published_by = user
@@ -120,7 +121,8 @@ class MiracleMetadataMixin(models.Model):
             ActivityLog.objects.log_user(
                 user, 'Published {} on {}'.format(unicode(self), self.published_on))
 
-    def unpublish(self, user):
+    def unpublish(self, user, defer=False):
+        logger.debug("%s unpublishing %s", user, self)
         original_published_on = self.published_on
         if original_published_on:
             self.published_on = None

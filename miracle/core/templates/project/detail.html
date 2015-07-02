@@ -28,7 +28,7 @@
             <div class='panel-body'>
                 <div class='tab-content'>
                     <div role='tabpanel' class='tab-pane active' id='overview'>
-                        <form class='form-horizontal' data-bind='submit: saveProjectDetails'>
+                        <form class='form-horizontal' data-bind='submit: project.save'>
                             <project-detail-form params='model: project'></project-detail-form>
                             <div class='form-group'>
                                 <div class='col-sm-offset-2 col-sm-8'>
@@ -63,35 +63,6 @@ $(function() {
     function ProjectWorkflowModel() {
         var self = this;
         self.project = new ProjectModel({data: $.parseJSON("{{ project_json|escapejs }}")});
-        console.debug(self.project);
-        self.projectUrl = ko.pureComputed(function() {
-            var projectId = self.project.id();
-            return (projectId === -1) ? "/projects/" : "/projects/" + projectId + "/";
-        });
-        self.projectRequestType = ko.pureComputed(function() {
-            return self.project.id() === -1 ? "POST" : "PUT";
-        });
-        self.toProjectJson = function() {
-            var data = ko.mapping.toJSON(self.project);
-            console.debug(data);
-            return data;
-        };
-        self.saveProjectDetails = function() {
-            $.ajax({
-                url: self.projectUrl(),
-                type: self.projectRequestType(),
-                data: self.toProjectJson(),
-                contentType: 'application/json; charset=utf-8',
-                dataType: 'json',
-                crossDomain: false,
-            }).done(function(data) {
-                console.debug("SUCCESS");
-                console.debug(data);
-                ko.mapping.fromJS(data, self.project);
-            }).fail(function(jqxhr) {
-                console.debug("FAIL");
-            });
-        }
         return self;
     }
     ko.applyBindings(new ProjectWorkflowModel());
