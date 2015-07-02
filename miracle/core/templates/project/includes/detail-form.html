@@ -52,7 +52,7 @@ function ProjectModel(params) {
     model = ko.mapping.fromJS(params.data);
     model.saveUrl = ko.pureComputed(function() {
         var projectId = model.id();
-        return (projectId === -1) ? "/projects/" : "/projects/" + projectId + "/";
+        return (projectId === -1) ? {% url 'core:project-list' %} : {% url 'core:project-list' %} + projectId + "/";
     });
     model.toJSON = ko.pureComputed(function() {
         return ko.mapping.toJSON(model, {
@@ -62,21 +62,31 @@ function ProjectModel(params) {
     model.requestType = ko.pureComputed(function() {
         return model.id() === -1 ? "POST" : "PUT";
     });
-    model.save = function() {
-        $.ajax({
+    model.save = function(data, doneCallback, failCallback) {
+        if (!doneCallback) {
+            console.debug("assigning default done callback");
+            doneCallback = function(data) {
+                console.debug("SUCCESS");
+                console.debug(data);
+                ko.mapping.fromJS(data, model);
+            }
+        }
+        if (!failCallback) {
+            console.debug("assigning default fail callback");
+            failCallback = function() {
+                console.debug("FAIL");
+            }
+        }
+        var promise = $.ajax({
             url: model.saveUrl(),
             type: model.requestType(),
             data: model.toJSON(),
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
             crossDomain: false,
-        }).done(function(data) {
-            console.debug("SUCCESS");
-            console.debug(data);
-            ko.mapping.fromJS(data, model);
-        }).fail(function(jqxhr) {
-            console.debug("FAIL");
-        });
+        })
+        .done(doneCallback)
+        .fail(failCallback);
     }
     return model;
 }

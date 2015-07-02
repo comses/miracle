@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse_lazy
 from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.db import models, connections
@@ -223,7 +224,7 @@ class Project(MiracleMetadataMixin):
         return self.full_name or self.name
 
     def get_absolute_url(self):
-        return u"/projects/{}".format(self.pk)
+        return reverse_lazy('core:project-detail', args=[self.pk])
 
     class Meta(object):
         permissions = (
@@ -392,7 +393,7 @@ class MiracleUser(models.Model):
     institution = models.CharField(max_length=512)
 
     def get_absolute_url(self):
-        return '/account/profile/'
+        return reverse_lazy('core:profile')
 
     def __unicode__(self):
         return u'{} {}'.format(self.user, self.institution)
@@ -427,5 +428,7 @@ class ActivityLog(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, blank=True, null=True)
     action = models.CharField(max_length=32, choices=ActionType, default=ActionType.SYSTEM)
-
     objects = ActivityLogManager.for_queryset_class(ActivityLogQuerySet)()
+
+    def __unicode__(self):
+        return u"{} {} {}".format(self.creator, self.action, self.message)

@@ -23,4 +23,5 @@ urlpatterns = [
 
 router = routers.DefaultRouter()
 router.register(r'projects', views.ProjectViewSet, base_name='project')
+print "urls: %s" % router.urls
 urlpatterns += router.urls

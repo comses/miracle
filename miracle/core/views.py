@@ -1,11 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse_lazy
-from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from extra_views import InlineFormSet, UpdateWithInlinesView
 from json import dumps
-from rest_framework import renderers, viewsets
+from rest_framework import renderers, viewsets, mixins, status
 from rest_framework.response import Response
 
 from .models import Project, ActivityLog, MiracleUser
@@ -54,7 +53,10 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
         return self.request.user
 
 
-class ProjectViewSet(viewsets.ModelViewSet):
+class ProjectViewSet(mixins.UpdateModelMixin,
+                     # mixins.CreateModelMixin,
+                     # mixins.ListModelMixin,
+                     viewsets.GenericViewSet):
     """ Project controller """
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
@@ -75,30 +77,35 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Project.objects.viewable(self.request.user)
 
-    def list(self, request):
+    def create(self, request, *args, **kwargs):
+        logger.debug("WHAT")
+        serializer = self.get_serializer(data=request.data)
+        logger.debug("getting serializer %s for data %s", serializer, request.data)
+        serializer.is_valid(raise_exception=True)
+        headers = self.get_success_headers(serializer.data)
+        instance = serializer.save()
+        logger.debug("created instance %s with serializer: %s", instance, serializer)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def list(self, request, *args, **kwargs):
+        # FIXME: use ListModelMixin if pagination needed
         serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response({
             'project_list_json': dumps(serializer.data)
         })
 
     def retrieve(self, request, pk=None):
-        project = get_object_or_404(Project, pk=pk)
+        project = self.get_object()
         serializer = self.get_serializer(project)
         return Response({
             'project': project,
             'project_json': dumps(serializer.data),
         })
 
-    def update(self, request, pk=None):
-        project = get_object_or_404(Project, pk=pk)
-        serializer = self.get_serializer(project, request.data)
-        logger.debug("serializer: %s", serializer)
-        if serializer.is_valid():
-            project = serializer.save(user=self.request.user)
-            ActivityLog.objects.log_user(self.request.user, 'Updating project {} with serializer {}'.format(
-                project,
-                serializer))
-            return Response(serializer.data)
-        else:
-            logger.debug("serializer invalid, errors: %s", serializer.errors)
-            return Response(serializer.errors)
+    def perform_update(self, serializer):
+        user = self.request.user
+        project = serializer.save(user=user)
+        logger.debug("modified data: %s", serializer.modified_data_text)
+        ActivityLog.objects.log_user(user, 'Updating project {} with serializer {}'.format(
+            project,
+            serializer.modified_data_text))
