@@ -29,7 +29,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(os.path.join(os.path.dirname(__file__
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['borgesc']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -96,13 +96,8 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
-
-                #'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                #'django.contrib.auth.context_processors.auth',
-                #'django.contrib.messages.context_processors.messages',
-
-
+                # python-social-auth context processors
                 'social.apps.django_app.context_processors.backends',
                 'social.apps.django_app.context_processors.login_redirect',
             ],
@@ -113,7 +108,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'miracle.wsgi.application'
 
 
-# Database
+# Database configuration for metadata and ingested data
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
@@ -169,7 +164,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'root': {
         'level': 'WARNING',
-        'handlers': ['sentry', 'miracle.file'],
+        'handlers': ['sentry', 'miracle.file', 'console'],
     },
     'formatters': {
         'verbose': {
@@ -225,10 +220,14 @@ LOGGING = {
 
 USE_TZ = True
 
+LOGIN_URL = "/account/login/"
 LOGIN_REDIRECT_URL = '/dashboard/'
 
 # Django REST Framework configuration, see http://www.django-rest-framework.org/api-guide/settings/
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    ),
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.TemplateHTMLRenderer',
         'rest_framework.renderers.JSONRenderer',

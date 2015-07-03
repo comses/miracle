@@ -27,7 +27,7 @@ ko.bindingHandlers.modal = {
         if (unwrappedValue) {
             $(element).modal('show');
             // focus input field inside dialog
-            $("input:first", element).focus();
+            $("input", element).focus();
             $('.has-popover', element).popover({'trigger':'hover'});
         }
         else {

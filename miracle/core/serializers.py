@@ -13,7 +13,7 @@ class StringListField(serializers.ListField):
 
 
 class ProjectSerializer(serializers.ModelSerializer):
-    group_members = StringListField()
+    group_members = StringListField(required=False)
     group = serializers.StringRelatedField()
     creator = serializers.SlugRelatedField(slug_field='email', read_only=True)
     published = serializers.BooleanField()
@@ -23,6 +23,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         logger.debug("creating project with data %s", validated_data)
+        # FIXME: slice validated_data to only take out the name, description, and whether or not it's been published
         group_members = validated_data.pop('group_members')
         project = Project.objects.create(**validated_data)
         project.set_group_members(User.objects.filter(username__in=group_members))

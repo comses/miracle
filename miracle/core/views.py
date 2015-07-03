@@ -18,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 class LoginRequiredMixin(object):
     @classmethod
-    def as_view(cls, **initkwargs):
-        view = super(LoginRequiredMixin, cls).as_view(**initkwargs)
+    def as_view(cls, *args, **kwargs):
+        view = super(LoginRequiredMixin, cls).as_view(*args, **kwargs)
         return login_required(view)
 
 
@@ -28,8 +28,10 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(DashboardView, self).get_context_data(**kwargs)
+        serializer = ProjectSerializer(Project.objects.viewable(self.request.user), many=True)
         context.update(
             activity_log=ActivityLog.objects.for_user(self.request.user),
+            project_list_json=dumps(serializer.data),
         )
         return context
 
@@ -53,12 +55,12 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
         return self.request.user
 
 
-class ProjectViewSet(mixins.UpdateModelMixin,
-                     # mixins.CreateModelMixin,
-                     # mixins.ListModelMixin,
+class ProjectViewSet(LoginRequiredMixin,
+                     mixins.UpdateModelMixin,
+                     mixins.CreateModelMixin,
+                     mixins.ListModelMixin,
                      viewsets.GenericViewSet):
     """ Project controller """
-    queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
     permission_classes = (CanEditProject,)
@@ -77,22 +79,8 @@ class ProjectViewSet(mixins.UpdateModelMixin,
     def get_queryset(self):
         return Project.objects.viewable(self.request.user)
 
-    def create(self, request, *args, **kwargs):
-        logger.debug("WHAT")
-        serializer = self.get_serializer(data=request.data)
-        logger.debug("getting serializer %s for data %s", serializer, request.data)
-        serializer.is_valid(raise_exception=True)
-        headers = self.get_success_headers(serializer.data)
-        instance = serializer.save()
-        logger.debug("created instance %s with serializer: %s", instance, serializer)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-    def list(self, request, *args, **kwargs):
-        # FIXME: use ListModelMixin if pagination needed
-        serializer = self.get_serializer(self.get_queryset(), many=True)
-        return Response({
-            'project_list_json': dumps(serializer.data)
-        })
+    def perform_create(self, serializer):
+        instance = serializer.save(creator=self.request.user)
 
     def retrieve(self, request, pk=None):
         project = self.get_object()
