@@ -113,7 +113,6 @@ class MiracleMetadataMixin(models.Model):
             return "Draft"
 
     def publish(self, user, defer=False):
-        logger.debug("%s publishing %s", user, self)
         if not self.published_on:
             self.published_on = timezone.now()
             self.published_by = user
@@ -123,7 +122,6 @@ class MiracleMetadataMixin(models.Model):
                 user, 'Published {} on {}'.format(unicode(self), self.published_on))
 
     def unpublish(self, user, defer=False):
-        logger.debug("%s unpublishing %s", user, self)
         original_published_on = self.published_on
         if original_published_on:
             self.published_on = None
@@ -204,7 +202,7 @@ class Project(MiracleMetadataMixin):
         return [u.username for u in self.group.user_set.all()]
 
     def has_group_member(self, user):
-        return user.groups.filter(name=self.group_name).exists()
+        return self.creator == user or user.groups.filter(name=self.group_name).exists()
 
     def add_group_member(self, user):
         return user.groups.add(self.group)

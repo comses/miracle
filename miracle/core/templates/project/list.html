@@ -4,7 +4,9 @@
 <div class='panel panel-default'>
     <div class='panel-heading'>
         <h4 class='panel-title'>Projects
+            {% if request.user.is_authenticated %}
             <span class='btn btn-primary btn-xs' data-bind='click: createNewProject'><i class='fa fa-plus'></i> New</span>
+            {% endif %}
         </h4>
     </div>
     <div class='panel-body dynamic-content'>

@@ -34,7 +34,7 @@ class BaseMiracleTest(TestCase):
 
     @property
     def login_url(self):
-        return reverse('core:login')
+        return reverse('login')
 
     @property
     def profile_url(self):

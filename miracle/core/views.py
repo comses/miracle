@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from .models import Project, ActivityLog, MiracleUser
 from .serializers import ProjectSerializer
-from .permissions import CanEditProject
+from .permissions import CanViewReadOnlyOrEditProject
 
 import logging
 
@@ -55,15 +55,14 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
         return self.request.user
 
 
-class ProjectViewSet(LoginRequiredMixin,
-                     mixins.UpdateModelMixin,
+class ProjectViewSet(mixins.UpdateModelMixin,
                      mixins.CreateModelMixin,
                      mixins.ListModelMixin,
                      viewsets.GenericViewSet):
     """ Project controller """
     serializer_class = ProjectSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
-    permission_classes = (CanEditProject,)
+    permission_classes = (CanViewReadOnlyOrEditProject,)
 
     @property
     def template_filename(self):
@@ -80,7 +79,7 @@ class ProjectViewSet(LoginRequiredMixin,
         return Project.objects.viewable(self.request.user)
 
     def perform_create(self, serializer):
-        instance = serializer.save(creator=self.request.user)
+        serializer.save(creator=self.request.user)
 
     def retrieve(self, request, pk=None):
         project = self.get_object()
