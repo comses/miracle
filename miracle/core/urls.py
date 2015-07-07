@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^dashboard/$', views.DashboardView.as_view(), name='dashboard'),
     url(r'^search/$', TemplateView.as_view(template_name='search.html'), name='search'),
     url(r'^account/profile/$', views.UserProfileView.as_view(), name='profile'),
+    url(r'^file-upload/$', views.FileUploadView.as_view(), name='upload')
 ]
 
 router = routers.DefaultRouter()
