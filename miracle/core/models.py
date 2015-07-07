@@ -189,7 +189,7 @@ class Project(MiracleMetadataMixin):
 
     @property
     def path(self):
-        return os.path.join(settings.MIRACLE_DATA_DIRECTORY, 'project', self.pk)
+        return os.path.join(settings.MIRACLE_DATA_DIRECTORY, 'project', str(self.pk))
 
     @property
     def group_name(self):

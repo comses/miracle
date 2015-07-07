@@ -1,4 +1,10 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block head %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'css/dropzone.css' %}" text="text/css">
+{% endblock %}
 
 {% block content %}
 <div class='row'>
@@ -47,7 +53,14 @@
                         Data analysis and scripts
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
-                        Add dataset upload for project {{project}}
+                        Add dataset upload for project {{project}}<br>
+                        <form action="{% url 'core:upload' %}" class="dropzone" enctype="multipart/form-data" method="post" id="my-dropzone">
+                            {% csrf_token %}
+                            <input type="hidden" name="id" value="{{ project.id }}">
+                            <div class="fallback">
+                                <input name="file" type="file" multiple />
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -58,8 +71,14 @@
 
 {% block javascript %}
 {% include "includes/ko.js" %}
+<script src='{% static 'js/dropzone.js' %}'></script>
 {% include "includes/csrf.js" %}
 {% include "project/includes/detail-form.html" %}
+<script>
+Dropzone.options.myDropzone = {
+    paramName: "file",
+};
+</script>
 <script>
 $(function() {
     var model = new ProjectModel({data: {{ project_json|safe}}} );
