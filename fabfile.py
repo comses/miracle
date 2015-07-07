@@ -18,7 +18,7 @@ sys.path.append(env.abs_project_path)
 env.roledefs = {
     'localhost': ['localhost'],
     'staging': ['staging.server'],
-    'prod': ['production.server'],
+    'prod': ['miracle.comses.net'],
 }
 env.python = 'python'
 env.project_name = 'miracle'
@@ -182,10 +182,25 @@ def sudo_chain(*commands, **kwargs):
     sudo(' && '.join(commands), **kwargs)
 
 
-def deploy(branch):
-    """ deploy to an already setup environment """
+@task(alias='reloaduwsgi')
+def reload_uwsgi():
+    status_line = sudo("supervisorctl status")
+    m = re.search('RUNNING(?:\s+)pid\s(\d+)', status_line)
+    if m:
+        uwsgi_pid = m.group(1)
+        logger.debug("sending HUP to %s", uwsgi_pid)
+        sudo("kill -HUP {}".format(uwsgi_pid))
+    else:
+        logger.warning("No pid found: %s", status_line)
+
+
+def deploy(branch, user):
+    """ deploys to an already setup environment """
+    if user is None:
+        user = env.deploy_user
     env.deploy_dir = env.deploy_parent_dir + env.project_name
     env.branch = branch
+    env.virtualenv_path = '/comses/virtualenvs/{}'.format(env.project_name)
     if confirm("Deploying '%(branch)s' branch to host %(host)s : \n\r%(vcs_command)s\nContinue? " % env):
         with cd(env.deploy_dir):
             sudo_chain(
@@ -207,3 +222,4 @@ def deploy(branch):
                 'chown -R %(deploy_user)s:%(deploy_group)s . %(static_root)s %(virtualenv_path)s' % env,
                 _restart_command(),
                 pty=True)
+            execute(reload_uwsgi)

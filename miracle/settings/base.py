@@ -100,6 +100,8 @@ TEMPLATES = [
                 # python-social-auth context processors
                 'social.apps.django_app.context_processors.backends',
                 'social.apps.django_app.context_processors.login_redirect',
+                # expose SCM revision management to templates: https://github.com/klen/dealer
+                'dealer.contrib.django.context_processor',
             ],
         },
     },
