@@ -118,8 +118,7 @@ class MiracleMetadataMixin(models.Model):
             self.published_by = user
             if not defer:
                 self.save()
-            ActivityLog.objects.log_user(
-                user, 'Published {} on {}'.format(unicode(self), self.published_on))
+            ActivityLog.objects.log_user(user, 'Published {} on {}'.format(unicode(self), self.published_on))
 
     def unpublish(self, user, defer=False):
         original_published_on = self.published_on
@@ -199,7 +198,7 @@ class Project(MiracleMetadataMixin):
 
     @property
     def group_members(self):
-        return [u.username for u in self.group.user_set.all()]
+        return self.group.user_set.values_list('username', flat=True)
 
     def has_group_member(self, user):
         return self.creator == user or user.groups.filter(name=self.group_name).exists()

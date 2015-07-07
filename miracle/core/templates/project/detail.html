@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class='row'>
     <div class='col-md-3'>
         {# sidebar #}
@@ -31,8 +30,8 @@
             <div class='panel-body'>
                 <div class='tab-content'>
                     <div role='tabpanel' class='tab-pane active' id='overview'>
-                        <form class='form-horizontal' data-bind='submit: project.save'>
-                            <project-detail-form params='model: project'></project-detail-form>
+                        <form class='form-horizontal' data-bind='submit: save'>
+                            <project-detail-form params='model: $root'></project-detail-form>
                             <div class='form-group'>
                                 <div class='col-sm-offset-2 col-sm-8'>
                                     <button type='submit' class='btn btn-primary'><i class='fa fa-save'></i> Save</button>
@@ -63,12 +62,8 @@
 {% include "project/includes/detail-form.html" %}
 <script>
 $(function() {
-    function ProjectWorkflowModel() {
-        var self = this;
-        self.project = new ProjectModel({data: $.parseJSON("{{ project_json|escapejs }}")});
-        return self;
-    }
-    ko.applyBindings(new ProjectWorkflowModel());
+    var model = new ProjectModel({data: {{ project_json|safe}}} );
+    ko.applyBindings(model);
 });
 </script>
 {% endblock %}

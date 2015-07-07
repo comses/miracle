@@ -4,11 +4,11 @@ from django.core.urlresolvers import reverse_lazy
 from django.views.generic import TemplateView
 from extra_views import InlineFormSet, UpdateWithInlinesView
 from json import dumps
-from rest_framework import renderers, viewsets, mixins, status
+from rest_framework import renderers, viewsets
 from rest_framework.response import Response
 
 from .models import Project, ActivityLog, MiracleUser
-from .serializers import ProjectSerializer
+from .serializers import ProjectSerializer, UserSerializer
 from .permissions import CanViewReadOnlyOrEditProject
 
 import logging
@@ -28,10 +28,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(DashboardView, self).get_context_data(**kwargs)
-        serializer = ProjectSerializer(Project.objects.viewable(self.request.user), many=True)
+        project_serializer = ProjectSerializer(Project.objects.viewable(self.request.user), many=True)
+        user_serializer = UserSerializer(User.objects.all(), many=True)
         context.update(
             activity_log=ActivityLog.objects.for_user(self.request.user),
-            project_list_json=dumps(serializer.data),
+            project_list_json=dumps(project_serializer.data),
+            users_json=dumps(user_serializer.data),
         )
         return context
 
@@ -55,10 +57,7 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
         return self.request.user
 
 
-class ProjectViewSet(mixins.UpdateModelMixin,
-                     mixins.CreateModelMixin,
-                     mixins.ListModelMixin,
-                     viewsets.GenericViewSet):
+class ProjectViewSet(viewsets.ModelViewSet):
     """ Project controller """
     serializer_class = ProjectSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
@@ -81,18 +80,22 @@ class ProjectViewSet(mixins.UpdateModelMixin,
     def perform_create(self, serializer):
         serializer.save(creator=self.request.user)
 
-    def retrieve(self, request, pk=None):
-        project = self.get_object()
-        serializer = self.get_serializer(project)
-        return Response({
-            'project': project,
-            'project_json': dumps(serializer.data),
-        })
+    def retrieve(self, request, *args, **kwargs):
+        response = super(ProjectViewSet, self).retrieve(request, *args, **kwargs)
+        user_serializer = UserSerializer(User.objects.all(), many=True)
+        project = response.data
+        response.data = {
+            'project': self.get_object(),
+            'project_json': dumps(project),
+            'users': dumps(user_serializer.data),
+        }
+        return response
 
     def perform_update(self, serializer):
+        logger.debug("performing update with serializer: %s", serializer)
         user = self.request.user
         project = serializer.save(user=user)
         logger.debug("modified data: %s", serializer.modified_data_text)
-        ActivityLog.objects.log_user(user, 'Updating project {} with serializer {}'.format(
+        ActivityLog.objects.log_user(user, 'UPDATE {}: {}'.format(
             project,
             serializer.modified_data_text))

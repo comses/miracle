@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.utils import timezone
 from collections import defaultdict
 from rest_framework import serializers
 from .models import (Project, Dataset,)
@@ -12,27 +13,49 @@ class StringListField(serializers.ListField):
     child = serializers.CharField()
 
 
+class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(read_only=True)
+    email = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('username',
+                  'email',
+                  )
+
+
 class ProjectSerializer(serializers.ModelSerializer):
-    group_members = StringListField(required=False)
+    group_members = StringListField()
     group = serializers.StringRelatedField()
     creator = serializers.SlugRelatedField(slug_field='email', read_only=True)
     published = serializers.BooleanField()
-    published_on = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S', read_only=True)
-    date_created = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S', read_only=True)
+    published_on = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S %Z', read_only=True)
+    date_created = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S %Z', read_only=True)
     detail_url = serializers.CharField(source='get_absolute_url', read_only=True)
+    status = serializers.CharField(read_only=True)
+
+    def validate_group_members(self, value):
+        logger.debug("validating group members with value: %s", value)
+        return value
 
     def create(self, validated_data):
         logger.debug("creating project with data %s", validated_data)
         # FIXME: slice validated_data to only take out the name, description, and whether or not it's been published
         group_members = validated_data.pop('group_members')
+        published = validated_data.pop('published', False)
+        creator = validated_data.get('creator')
+        if published:
+            validated_data['published_on'] = timezone.now()
+            validated_data['published_by'] = creator
         project = Project.objects.create(**validated_data)
-        project.set_group_members(User.objects.filter(username__in=group_members))
+        if group_members:
+            project.set_group_members(User.objects.filter(username__in=group_members))
         return project
 
     def update(self, instance, validated_data):
         logger.debug("updating instance %s with validated data %s", instance, validated_data)
         self._modified_data = defaultdict(tuple)
-        group_members = validated_data.pop('group_members')
+        incoming_group_members = validated_data.pop('group_members')
         user = validated_data.pop('user')
         published = validated_data.pop('published')
         for attr, value in validated_data.items():
@@ -47,9 +70,9 @@ class ProjectSerializer(serializers.ModelSerializer):
             self._modified_data['published'] = (False, True)
             instance.unpublish(user, defer=True)
         existing_group_members = frozenset(instance.group_members)
-        if existing_group_members.difference(group_members):
-            logger.debug("updating group members for %s from %s to %s", instance, existing_group_members, group_members)
-            users = User.objects.filter(username__in=group_members)
+        if existing_group_members.symmetric_difference(incoming_group_members):
+            self._modified_data['group_members'] = (existing_group_members, incoming_group_members)
+            users = User.objects.filter(username__in=incoming_group_members)
             instance.set_group_members(users)
         instance.save()
         return instance

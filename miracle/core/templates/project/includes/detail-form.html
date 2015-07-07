@@ -1,3 +1,4 @@
+{# NB: assumes selectize is loaded, really need to start using requirejs or something similar #}
 <template id='project-detail-form'>
     {% csrf_token %}
     <div class='form-group'>
@@ -10,6 +11,12 @@
         <label for='description' class='control-label col-sm-2'>Description</label>
         <div class='col-sm-8'>
             <textarea class='form-control' rows="6" data-bind='value: description'></textarea>
+        </div>
+    </div>
+    <div class='form-group'>
+        <label for='project-members' class='control-label col-sm-2'>Members</label>
+        <div class='col-sm-8'>
+            <select data-bind='selectize: users, optionsText: "email", optionsValue: "username", selectedOptions: group_members, options: {plugins: ["remove_button"]}' id='project-members' class='members' placeholder='Project members' multiple="true"></select>
         </div>
     </div>
     <div class='form-group'>
@@ -28,28 +35,34 @@
 </template>
 <script>
 function ProjectModel(params) {
-    console.debug("creating project model");
-    if (params === undefined) {
-        params = {
-            data: {
-                id: -1,
-                name: "",
-                description: "",
-                group_members: [],
-                published: false,
-                published_on: null,
-                published_by: null,
-                deleted_on: null,
-                deleted_by: null,
-            }
+    params = params || {
+        data: {
+            id: -1,
+            name: "",
+            description: "",
+            group_members: [],
+            published: false,
+            published_on: null,
+            published_by: null,
+            deleted_on: null,
+            deleted_by: null,
+            detail_url: null,
+            creator: null,
+            status: null,
+            date_created: null,
+            users: {{users|safe}},
         }
     }
-    else if (params.model) {
+    if (params.model) {
         return params.model;
     }
-    console.debug("created project model with data");
+    console.debug("mapping from data");
     console.debug(params.data);
+    data = params.data;
     model = ko.mapping.fromJS(params.data);
+    console.debug("model group members");
+    console.debug(model.group_members());
+    model.users = ko.observable({{users|safe}})
     model.saveUrl = ko.pureComputed(function() {
         var projectId = model.id();
         return (projectId === -1) ? {% url 'core:project-list' %} : {% url 'core:project-list' %} + projectId + "/";

@@ -13,13 +13,15 @@
             <div data-bind='if: projects().length'>
             <table class='table striped'>
                 <thead>
-                    <th class='col-md-4'>Name</th>
+                    <th class='col-md-1'>Status</th>
+                    <th class='col-md-3'>Name</th>
                     <th class='col-md-4'>Description</th>
                     <th class='col-md-2'>Owner</th>
                     <th class='col-md-2'>Date created</th>
                 </thead>
                 <tbody data-bind='foreach: projects'>
                 <tr>
+                    <td><span class='label label-badge label-primary' data-bind='text: status'></span></td>
                     <td><a data-bind='attr: {href: detail_url}, text: name'></a></td>
                     <td data-bind='text: description'></td>
                     <td data-bind='text: creator'></td>
@@ -119,8 +121,10 @@ $(function() {
         }
         model.saveProject = function() {
             if ($('#new-project-form').valid()) {
-                model.project().save();
+                var project = model.project();
+                project.save();
                 model.activateNewProject(false);
+                model.projects.push(project);
             }
         }
         return model;
