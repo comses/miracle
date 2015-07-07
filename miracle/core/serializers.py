@@ -33,6 +33,8 @@ class ProjectSerializer(serializers.ModelSerializer):
     date_created = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S %Z', read_only=True)
     detail_url = serializers.CharField(source='get_absolute_url', read_only=True)
     status = serializers.CharField(read_only=True)
+    number_of_datasets = serializers.IntegerField(read_only=True)
+    datasets = serializers.HyperlinkedRelatedField(many=True, view_name='core:dataset-detail', read_only=True)
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)
@@ -95,7 +97,9 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
 
 
-class DatasetSerializer(serializers.ModelSerializer):
+class DatasetSerializer(serializers.HyperlinkedModelSerializer):
+    project = serializers.ReadOnlyField(source='project.name')
+
     class Meta:
         model = Dataset
-        fields = ('id', 'name', 'datafile',)
+        fields = ('id', 'name', 'datafile', 'project')

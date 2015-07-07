@@ -1,8 +1,8 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse_lazy
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
-from django.db.models import ObjectDoesNotExist
 from extra_views import InlineFormSet, UpdateWithInlinesView
 from json import dumps
 from rest_framework import renderers, viewsets
@@ -10,12 +10,11 @@ from rest_framework.response import Response
 
 from .models import Project, ActivityLog, MiracleUser, Dataset
 from .serializers import ProjectSerializer, UserSerializer, DatasetSerializer
-from .permissions import CanViewReadOnlyOrEditProject
+from .permissions import CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditDatasetProject
 
 from rest_framework import generics
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
-from rest_framework.exceptions import ValidationError
 
 import logging
 
@@ -34,12 +33,14 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(DashboardView, self).get_context_data(**kwargs)
-        project_serializer = ProjectSerializer(Project.objects.viewable(self.request.user), many=True)
+        project_serializer = ProjectSerializer(Project.objects.viewable(self.request.user), many=True,
+                                               context={'request': self.request})
         user_serializer = UserSerializer(User.objects.all(), many=True)
         context.update(
             activity_log=ActivityLog.objects.for_user(self.request.user),
             project_list_json=dumps(project_serializer.data),
             users_json=dumps(user_serializer.data),
+            request=self.request,
         )
         return context
 
@@ -61,6 +62,26 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
 
     def get_object(self):
         return self.request.user
+
+
+class DatasetViewSet(viewsets.ModelViewSet):
+    serializer_class = DatasetSerializer
+    renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
+    permission_classes = (CanViewReadOnlyOrEditDatasetProject,)
+
+    @property
+    def template_filename(self):
+        _action = self.action
+        if _action == 'retrieve':
+            _action = 'detail'
+        return '{}.html'.format(_action)
+
+    @property
+    def template_name(self):
+        return 'dataset/{}'.format(self.template_filename)
+
+    def get_queryset(self):
+        return Dataset.objects.viewable(self.request.user)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -106,9 +127,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
             project,
             serializer.modified_data_text))
 
-
     def perform_destroy(self, instance):
         instance.deactivate(self.request.user)
+
 
 class FileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser,)
@@ -116,22 +137,13 @@ class FileUploadView(APIView):
 
     def post(self, request, format=None):
         file_obj = request.FILES['file']
-        project_pk = int(request.DATA[u'id'][0])
-        project = get_safe(Project, project_pk)
-        user = User.objects.filter(username=request.user)[0]
-
+        project = get_object_or_404(Project, pk=request.data.get('id'))
+        user = request.user
         dataset = Dataset(name=file_obj.name, creator=user, project=project, datafile=file_obj)
         dataset.save()
-
         return Response(status=201)
+
 
 class FileUploadRetrieveDestroyView(generics.RetrieveDestroyAPIView):
     permission_classes = (CanViewReadOnlyOrEditProject,)
     serializer_class = DatasetSerializer
-
-
-def get_safe(model, pk):
-    try:
-        return model.objects.get(pk=pk)
-    except ObjectDoesNotExist:
-        raise ValidationError(detail='%s %s does not exist' % (model.__name__, pk))

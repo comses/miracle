@@ -3,7 +3,7 @@
 
 {% block head %}
 {{ block.super }}
-<link rel="stylesheet" href="{% static 'css/dropzone.css' %}" text="text/css">
+<link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/dropzone/4.0.1/min/dropzone.min.css'>
 {% endblock %}
 
 {% block content %}
@@ -38,16 +38,23 @@
                     <div role='tabpanel' class='tab-pane active' id='overview'>
                         <form class='form-horizontal' data-bind='submit: save'>
                             <project-detail-form params='model: $root'></project-detail-form>
+                            <div class='well'>
+                                <h3>Uploaded datasets</h3>
+                                <ul class='list-group' data-bind='foreach: datasets'>
+                                    <li class='list-group-item'><a data-bind='attr: {href: $data}, text: $data'></a></li>
+                                </ul>
+                            </div>
                             <div class='form-group'>
                                 <div class='col-sm-offset-2 col-sm-8'>
                                     <button type='submit' class='btn btn-primary'><i class='fa fa-save'></i> Save</button>
                                 </div>
                             </div>
-
                         </form>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='explorer'>
-                        Data explorer
+                        <div class='embed-responsive embed-responsive-4by3'>
+                            <iframe height='900px' class='radiant' src='http://miracle-devel.sharcnet.ca/radiant/?project=sample'></iframe>
+                        </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='analysis'>
                         Data analysis and scripts
@@ -71,16 +78,14 @@
 
 {% block javascript %}
 {% include "includes/ko.js" %}
-<script src='{% static 'js/dropzone.js' %}'></script>
+{% include "includes/dropzone.js" %}
 {% include "includes/csrf.js" %}
 {% include "project/includes/detail-form.html" %}
 <script>
-Dropzone.options.myDropzone = {
-    paramName: "file",
-};
-</script>
-<script>
 $(function() {
+    Dropzone.options.myDropzone = {
+        paramName: "file",
+    };
     var model = new ProjectModel({data: {{ project_json|safe}}} );
     ko.applyBindings(model);
 });

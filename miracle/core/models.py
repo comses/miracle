@@ -154,13 +154,16 @@ class MiracleMetadataMixin(models.Model):
         abstract = True
 
 
-class ProjectQuerySet(models.query.QuerySet):
+class ActivePublishedQuerySet(models.query.QuerySet):
 
     def active(self, *args, **kwargs):
         return self.filter(deleted_on__isnull=True, *args, **kwargs)
 
     def published(self, *args, **kwargs):
         return self.filter(published_on__isnull=False, *args, **kwargs)
+
+
+class ProjectQuerySet(ActivePublishedQuerySet):
 
     def viewable(self, user, *args, **kwargs):
         """
@@ -173,10 +176,8 @@ class ProjectQuerySet(models.query.QuerySet):
         if not user or not user.is_authenticated():
             return self.active().published()
         # FIXME: figure out why distinct() is necessary here
-        return self.filter(models.Q(creator=user)
-                           | models.Q(group__user=user)
-                           | (models.Q(deleted_on__isnull=True) & models.Q(published_on__isnull=False))
-                           ).distinct()
+        return self.filter(models.Q(creator=user) | models.Q(group__user=user) |
+                           (models.Q(deleted_on__isnull=True) & models.Q(published_on__isnull=False))).distinct()
 
 
 class Project(MiracleMetadataMixin):
@@ -217,8 +218,8 @@ class Project(MiracleMetadataMixin):
         return bookmarked_project
 
     @property
-    def title(self):
-        return self.full_name or self.name
+    def number_of_datasets(self):
+        return self.datasets.count()
 
     def get_absolute_url(self):
         return reverse_lazy('core:project-detail', args=[self.pk])
@@ -267,7 +268,20 @@ class Analysis(models.Model):
 
 
 class DatasetQuerySet(models.query.QuerySet):
-    pass
+
+    def viewable(self, user, *args, **kwargs):
+        """
+        Datasets are viewable when they:
+        1. are active
+        2. are published
+        3. are created by the given user
+        4. have the given user as a member of their parent project's group
+        """
+        if not user or not user.is_authenticated():
+            return self.active().published()
+        return self.filter(models.Q(creator=user) |
+                           models.Q(project__group__user=user) |
+                           (models.Q(deleted_on__isnull=True) & models.Q(published_on__isnull=False))).distinct('id')
 
 
 class DatasetManager(PassThroughManager):

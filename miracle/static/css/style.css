@@ -36,3 +36,9 @@ input#id_contact_number {
 .no-js .dynamic-content {
     display: none;
 }
+.label-badge {
+    border-radius: 1em;
+}
+.radiant {
+    height: 900px;
+}

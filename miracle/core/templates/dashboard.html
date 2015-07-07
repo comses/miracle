@@ -3,10 +3,10 @@
 {% block content %}
 <div class='row'>
     <h4><i class='fa fa-tachometer'></i> Dashboard</h4>
-    <div class='panel panel-default'>
-        <div class='panel-heading'>
+    <div class='panel panel-primary'>
+        <div class='panel-heading clearfix'>
             <h4 class='panel-title'><i class='fa fa-table'></i> Your Projects
-                <button class='btn btn-primary btn-xs' data-bind='click: createNewProject'><i class='fa fa-plus'></i> New</button>
+                <button class='pull-right btn btn-default btn-xs' data-bind='click: createNewProject'><i class='fa fa-plus'></i> New</button>
             </h4>
         </div>
         <div class='panel-body dynamic-content'>
@@ -16,12 +16,12 @@
                     <th class='col-md-1'>Status</th>
                     <th class='col-md-3'>Name</th>
                     <th class='col-md-4'>Description</th>
-                    <th class='col-md-2'>Owner</th>
+                    <th class='col-md-1'>Owner</th>
                     <th class='col-md-2'>Date created</th>
                 </thead>
                 <tbody data-bind='foreach: projects'>
                 <tr>
-                    <td><span class='label label-badge label-primary' data-bind='text: status'></span></td>
+                    <td><span class='label label-badge label-warning' data-bind='text: number_of_datasets'></span> <span class='label label-primary' data-bind='text: status'></span></td>
                     <td><a data-bind='attr: {href: detail_url}, text: name'></a></td>
                     <td data-bind='text: description'></td>
                     <td data-bind='text: creator'></td>
@@ -43,12 +43,11 @@
         </div>
         <div class='panel-body'>
             {% for activity in activity_log %}
-            <div class='alert alert-info'>
-                <mark>{{activity.creator}}</mark>: {{ activity.message }} <span class='pull-right label label-primary'>{{ activity.date_created }}</span>
-            </div>
+            <mark>{{activity.creator}}</mark>: {{ activity.message }} <span class='pull-right label label-primary'>{{ activity.date_created }}</span>
+            <br>
             {% empty %}
-            <div class='alert alert-info'>
-                No recent activity.
+            <div class='well'>
+                <i class='fa fa-info-circle'></i> No recent activity.
             </div>
             {% endfor %}
         </div>
