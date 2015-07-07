@@ -49,7 +49,10 @@ class ProjectSerializer(serializers.ModelSerializer):
             validated_data['published_by'] = creator
         project = Project.objects.create(**validated_data)
         if group_members:
+            users = User.objects.filter(username__in=group_members)
+            logger.debug("setting group members: %s", users)
             project.set_group_members(User.objects.filter(username__in=group_members))
+            project.save()
         return project
 
     def update(self, instance, validated_data):

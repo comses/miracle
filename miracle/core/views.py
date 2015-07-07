@@ -87,7 +87,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         response.data = {
             'project': self.get_object(),
             'project_json': dumps(project),
-            'users': dumps(user_serializer.data),
+            'users_json': dumps(user_serializer.data),
         }
         return response
 

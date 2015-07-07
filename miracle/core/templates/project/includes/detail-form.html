@@ -50,19 +50,14 @@ function ProjectModel(params) {
             creator: null,
             status: null,
             date_created: null,
-            users: {{users|safe}},
         }
     }
     if (params.model) {
         return params.model;
     }
-    console.debug("mapping from data");
-    console.debug(params.data);
     data = params.data;
     model = ko.mapping.fromJS(params.data);
-    console.debug("model group members");
-    console.debug(model.group_members());
-    model.users = ko.observable({{users|safe}})
+    model.users = ko.observable({{users_json|safe}})
     model.saveUrl = ko.pureComputed(function() {
         var projectId = model.id();
         return (projectId === -1) ? {% url 'core:project-list' %} : {% url 'core:project-list' %} + projectId + "/";
