@@ -17,6 +17,11 @@ DATABASES = {
         'PASSWORD': 'CHANGEME',
     }
 }
+
+INSTALLED_APPS += (
+    'debug_toolbar',
+    )
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # disabling i18n until we need it

@@ -58,7 +58,7 @@
                             <li class='{{ request|active_re:dashboard_url }}'><a href='{{ dashboard_url }}'><i class='fa fa-tachometer'></i> Dashboard</a></li>
                             <li class='{{ request|active_re:search_url }}'><a href='{{ search_url }}'><i class='fa fa-search'></i> Search</a></li>
                         {% endif %}
-                        <li class='{{ request|active_re:contact_url }}'><a href='{{ contact_url }}'><i class='fa fa-bell-o'></i> Contact us</a></li>
+                        <li class='{{ request|active_re:contact_url }}'><a target='_blank' href='{{ contact_url }}'><i class='fa fa-bell-o'></i> Contact us</a></li>
                         <li><a target='_blank' href='{{ issues_url }}'><i class='fa fa-bullhorn'></i> Report a bug</a></li>
                     </ul>
                     <ul class="nav navbar-nav pull-right">

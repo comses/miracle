@@ -47,7 +47,7 @@ THIRD_PARTY_APPS = (
     'django_extensions',
     'bootstrap3',
     'social.apps.django_app.default',
-    'debug_toolbar',
+    'raven.contrib.django.raven_compat',
 )
 
 MIRACLE_APPS = (
@@ -165,7 +165,7 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'root': {
-        'level': 'WARNING',
+        'level': 'INFO',
         'handlers': ['sentry', 'miracle.file', 'console'],
     },
     'formatters': {
