@@ -33,6 +33,10 @@ input#id_contact_number {
     color: #FFF;
     background-color: #3B5999;
 }
+.btn-google {
+    color: #FFF;
+    background-color: #4d90fe;
+}
 .no-js .dynamic-content {
     display: none;
 }
@@ -41,4 +45,7 @@ input#id_contact_number {
 }
 .radiant {
     height: 900px;
+}
+.btn {
+    text-transform: none;
 }

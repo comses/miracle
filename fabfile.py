@@ -1,10 +1,11 @@
 from fabric.api import local, sudo, cd, env, execute, roles, task, run
 from fabric.context_managers import prefix
-from fabric.contrib.console import confirm
-from fabric.contrib import django
-import sys
-import os
+from fabric.contrib import django, console
+
 import logging
+import os
+import re
+import sys
 
 logger = logging.getLogger(__name__)
 
@@ -146,7 +147,7 @@ def initialize_database_schema():
 @roles('localhost')
 @task(alias='rebs')
 def rebuild_schema():
-    if confirm("Delete existing db schemas and rerun migrations? All data in {} will be lost.".format(env.databases)):
+    if console.confirm("Delete existing db schemas in {}? All data will be lost.".format(env.databases)):
         for db in env.databases:
             local("dropdb --if-exists {0} -U {1} && createdb {0} -U {1}".format(db, env.db_user))
         local("find . -name '00*.py' -print -delete")
@@ -201,7 +202,7 @@ def deploy(branch, user):
     env.deploy_dir = env.deploy_parent_dir + env.project_name
     env.branch = branch
     env.virtualenv_path = '/comses/virtualenvs/{}'.format(env.project_name)
-    if confirm("Deploying '%(branch)s' branch to host %(host)s : \n\r%(vcs_command)s\nContinue? " % env):
+    if console.confirm("Deploying '%(branch)s' branch to host %(host)s : \n\r%(vcs_command)s\nContinue? " % env):
         with cd(env.deploy_dir):
             sudo_chain(
                 env.vcs_command,
@@ -209,9 +210,9 @@ def deploy(branch, user):
                 'chmod -R g+rw logs/',
                 user=env.deploy_user, pty=True)
             env.static_root = miracle_settings.STATIC_ROOT
-            if confirm("Update pip dependencies?"):
+            if console.confirm("Update pip dependencies?"):
                 _virtualenv(sudo, 'pip install -Ur requirements.txt', user=env.deploy_user)
-            if confirm("Run database migrations?"):
+            if console.confirm("Run database migrations?"):
                 _virtualenv(sudo, '%(python)s manage.py migrate' % env, user=env.deploy_user)
             _virtualenv(sudo, '%(python)s manage.py collectstatic' % env)
             sudo_chain(
