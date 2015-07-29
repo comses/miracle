@@ -5,14 +5,14 @@ from django.test import TestCase
 from django.test.client import RequestFactory, Client
 from django.utils.http import urlencode
 
-from ..models import (Project, Dataset, DataTable, DataTableColumn)
+from ..models import (Analysis, Project, Dataset, DataTable, DataTableColumn)
 
 import logging
 import os
 
 logger = logging.getLogger(__name__)
 
-
+# Todo: add analysis test directory
 class BaseMiracleTest(TestCase):
 
     """
@@ -20,6 +20,7 @@ class BaseMiracleTest(TestCase):
     """
 
     TEST_DATA_DIR = os.path.join(settings.BASE_DIR, 'miracle', 'core', 'tests', 'data')
+    MIRACLE_ANALYSIS_DIR = settings.MIRACLE_ANALYSIS_DIRECTORY
 
     def setUp(self, **kwargs):
         self.client = Client()
@@ -27,10 +28,15 @@ class BaseMiracleTest(TestCase):
         self.logger = logger
         self.default_user = self.create_user()
         self.default_project = self.create_project()
+        self.default_analysis = self.create_analysis()
 
     @property
     def default_project_name(self):
         return "{} Project".format(type(self).__name__)
+
+    @property
+    def default_analysis_name(self):
+        return "test_analysis.zip"
 
     @property
     def login_url(self):
@@ -56,6 +62,19 @@ class BaseMiracleTest(TestCase):
             last_name=last_name,
             password=password
         )
+
+    def create_analysis(self, name=None, project=None, datapath=None):
+        if name is None:
+            name = self.default_analysis_name
+        if datapath is None:
+            datapath = os.path.join("/vagrant/miracle/core/tests/data", name)
+        if project is None:
+            project = self.default_project
+        analysis = Analysis(name=name,
+                            project=project,
+                            data_path=datapath)
+        analysis.save()
+        return analysis
 
     def create_project(self, name=None, user=None):
         if name is None:
@@ -90,7 +109,7 @@ class BaseMiracleTest(TestCase):
     def create_column(self, datatable=None, name=None):
         if datatable is None:
             self.fail("column requires parent table")
-        column = DataTableColumn(table=datatable, name=name)
+        column = DataTableColumn(datatable=datatable, name=name)
         column.full_clean()
         column.save()
         return column

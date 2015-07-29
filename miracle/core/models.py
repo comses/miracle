@@ -16,6 +16,8 @@ import logging
 import os
 import re
 
+from .extractors import Extractor
+
 logger = logging.getLogger(__name__)
 
 
@@ -261,6 +263,7 @@ class Author(models.Model):
 
 class Analysis(models.Model):
 
+    name = models.CharField(max_length=255, blank=True)
     project = models.ForeignKey(Project, related_name="analyses")
     provenance = PostgresJSONField()
     data_path = models.TextField(blank=True, help_text=_("What is this for?"))
@@ -312,6 +315,8 @@ class Dataset(MiracleMetadataMixin):
     provenance = PostgresJSONField()
     authors = models.ManyToManyField(Author)
     analyses = models.ManyToManyField(Analysis)
+    data_type = models.CharField(max_length=50, blank=True)
+    properties = PostgresJSONField()
     url = models.URLField(blank=True)
     datafile = models.FileField(upload_to=_local_dataset_path)
 
@@ -383,7 +388,7 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
         ('text', _('text')),
     )
 
-    table = models.ForeignKey(DataTable, related_name='columns')
+    datatable = models.ForeignKey(DataTable, related_name='columns')
     name = models.CharField(max_length=64, default=None, help_text=_("Internal data table name"))
     full_name = models.CharField(max_length=255, blank=True)
     description = models.TextField()

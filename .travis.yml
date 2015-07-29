@@ -6,6 +6,7 @@ addons:
     apt:
         packages:
             - python-gdal
+            - p7zip-full
 notifications:
     email: comses-dev@googlegroups.com
 env: DB=postgres
