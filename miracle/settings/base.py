@@ -240,6 +240,20 @@ REST_FRAMEWORK = {
 # Media files, see https://docs.djangoproject.com/en/1.8/ref/settings/#std:setting-MEDIA_ROOT for more details
 # This absolute path specifies where all uploaded datasets will be sent. Can be overridden in local.py
 MIRACLE_DATA_DIRECTORY = MEDIA_ROOT = '/opt/miracle/data/'
+MIRACLE_ANALYSIS_DIRECTORY = os.path.join(MIRACLE_DATA_DIRECTORY, "analyses")
+
+if not is_accessible(MIRACLE_ANALYSIS_DIRECTORY):
+    try:
+        os.makedirs(MIRACLE_ANALYSIS_DIRECTORY)
+    except OSError:
+        print("Cannot create absolute analysis directory [%s]. Using relative path 'analyses' instead" % MIRACLE_ANALYSIS_DIRECTORY,
+              file=sys.stderr)
+        MIRACLE_ANALYSIS_DIRECTORY = 'analyses'
+        if not is_accessible(MIRACLE_ANALYSIS_DIRECTORY):
+            try:
+                os.makedirs(MIRACLE_ANALYSIS_DIRECTORY)
+            except OSError:
+                print("Couldn't create any analyses directory, startup will fail", file=sys.stderr)
 
 MEDIA_URL = '/data/'
 
