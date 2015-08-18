@@ -30,7 +30,7 @@ env.db_user = 'miracle'
 env.databases = ('miracle_metadata', 'miracle_data')
 env.deploy_parent_dir = '/opt/'
 env.git_url = 'https://github.com/comses/miracle.git'
-env.services = 'nginx redis supervisord'
+env.services = 'nginx14-nginx redis supervisord'
 env.docs_path = os.path.join(env.project_path, 'docs')
 env.virtualenv_path = '%s/.virtualenvs/%s' % (os.getenv('HOME'), env.project_name)
 env.ignored_coverage = ('test', 'settings', 'migrations', 'fabfile', 'wsgi',)
@@ -67,9 +67,10 @@ def _virtualenv(executor, *commands, **kwargs):
         executor(command, **kwargs)
 
 
+@roles('prod')
 @task
 def host_type():
-    run('uname -a')
+    run('lsb_release -a')
 
 
 @roles('localhost')
@@ -154,7 +155,7 @@ def rebuild_schema():
         execute(initialize_database_schema)
 
 
-def _restart_command(systemd=True):
+def _restart_command(systemd=False):
     """
     Returns a systemctl or SysV system restart command for the services defined in env.services
     """
@@ -223,6 +224,6 @@ def deploy(branch, user):
                 'find %(static_root)s %(virtualenv_path)s -type f -exec chmod a+r {} \;' % env,
                 'find . -type d -exec chmod ug+x {} \;',
                 'chown -R %(deploy_user)s:%(deploy_group)s . %(static_root)s %(virtualenv_path)s' % env,
-                _restart_command(),
+                # _restart_command(), - disabled, just reload uwsgi
                 pty=True)
             execute(reload_uwsgi)
