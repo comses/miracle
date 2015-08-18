@@ -24,7 +24,7 @@ env.roledefs = {
 env.python = 'python'
 env.project_name = 'miracle'
 env.project_conf = 'miracle.settings'
-env.deploy_user = 'miracle'
+env.deploy_user = 'nginx'
 env.deploy_group = 'comses'
 env.db_user = 'miracle'
 env.databases = ('miracle_metadata', 'miracle_data')
@@ -36,7 +36,6 @@ env.virtualenv_path = '%s/.virtualenvs/%s' % (os.getenv('HOME'), env.project_nam
 env.ignored_coverage = ('test', 'settings', 'migrations', 'fabfile', 'wsgi',)
 env.solr_conf_dir = '/etc/solr/conf'
 env.vcs = 'git'
-env.vcs_command = 'export GIT_WORK_TREE=%(deploy_dir)s && git checkout -f %(branch)s && git pull'
 
 # django integration for access to settings, etc.
 django.project(env.project_name)
@@ -91,6 +90,7 @@ def test(name=None, coverage=False):
     if coverage:
         ignored = ['*{0}*'.format(ignored_pkg) for ignored_pkg in env.ignored_coverage]
         env.python = "coverage run --source='.' --omit=" + ','.join(ignored)
+    logger.debug("env: %s", env)
     local('%(python)s manage.py test %(apps)s' % env)
 
 
@@ -110,8 +110,8 @@ def staging():
 
 @roles('prod')
 @task
-def prod():
-    execute(deploy, 'master')
+def prod(user=None):
+    execute(deploy, 'master', user)
 
 
 @roles('localhost')
@@ -183,9 +183,9 @@ def sudo_chain(*commands, **kwargs):
     sudo(' && '.join(commands), **kwargs)
 
 
-@task(alias='reloaduwsgi')
+@task(alias='ruwsgi')
 def reload_uwsgi():
-    status_line = sudo("supervisorctl status")
+    status_line = sudo("supervisorctl status | grep %(project_name)s" % env)
     m = re.search('RUNNING(?:\s+)pid\s(\d+)', status_line)
     if m:
         uwsgi_pid = m.group(1)
@@ -199,9 +199,11 @@ def deploy(branch, user):
     """ deploys to an already setup environment """
     if user is None:
         user = env.deploy_user
+    env.user = user
     env.deploy_dir = env.deploy_parent_dir + env.project_name
     env.branch = branch
     env.virtualenv_path = '/comses/virtualenvs/{}'.format(env.project_name)
+    env.vcs_command = 'export GIT_WORK_TREE={} && git checkout -f {} && git pull'.format(env.deploy_dir, env.branch)
     if console.confirm("Deploying '%(branch)s' branch to host %(host)s : \n\r%(vcs_command)s\nContinue? " % env):
         with cd(env.deploy_dir):
             sudo_chain(

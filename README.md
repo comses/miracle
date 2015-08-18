@@ -1,12 +1,11 @@
 # Digging into Data: Mining relationships among variables in large datasets from complex systems
 
 ### Developer Linux Setup
-- install virtualenv via `pip install virtualenv` or via  Linux package manager, e.g, `apt-get install python-virtualenv virtualenvwrapper`
-- create a virtualenv via `virtualenv miracle` (or `mkvirtualenv miracle` if using virtualenvwrapper which provides
-  aliases for manipulating virtualenvs, `mkvirtualenv <virtualenv-name>` and `workon <virtualenv-name>`)
-- run `pip install -U pip` inside your virtualenv (avoids a bug in Ubuntu's packaged pip, may now be fixed)
-- run `pip install -Ur requirements.txt` to install Python dependencies. Add any additional python dependencies to this
-  file, preferably with frozen version numbers
+- install [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/) using pip or other package manager, e.g, `% apt-get install python-virtualenv virtualenvwrapper`
+- create a virtualenv: if using virtualenvwrapper, `% mkvirtualenv miracle` to create the virtualenv and `% workon miracle` to activate it, if using `virtualenvwrapper`
+- `% pip install -Ur requirements.txt` to install all Python dependencies. Add python dependencies to this file,
+  preferably with frozen version numbers
+- use [nodeenv](https://pypi.python.org/pypi/nodeenv), e.g., `% nodeenv -p` to set up an isolated nodejs environment
 - copy and customize the `local.py` settings file, e.g., `% cp miracle/settings/local.py.example miracle/settings/local.py`
 
 ### Setup the databases

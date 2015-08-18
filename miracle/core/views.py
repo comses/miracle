@@ -5,14 +5,13 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from extra_views import InlineFormSet, UpdateWithInlinesView
 from json import dumps
-from rest_framework import renderers, viewsets
+from rest_framework import renderers, viewsets, generics
 from rest_framework.response import Response
 
 from .models import Project, ActivityLog, MiracleUser, Dataset
 from .serializers import ProjectSerializer, UserSerializer, DatasetSerializer
 from .permissions import CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditDatasetProject
 
-from rest_framework import generics
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
 

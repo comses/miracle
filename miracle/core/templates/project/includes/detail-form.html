@@ -59,7 +59,7 @@ function ProjectModel(params) {
     }
     data = params.data;
     model = ko.mapping.fromJS(params.data);
-    model.users = ko.observable({{users_json|safe}})
+    model.users = ko.observableArray({{users_json|safe}})
     model.saveUrl = ko.pureComputed(function() {
         var projectId = model.id();
         return (projectId === -1) ? {% url 'core:project-list' %} : {% url 'core:project-list' %} + projectId + "/";
