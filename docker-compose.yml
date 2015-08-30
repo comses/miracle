@@ -1,0 +1,34 @@
+deployr:
+  build: deployr
+  volumes:
+    - ./test_analyses/data:/home/miracle/deployr/7.4.1/deployr/external/data/public/data
+    - ./test_analyses/output:/home/miracle/deployr/7.4.1/deployr/external/data/public/output
+  ports: 
+    - "7400:7400"
+radiant:
+  build: radiant
+  volumes:
+    - ./test_analyses/apps:/srv/shiny-server/apps
+    - ./test_analyses/data:/srv/shiny-server/data
+    - ./test_analyses/output:/srv/shiny-server/output
+  ports: 
+    - "3838:3838"
+db:
+  image: sameersbn/postgresql:9.4-3
+  ports: 
+    - "5432:15432"
+  environment:
+    DB_USER: miracle
+    DB_PASS: CHANGEME
+    DB_NAME: 'miracle_data,miracle_metadata'
+    PSQL_TRUST_LOCALNET: true
+django:
+  build: django
+  command: python /code/manage.py runserver 0.0.0.0:8000
+  volumes:
+    - ./django:/code
+    - ./test_analyses:/opt/miracle
+  ports:
+    - "8000:8000"
+  links:
+    - db

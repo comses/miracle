@@ -3,12 +3,12 @@
 # ctags index
 tags
 # ignore local settings
-miracle/settings/local.py
+django/miracle/settings/local.py
 # ignore database dumps, for now
 *.sql
 
 # ignore migrations
-miracle/core/migrations/*
+django/miracle/core/migrations/*
 
 # Google Drive
 *.DS_Store

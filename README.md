@@ -1,26 +1,74 @@
-# Digging into Data: Mining relationships among variables in large datasets from complex systems
+Installation Instructions
+=========================
 
-### Developer Linux Setup
-- install [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/) using pip or other package manager, e.g, `% apt-get install python-virtualenv virtualenvwrapper`
-- create a virtualenv: if using virtualenvwrapper, `% mkvirtualenv miracle` to create the virtualenv and `% workon miracle` to activate it, if using `virtualenvwrapper`
-- `% pip install -Ur requirements.txt` to install all Python dependencies. Add python dependencies to this file,
-  preferably with frozen version numbers
-- use [nodeenv](https://pypi.python.org/pypi/nodeenv), e.g., `% nodeenv -p` to set up an isolated nodejs environment
-- copy and customize the `local.py` settings file, e.g., `% cp miracle/settings/local.py.example miracle/settings/local.py`
+`test_analyses` Requirements
+----------------------------
 
-### Setup the databases
-- If you have `trust` permissions setup in your `pg_hba.conf` file, `fab setup` will setup and initialize the database. 
-  Otherwise, create the postgres databases `miracle_metadata` and `miracle_data` and the `miracle` postgres user
-  manually and then run `fab initdb` to initialize and create the schema.
-- **NOTE:** Schema is still evolving. Run `fab rebuild_schema` to drop the database, delete any generated migrations, and
-  rebuild the schema. If you have local data that you'd like to preserve, use `dumpdata` or use `makemigrations` and
-  `migrate` to try to migrate it to the new schema.
-  
-### load test data
-Data fixtures in `miracle/core/fixtures` can be loaded via `%./manage.py loaddata <fixture-name-without-file-extension>`. 
+`test_analyses` should contain sample analyses and match the layout in the LUXE
+example.
 
+Software Requirements
+---------------------
 
-### Codebase Status
-[![Build Status](https://travis-ci.org/comses/miracle.svg?branch=master)](https://travis-ci.org/comses/miracle)
-[![Coverage Status](https://coveralls.io/repos/comses/miracle/badge.svg)](https://coveralls.io/r/comses/miracle)
-[![Code Health](https://landscape.io/github/comses/miracle/master/landscape.svg?style=flat)](https://landscape.io/github/comses/miracle/master)
+- docker
+- docker-compose
+- boot2docker (Windows and Mac OSX)
+
+If you want to run on a virtual machine only vagrant is required.
+
+Permission Requirements
+-----------------------
+
+In order for the volumes bound to the containers to be writable we need to have
+the UID on the docker container to match the UID on the host machine. The 
+default UID value for the `django`, `radiant` and `deployr` containers is 1000.
+The UID value can be changed by adding `user_id` environment variables to the
+`docker-compose.yml` file.
+
+#### Alternative Approach
+
+Instead of matching UIDs with the host and containers data only containers
+could be used. These still may require UID matching if the container operating
+systems are different because the operating system starts the UIDs at different
+places (usually 500 or 1000).
+
+Prepare the Images
+------------------
+
+In this directory
+
+```bash
+./build-images.sh
+```
+
+Prepare the Containers
+----------------------
+
+Initialize the database
+
+```bash
+sudo docker-compose run django fab initdb
+```
+
+Create the other containers and run them
+
+```bash
+sudo docker-compose up
+```
+
+Running the Containers
+----------------------
+
+Run the containers after they have been created.
+
+```bash
+./start-containers.sh
+```
+
+`sudo docker-compose start` does not work because Django dies on start up
+if there is no database connectivity (so a 20s sleep is added).
+
+Use `sudo docker-compose stop` to stop the containers and 
+`sudo docker-compose rm` to remove stopped containers.
+
+See the `docker-compose` documentation for more information

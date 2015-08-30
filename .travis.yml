@@ -11,10 +11,10 @@ notifications:
     email: comses-dev@googlegroups.com
 env: DB=postgres
 before_script:
-    - cp miracle/settings/local.py.example miracle/settings/local.py
-    - fab setup
+    - cp django/miracle/settings/travis_local.py.example django/miracle/settings/local.py
+    - cd django && fab setup
 install: 
-    - pip install -r requirements.txt
+    - pip install -r django/requirements.txt
 script: fab coverage
 after_success:
     - coveralls
