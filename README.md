@@ -44,16 +44,17 @@ In this directory
 Prepare the Containers
 ----------------------
 
-Initialize the database
-
-```bash
-sudo docker-compose run django fab initdb
-```
-
 Create the other containers and run them
 
 ```bash
 sudo docker-compose up
+```
+
+Apply migrations
+
+```bash
+# assuming django container is called miracle_django_1
+sudo docker exec -it miracle_django_1 python manage.py migrate
 ```
 
 Running the Containers
