@@ -1,9 +1,33 @@
 {% extends "base.html" %}
 
 {% block content %}
-{{ id }}
-
-{{ name }}
-
-{{ uploaded_file }}
+<div class='panel panel-primary'>
+    <div class='panel-heading'>
+        <h3 class='panel-title'><i class='fa fa-database'></i> {{name}} {{id}}</h3>
+    </div>
+    <div class='panel-body'>
+        <div class='well'>
+            Include metadata + provenance here. Could use D3.js to render the JSON <br>
+            Uploaded file: {{uploaded_file}}
+        </div>
+        <a class='btn btn-sm btn-warning' href='{{ uploaded_file }}'><i class='fa fa-download'></i> Download</a>
+    </div>
+</div>
 {% endblock content %}
+
+{% block javascript %}
+{% include "includes/ko.js" %}
+{% include "includes/csrf.js" %}
+<script>
+$(function() {
+    var DatasetViewModel = function() {
+        var self = this;
+        self.analyze = function() {
+            alert("run analysis on this dataset");
+        }
+    }
+    var viewModel = new DatasetViewModel();
+    ko.applyBindings(viewModel);
+});
+</script>
+{% endblock javascript %}
