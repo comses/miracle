@@ -28,10 +28,11 @@ def process_uploaded_analysis(fullpath, project, creator):
 
     :return:
     """
-    analysis = Analysis(name=path.basename(fullpath),
-                        project=project,
-                        data_path=fullpath)
-    analysis.save()
+    analysis = Analysis.objects.create(
+        creator=creator,
+        name=path.basename(fullpath),
+        project=project,
+        uploaded_file=fullpath)
     extract = Extractor.from_archive(fullpath, analysis_name=str(analysis.id))
     analysis_metadata = extract.extract_metadata()
     dataset_metadata = analysis_metadata.dataset_metadata

@@ -282,6 +282,7 @@ class Analysis(MiracleMetadataMixin):
     project = models.ForeignKey(Project, related_name="analyses")
     provenance = PostgresJSONField()
     uploaded_file = models.FileField(upload_to=_local_analysis_path)
+    archived_file = models.FileField(blank=True, help_text=_("Archived script file to be run in a sandbox."))
     file_type = models.CharField(max_length=128, choices=FileType, default=FileType.R)
     authors = models.ManyToManyField(Author)
 

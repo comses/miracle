@@ -28,7 +28,7 @@ class BaseMiracleTest(TestCase):
         self.logger = logger
         self.default_user = self.create_user()
         self.default_project = self.create_project()
-        self.default_analysis = self.create_analysis()
+        self.default_analysis = self.create_analysis(creator=self.default_user)
 
     @property
     def default_project_name(self):
@@ -63,18 +63,19 @@ class BaseMiracleTest(TestCase):
             password=password
         )
 
-    def create_analysis(self, name=None, project=None, datapath=None):
+    def create_analysis(self, name=None, project=None, datapath=None, creator=None):
         if name is None:
             name = self.default_analysis_name
         if datapath is None:
             datapath = os.path.join("/vagrant/miracle/core/tests/data", name)
         if project is None:
             project = self.default_project
-        analysis = Analysis(name=name,
-                            project=project,
-                            data_path=datapath)
-        analysis.save()
-        return analysis
+        if creator is None:
+            creator = self.default_user
+        return Analysis.objects.create(creator=creator,
+                                       name=name,
+                                       project=project,
+                                       uploaded_file=datapath)
 
     def create_project(self, name=None, user=None):
         if name is None:
@@ -93,7 +94,7 @@ class BaseMiracleTest(TestCase):
             creator = project.creator
         if datafile is None:
             datafile = self.get_test_data('head.csv')
-        dataset = Dataset(project=project, name=name, creator=creator, datafile=datafile)
+        dataset = Dataset(project=project, name=name, creator=creator, uploaded_file=datafile)
         dataset.full_clean()
         dataset.save()
         return dataset
