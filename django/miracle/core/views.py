@@ -8,9 +8,9 @@ from json import dumps
 from rest_framework import renderers, viewsets, generics
 from rest_framework.response import Response
 
-from .models import Project, ActivityLog, MiracleUser, Dataset
-from .serializers import ProjectSerializer, UserSerializer, DatasetSerializer
-from .permissions import CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditDatasetProject
+from .models import Project, ActivityLog, MiracleUser, Dataset, Analysis
+from .serializers import ProjectSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer
+from .permissions import CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource
 
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.views import APIView
@@ -63,10 +63,24 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
         return self.request.user
 
 
+class AnalysisViewSet(viewsets.ModelViewSet):
+    serializer_class = AnalysisSerializer
+    renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
+    permission_classes = (CanViewReadOnlyOrEditProjectResource,)
+
+    def get_queryset(self):
+        # FIXME: replace with viewable QuerySet
+        return Analysis.objects.all()
+
+    @property
+    def template_name(self):
+        return 'analysis/{}.html'.format(self.action)
+
+
 class DatasetViewSet(viewsets.ModelViewSet):
     serializer_class = DatasetSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
-    permission_classes = (CanViewReadOnlyOrEditDatasetProject,)
+    permission_classes = (CanViewReadOnlyOrEditProjectResource,)
 
     @property
     def template_filename(self):

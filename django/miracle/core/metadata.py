@@ -4,18 +4,19 @@ Read files and extract metadata
 import csv
 import os
 import collections
-from os import path
 import dateutil.parser as date
 from enum import Enum
+from os import path
+from django.conf import settings
 from django.contrib.gis.gdal import DataSource, GDALRaster, GDALException
 
 from hachoir_core.cmd_line import unicodeFilename
 from hachoir_parser import createParser
 from hachoir_metadata import extractMetadata
 
-from ..settings import MIRACLE_ANALYSIS_DIRECTORY
 
 DatasetTypes = Enum('DatasetTypes', 'none archive code data document vizualization')
+
 
 class AnalysisMetadata(object):
     def __init__(self, dataset_metadata, log):
@@ -29,7 +30,7 @@ class AnalysisMetadata(object):
 class Metadata(object):
 
     def __init__(self, fullpath, datatype, properties, layers):
-        self.path = path.relpath(fullpath, MIRACLE_ANALYSIS_DIRECTORY)
+        self.path = path.relpath(fullpath, settings.MIRACLE_ANALYSIS_DIRECTORY)
         self.datatype = datatype
         self.properties = properties
         self.layers = layers

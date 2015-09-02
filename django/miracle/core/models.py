@@ -192,7 +192,11 @@ class Project(MiracleMetadataMixin):
 
     @property
     def path(self):
-        return os.path.join(settings.MIRACLE_DATA_DIRECTORY, 'project', str(self.pk))
+        return os.path.join(settings.MIRACLE_DATA_DIRECTORY, 'project', str(self.slug))
+
+    @property
+    def uploads_path(self):
+        return os.path.join(self.path, 'uploads')
 
     @property
     def group_name(self):
@@ -261,13 +265,28 @@ class Author(models.Model):
     attributes = PostgresJSONField()
 
 
-class Analysis(models.Model):
+def _local_analysis_path(analysis, filename):
+    return os.path.join(analysis.project.upload_path, 'scripts', filename)
 
-    name = models.CharField(max_length=255, blank=True)
+
+class Analysis(MiracleMetadataMixin):
+
+    FileType = Choices(
+        ('R', _('R script')),
+        ('Julia', _('Julia script')),
+        ('Python', _('Python script')),
+        ('Perl', _('Perl script')),
+    )
+
+    slug = AutoSlugField(populate_from='name', unique=True)
     project = models.ForeignKey(Project, related_name="analyses")
     provenance = PostgresJSONField()
-    data_path = models.TextField(blank=True, help_text=_("What is this for?"))
+    uploaded_file = models.FileField(upload_to=_local_analysis_path)
+    file_type = models.CharField(max_length=128, choices=FileType, default=FileType.R)
     authors = models.ManyToManyField(Author)
+
+    def __unicode__(self):
+        return u'{} {}'.format(self.name, self.uploaded_file.url)
 
 
 class DatasetQuerySet(models.query.QuerySet):
@@ -300,14 +319,21 @@ class DatasetManager(PassThroughManager):
 
 
 def _local_dataset_path(dataset, filename):
-    return os.path.join(dataset.project.path, 'dataset', filename)
+    return os.path.join(dataset.uploads_path, filename)
 
+def _local_datatable_path(datatable, filename):
+    return os.path.join(datatable.dataset.uploads_path, 'datatables', filename)
 
 class Dataset(MiracleMetadataMixin):
-
     """
-    Assumes one file per Dataset. A Dataset can consist of multiple DataTables, e.g., an Excel file with multiple sheets
-    is a single Dataset with multiple DataTables, likewise an Access database.
+    A Dataset maintains a schema + metadata for its associated DataTables. For example, an Excel file with N sheets
+    where each sheet has a different schema would be represented as N Datasets with single DataTables. Likewise,
+    a directory with 600 data files that all share the same schema would be represented as a single Dataset with 600
+    DataTables. A Dataset always has at least one DataTable, and a DataTable corresponds to a single file.
+
+    Although we aren't promising to be a digital preservation repository we should still loosely hold the concepts of
+    Submission Information Packages, Archival Information Packages, and Dissemination Information Packages as defined by
+    the OAIS reference model (http://www2.archivists.org/groups/standards-committee/open-archival-information-system-oais)
     """
 
     slug = AutoSlugField(populate_from='name', unique=True)
@@ -315,12 +341,16 @@ class Dataset(MiracleMetadataMixin):
     provenance = PostgresJSONField()
     authors = models.ManyToManyField(Author)
     analyses = models.ManyToManyField(Analysis)
+    uploaded_file = models.FileField(upload_to=_local_dataset_path, help_text=_("The original uploaded dataset file (loosely corresponding to a SIP)"))
     data_type = models.CharField(max_length=50, blank=True)
-    properties = PostgresJSONField()
+    properties = PostgresJSONField(help_text=_("Schema and metadata for this Dataset, applicable to all child DataTables"))
     url = models.URLField(blank=True)
-    datafile = models.FileField(upload_to=_local_dataset_path)
 
     objects = DatasetManager.for_queryset_class(DatasetQuerySet)()
+
+    @property
+    def uploads_path(self):
+        return os.path.join(dataset.project.uploads_path, 'datasets', dataset.slug)
 
     def get_absolute_url(self):
         return u"/dataset/{}".format(self.slug)
@@ -337,7 +367,7 @@ class DataTableManager(PassThroughManager):
     def create(self, *args, **kwargs):
         dataset = kwargs.get('dataset', None)
         if dataset is None:
-            raise ValidationError("DataTables must be associated with a Dataset")
+            raise ValidationError("Every DataTable must be associated with a Dataset")
         kwargs.setdefault('creator', dataset.creator)
         return super(DataTableManager, self).create(*args, **kwargs)
 
@@ -350,6 +380,7 @@ class DataTable(MiracleMetadataMixin, DatasetConnectionMixin):
     """
 
     dataset = models.ForeignKey(Dataset, related_name='tables')
+    datafile = models.FileField(help_text=_("The archived plaintext file corresponding to this DataTable"))
     objects = DataTableManager.for_queryset_class(DataTableQuerySet)()
 
     @property

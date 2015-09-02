@@ -7,10 +7,10 @@ be called directly.
 
 import shutil
 from os import path
+from django.conf import settings
 from .models import Analysis, Dataset, DataTable, DataTableColumn, User, Project
 from .metadata import Metadata, load_metadata
 from .extractors import Extractor
-from ..settings import MIRACLE_ANALYSIS_DIRECTORY
 
 
 def process_uploaded_analysis(fullpath, project, creator):
@@ -65,13 +65,13 @@ def process_uploaded_dataset(fullpath, analysis, project, creator, copy=False):
 
 def _move_dataset_to_analysis(fullpath_dataset, analysis_name, copy=False):
     filename = path.basename(fullpath_dataset)
-    dest_folder = path.join(MIRACLE_ANALYSIS_DIRECTORY,
-                     analysis_name,
-                     "data")
+    dest_folder = path.join(settings.MIRACLE_ANALYSIS_DIRECTORY,
+                            analysis_name,
+                            "data")
     if path.exists(dest_folder):
         shutil.move(fullpath_dataset, path.join(dest_folder, filename))
     else:
-        dest = path.join(MIRACLE_ANALYSIS_DIRECTORY,
+        dest = path.join(settings.MIRACLE_ANALYSIS_DIRECTORY,
                          analysis_name,
                          filename)
         if copy:

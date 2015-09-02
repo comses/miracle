@@ -10,7 +10,7 @@
 <div class='row'>
     <div class='col-md-3'>
         {# sidebar #}
-        <ul class='nav nav-pills nav-stacked' role='tablist'>
+        <ul class='nav nav-pills nav-stacked' role='tablist' id='project-tab'>
             <li role='presentation' class='active'>
                 <a href='#overview' aria-controls='overview' role='tab' data-toggle='tab'><i class='fa fa-table'></i> Overview</a>
             </li>
@@ -22,9 +22,6 @@
             </li>
             <li role='presentation'>
                 <a href='#upload' aria-controls='upload' role='tab' data-toggle='tab'><i class='fa fa-cloud-upload'></i> Upload datasets</a>
-            </li>
-            <li role='presentation'>
-                <a href='{% url "core:dashboard" %}'><i class='fa fa-dashboard'></i> Return to dashboard</a>
             </li>
         </ul>
     </div>
@@ -53,11 +50,49 @@
                     </div>
                     <div role='tabpanel' class='tab-pane' id='explorer'>
                         <div class='embed-responsive embed-responsive-4by3'>
-                            <iframe height='900px' class='radiant' src='http://miracle-devel.sharcnet.ca/radiant/?project=sample'></iframe>
+                            <div class='well'>
+                                Add local radiant iframe.
+                            </div>
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='analysis'>
-                        Data analysis and scripts
+                        {# FIXME: extract into a component (react or KO) #}
+                        <div class='panel panel-primary'>
+                            <div class='panel-heading'>
+                                <h3 class='panel-title'><i class='fa fa-code'></i> Analyses</h3>
+                            </div>
+                            <div class='panel-body'>
+                                <ul class='list-group' data-bind='foreach: analyses'>
+                                    <li class='list-group-item'>
+                                        <a class='btn btn-sm btn-info' data-bind='click: $root.runAnalysis.bind($data)'><i class='fa fa-play'></i> Run this analysis</a>
+                                        <a data-bind='attr: {href: $data}, text: $data'></a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class='panel panel-primary'>
+                            <div class='panel-heading'>
+                                <h3 class='panel-title'><i class='fa fa-database'></i> Data</h3>
+                            </div>
+                            <div class='panel-body'>
+                                <ul class='list-group' data-bind='foreach: datasets'>
+                                    <li class='list-group-item'>
+                                        <a class='btn btn-sm btn-info' data-bind='attr: {href: $data}'>
+                                            <i class='fa fa-download'></i> Download
+                                        </a>
+                                        <a data-bind='attr: {href: $data}, text: $data'></a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class='panel panel-primary'>
+                            <div class='panel-heading'>
+                                <h3 class='panel-title'><i class='fa fa-area-chart'></i> Outputs</h3>
+                            </div>
+                            <div class='panel-body'>
+                                Placeholder for analysis outputs (PNGs, etc)
+                            </div>
+                        </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
                         Add dataset upload for project {{project}}<br>
@@ -87,7 +122,21 @@ $(function() {
         paramName: "file",
     };
     var model = new ProjectModel({data: {{ project_json|safe}}} );
+    model.runAnalysis = function(analysis) {
+        console.debug("running analysis on: " + analysis);
+    };
     ko.applyBindings(model);
+    $('#project-tab a').click(function(e) {
+        e.preventDefault();
+        $(this).tab('show');
+    });
+    $('ul.nav-pills > li > a').on('shown.bs.tab', function (e) {
+        var href = $(e.target).attr('href');
+        var id = href.substr(1);
+        window.location.hash = id;
+    });
+    var hash = window.location.hash;
+    $('#project-tab a[href="' + hash + '"]').tab('show');
 });
 </script>
 {% endblock %}

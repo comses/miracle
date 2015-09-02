@@ -16,12 +16,12 @@ class CanViewReadOnlyOrEditProject(permissions.IsAuthenticatedOrReadOnly):
         )
 
 
-class CanViewReadOnlyOrEditDatasetProject(permissions.IsAuthenticatedOrReadOnly):
+class CanViewReadOnlyOrEditProjectResource(permissions.IsAuthenticatedOrReadOnly):
 
-    def has_object_permission(self, request, view, dataset):
+    def has_object_permission(self, request, view, resource):
         user = request.user
         return (
             user.is_superuser or
-            (dataset.published and request.method in permissions.SAFE_METHODS) or
-            (user.is_authenticated() and dataset.project.has_group_member(user))
+            (resource.published and request.method in permissions.SAFE_METHODS) or
+            (user.is_authenticated() and resource.project.has_group_member(user))
         )

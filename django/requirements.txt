@@ -2,16 +2,16 @@
 nodeenv
 # for web server
 requests>=2.5.1
-Django==1.8.3
+Django==1.8.4
 Fabric==1.10.2
-django-bootstrap3==6.2.0
+django-bootstrap3==6.2.2
 django-model-utils==2.3.1
 python-coveralls==2.5.0
 psycopg2==2.6.1
 python-social-auth==0.2.12
-djangorestframework==3.2.2
-# for better django shell_plus
-django-extensions==1.5.5
+djangorestframework==3.2.3
+# better django shell_plus
+django-extensions==1.5.6
 django-extra-views==0.7.1
 raven==5.5.0
 dealer==2.0.4

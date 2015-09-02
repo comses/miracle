@@ -25,4 +25,5 @@ urlpatterns = [
 router = routers.DefaultRouter()
 router.register(r'projects', views.ProjectViewSet, base_name='project')
 router.register(r'datasets', views.DatasetViewSet, base_name='dataset')
+router.register(r'analyses', views.AnalysisViewSet, base_name='analysis')
 urlpatterns += router.urls

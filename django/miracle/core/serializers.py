@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from collections import defaultdict
 from rest_framework import serializers
-from .models import (Project, Dataset,)
+from .models import (Project, Dataset, Analysis)
 
 import logging
 
@@ -19,9 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username',
-                  'email',
-                  )
+        fields = ('username', 'email',)
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -35,6 +33,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     status = serializers.CharField(read_only=True)
     number_of_datasets = serializers.IntegerField(read_only=True)
     datasets = serializers.HyperlinkedRelatedField(many=True, view_name='core:dataset-detail', read_only=True)
+    analyses = serializers.HyperlinkedRelatedField(many=True, view_name='core:analysis-detail', read_only=True)
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)
@@ -88,7 +87,8 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     @property
     def modified_data_text(self):
-        _convert = lambda v: 'None' if not v else v
+        def _convert(v):
+            return 'None' if not v else v
         md = self.modified_data
         md_list = ['{}: {} -> {}'.format(key, _convert(pair[0]), _convert(pair[1])) for key, pair in md.items()]
         return ' | '.join(md_list)
@@ -97,9 +97,17 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
 
 
+class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
+    project = serializers.ReadOnlyField(source='project.name')
+
+    class Meta:
+        model = Analysis
+        fields = ('id', 'name', 'uploaded_file', 'project', 'file_type')
+
+
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
 
     class Meta:
         model = Dataset
-        fields = ('id', 'name', 'datafile', 'project')
+        fields = ('id', 'name', 'uploaded_file', 'project')
