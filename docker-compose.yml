@@ -1,8 +1,15 @@
+deployr_data:
+  build: deployr
+  volumes:
+    - /home/miracle/deployr/7.4.1/deployr/database
+  command: echo deployr_data
 deployr:
   build: deployr
   volumes:
     - ./test_analyses/data:/home/miracle/deployr/7.4.1/deployr/external/data/public/data
     - ./test_analyses/output:/home/miracle/deployr/7.4.1/deployr/external/data/public/output
+  volumes_from:
+    - deployr_data
   ports: 
     - "7400:7400"
 radiant:
@@ -27,7 +34,7 @@ django:
   command: python /code/manage.py runserver 0.0.0.0:8000
   volumes:
     - ./django:/code
-    - ./test_analyses:/opt/miracle
+    - ./test_analyses:/opt/miracle/analyses
   ports:
     - "8000:8000"
   links:
