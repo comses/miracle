@@ -31,6 +31,9 @@
     },
     "scripts": {
         "lint": "jshint miracle/static/app/**.js",
-        "test": "mocha catalog/static/js/tests/"
+        "test": "mocha miracle/static/js/tests/",
+        "build": "browserify -t reactify js/app.js -o miracle/static/js/miracle.min.js",
+        "prepublish": "npm run build"
+
     }
 }
