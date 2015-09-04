@@ -19,9 +19,6 @@ ipython
 django-debug-toolbar
 pytest
 # for metadata
-hachoir-metadata
-hachoir-core
-hachoir-parser
 pyunpack==0.0.3
 patool==1.8
 python-dateutil==2.4.2

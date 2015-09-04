@@ -10,10 +10,6 @@ from os import path
 from django.conf import settings
 from django.contrib.gis.gdal import DataSource, GDALRaster, GDALException
 
-from hachoir_core.cmd_line import unicodeFilename
-from hachoir_parser import createParser
-from hachoir_metadata import extractMetadata
-
 
 DatasetTypes = Enum('DatasetTypes', 'none archive code data document vizualization')
 
@@ -26,6 +22,7 @@ class AnalysisMetadata(object):
     def __repr__(self):
         return "AnalysisMetadata(%s, %s)" % \
                (self.dataset_metadata, self.log)
+
 
 class Metadata(object):
 
@@ -40,6 +37,7 @@ class Metadata(object):
               (self.__class__, self.path, self.datatype, self.properties, self.layers)
         return res
 
+
 class GDALLoader(object):
     @staticmethod
     def from_file(path):
@@ -48,7 +46,8 @@ class GDALLoader(object):
                       "height": datasource.height}
         try:
             properties["srs"] = datasource.srs
-        except GDALException: pass
+        except GDALException:
+            pass
         layers = [GDALLoader.from_layer(band) for band in datasource.bands]
 
         return Metadata(path, "data", properties, layers)
@@ -79,6 +78,7 @@ class OGRLoader(object):
                 for (field, datatype) in zip(layer.fields, layer.field_types)}
 
 
+"""
 class MP4Loader(object):
     @staticmethod
     def from_file(path):
@@ -96,11 +96,14 @@ class MP4Loader(object):
         layers = []
 
         return Metadata(path, datatype, properties, layers)
+"""
+
 
 class ArchiveLoader(object):
     @staticmethod
     def from_file(path):
         return Metadata(path, DatasetTypes.archive, {}, [])
+
 
 class TabularLoader(object):
     @staticmethod
@@ -116,12 +119,12 @@ class TabularLoader(object):
             data = csv.reader(f)
 
             # extract the metadata
-            next(data) # ignore Netlogo Version
+            next(data)  # ignore Netlogo Version
             file_name = next(data)
             model_name = next(data)
-            next(data) # ignore timestamp of last run
-            next(data) # ignore slider name ranges
-            next(data) # ignore slider ranges
+            next(data)  # ignore timestamp of last run
+            next(data)  # ignore slider name ranges
+            next(data)  # ignore slider ranges
 
             colnames = next(data)
             datasample = next(data)
@@ -143,7 +146,7 @@ class TabularLoader(object):
             if has_header:
                 reader = csv.DictReader(f)
                 row = reader.next()
-                for  k, v in row.iteritems():
+                for k, v in row.iteritems():
                     layer[k] = TabularLoader._guess_type(v)
             else:
                 reader = csv.reader(f)
@@ -163,15 +166,12 @@ class TabularLoader(object):
             return "Real"
         except ValueError:
             pass
-
         try:
             date.parse(element)
             return "Date"
         except ValueError:
             pass
-
         return "String"
-
 
     @staticmethod
     def _is_netlogo(path):
@@ -217,7 +217,7 @@ class UnknownLoader(object):
 
 CONSTRUCTOR_FORMATS = {
     ArchiveLoader.from_file: frozenset([".bzip2", ".gzip", ".zip", ".7z", ".tar"]),
-    MP4Loader.from_file: frozenset([".mp4"]),
+    # MP4Loader.from_file: frozenset([".mp4"]),
     TabularLoader.from_file: frozenset([".csv", ".tsv"]),
     OGRLoader.from_file: frozenset([".shp"]),
     GDALLoader.from_file: frozenset([".jpg", ".gif", ".png", ".asc"]),
@@ -232,8 +232,10 @@ for constructor, formats in CONSTRUCTOR_FORMATS.iteritems():
     for fmt in formats:
         FORMAT_DISPATCH[fmt] = constructor
 
+
 def sanitize_ext(ext):
     return ext.lower()
+
 
 def load_metadata(path):
     """

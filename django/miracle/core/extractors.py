@@ -4,16 +4,18 @@ from os import path
 import shutil
 import collections
 
+from django.conf import settings
 from .metadata import load_metadata, AnalysisMetadata
-from ..settings import MIRACLE_ANALYSIS_DIRECTORY
 
 
-class MetaDataImportError(Exception): pass
+class MetaDataImportError(Exception):
+    pass
 
 
 def fileext_gen(file_names):
     for file_name in file_names:
         yield os.path.splitext(file_name)
+
 
 class SHPFileGlob(object):
     """
@@ -84,6 +86,7 @@ class FileGlobber(object):
 
         return AnalysisMetadata(metadata, log)
 
+
 class Extractor(object):
     """
     Create one extractor per uploaded analysis
@@ -111,7 +114,7 @@ class Extractor(object):
         if ext not in Extractor.ARCHIVE_FORMATS:
             raise ValueError("{} format not supported".format(ext))
 
-        analysis_path = os.path.join(MIRACLE_ANALYSIS_DIRECTORY, analysis_name)
+        analysis_path = os.path.join(settings.MIRACLE_ANALYSIS_DIRECTORY, analysis_name)
 
         if not path.exists(analysis_path):
             pyunpack.Archive(fullpath).extractall(analysis_path, auto_create_dir=True)
@@ -126,7 +129,7 @@ class Extractor(object):
         """
         Move all analysis files up one directory, if only one subdirectory
         """
-        analysis_path = path.join(MIRACLE_ANALYSIS_DIRECTORY, analysis_name)
+        analysis_path = path.join(settings.MIRACLE_ANALYSIS_DIRECTORY, analysis_name)
         dirs = os.listdir(analysis_path)
         if "__MACOSX" in dirs:
             dirs.remove("__MACOSX")
@@ -136,7 +139,7 @@ class Extractor(object):
 
             for file in files:
                 shutil.move(path.join(analysis_path, directory, file),
-                       path.join(analysis_path, file))
+                            path.join(analysis_path, file))
 
             os.rmdir(path.join(analysis_path, directory))
 

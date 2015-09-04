@@ -30,7 +30,7 @@
         ]
     },
     "scripts": {
-        "lint": "jshint miracle/static/app/**.js",
+        "lint": "jshint js/**.js",
         "test": "mocha miracle/static/js/tests/",
         "build": "browserify -t reactify js/app.js -o miracle/static/js/miracle.min.js",
         "prepublish": "npm run build"
