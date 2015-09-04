@@ -1,14 +1,5 @@
 var React = require('react');
 
-class ProjectDetail {
-    render() {
-        return (
-            <div>
-                Project Detail View
-            </div>
-        );
-    }
-};
 class Dashboard extends React.Component {
     render() {
         return (
@@ -19,4 +10,4 @@ class Dashboard extends React.Component {
     }
 }
 
-module.exports = [Dashboard, ProjectDetail];
+module.exports = Dashboard;

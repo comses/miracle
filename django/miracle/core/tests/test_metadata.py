@@ -23,10 +23,12 @@ class MetadataTest(BaseMiracleTest):
         self.assertEqual(data.properties, {'width': 192, 'height': 256})
         self.assertEqual(data.layers, [{'description': u''}, {'description': u''}, {'description': u''}])
 
+    """ XXX: disabled for the interim, introduces hachoir dependency
     def test_mp4(self):
         data = load_metadata(self.get_test_data("small.mp4"))
         self.assertEqual(data.properties, {'width': u'560 pixels', 'bit_rate': None, 'height': u'320 pixels'})
         self.assertFalse(data.layers)
+    """
 
     def test_headeredcsv(self):
         data = load_metadata(self.get_test_data("head.csv"))
