@@ -281,13 +281,43 @@ class Analysis(MiracleMetadataMixin):
     slug = AutoSlugField(populate_from='name', unique=True)
     project = models.ForeignKey(Project, related_name="analyses")
     provenance = PostgresJSONField()
+    input_parameters = PostgresJSONField(help_text=_("Supported input parameters for this analysis script"))
     uploaded_file = models.FileField(upload_to=_local_analysis_path)
     archived_file = models.FileField(blank=True, help_text=_("Archived script file to be run in a sandbox."))
     file_type = models.CharField(max_length=128, choices=FileType, default=FileType.R)
     authors = models.ManyToManyField(Author)
 
+    def get_deployr_input_dict(self, values=None):
+        if values is None:
+            values = {}
+        return dict(
+            (p.name, {'type': 'primitive', 'rclass': p.data_type, 'value': values.get(p.name, p.default_value)})
+            for p in self.parameters.all()
+        )
+
     def __unicode__(self):
         return u'{} {}'.format(self.name, self.uploaded_file.url)
+
+
+class AnalysisParameter(models.Model):
+
+    # XXX: currently 1:1 with R data types, support for other types of analysis scripts require additional mappings
+    ParameterType = Choices(
+        ('integer', _('integer')),
+        ('logical', _('boolean')),
+        ('numeric', _('floating point number')),
+        ('character', _('character')),
+        ('complex', _('complex numbers')),
+    )
+
+    analysis = models.ForeignKey(Analysis, related_name='parameters')
+    name = models.CharField(max_length=255, help_text=_("Input parameter name used in this analysis script."))
+    description = models.TextField(blank=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    last_modified = models.DateTimeField(auto_now=True)
+    data_type = models.CharField(max_length=128, choices=ParameterType, default=ParameterType.character)
+    default_value = models.CharField(max_length=255, blank=True,
+                                     help_text=_("default value for this analysis input parameter"))
 
 
 class DatasetQuerySet(models.query.QuerySet):
@@ -322,8 +352,10 @@ class DatasetManager(PassThroughManager):
 def _local_dataset_path(dataset, filename):
     return os.path.join(dataset.uploads_path, filename)
 
+
 def _local_datatable_path(datatable, filename):
     return os.path.join(datatable.dataset.uploads_path, 'datatables', filename)
+
 
 class Dataset(MiracleMetadataMixin):
     """

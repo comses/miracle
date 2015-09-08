@@ -1,6 +1,6 @@
 from django.core.exceptions import ValidationError
 from .common import BaseMiracleTest, logger
-from ..models import (DataTableColumn, DatasetConnectionMixin, Group, Project)
+from ..models import (DataTableColumn, DatasetConnectionMixin, Group, Project, AnalysisParameter)
 import string
 
 """
@@ -124,3 +124,35 @@ class BookmarkedProjectTest(BaseMiracleTest):
         self.assertEqual(user.bookmarked_projects.all()[0].project, project)
         self.assertEqual(second_user.bookmarked_projects.all()[0].project, second_project)
         self.assertEqual(second_user.bookmarked_projects.count(), 1)
+
+
+class AnalysisParametersTest(BaseMiracleTest):
+
+    def test_input_parameter_values(self):
+        test_parameters = {
+            'n': (AnalysisParameter.ParameterType.numeric, 17.1),
+            'i': (AnalysisParameter.ParameterType.integer, 16),
+            'c': (AnalysisParameter.ParameterType.character, 'Foof'),
+            'b': (AnalysisParameter.ParameterType.logical, True),
+        }
+        analysis = self.default_analysis
+        for name, v in test_parameters.items():
+            analysis.parameters.create(name=name, data_type=v[0], default_value=v[1])
+        d = analysis.get_deployr_input_dict()
+        # d should only contain default values and be of the form:
+        # { <parameter_name>: { 'type': 'primitive', 'rclass': <parameter_data_type>, 'value': <parameter_value> } }
+        for k, v in d.items():
+            # FIXME: add type coercion so AnalysisParameter values are converted to the appropriate value type?
+            self.assertEqual(unicode(v['value']), unicode(test_parameters[k][1]))
+
+        updated_test_parameters = {
+            'n': 23.4,
+            'i': 12,
+            'c': 'Groof',
+            'b': False,
+        }
+        d = analysis.get_deployr_input_dict(values=updated_test_parameters)
+        for k, v in d.items():
+            # FIXME: add type coercion so AnalysisParameter values are converted to the appropriate value type?
+            self.assertEqual(unicode(v['value']), unicode(updated_test_parameters[k]))
+
