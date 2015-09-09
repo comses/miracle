@@ -11,7 +11,7 @@ class ProjectListTest(BaseMiracleTest):
     def _get_project_list(self):
         return self.get('core:project-list', {'format': 'json'})
 
-    def test_project_list_view(self):
+    def test_project_list_access(self):
         response = self._get_project_list()
         # none of the initial projects have been published, should have no projects available to unauthenticated user
         self.assertFalse(json.loads(response.content))
@@ -28,9 +28,10 @@ class ProjectListTest(BaseMiracleTest):
             project.publish(self.default_user)
         response = self._get_project_list()
         projects = json.loads(response.content)
+        # all projects should now be accessible since they are published
         self.assertEqual(len(projects), 16)
         for project in Project.objects.all():
             project.unpublish(self.default_user)
         response = self._get_project_list()
+        # back to inaccessible
         self.assertFalse(json.loads(response.content))
-
