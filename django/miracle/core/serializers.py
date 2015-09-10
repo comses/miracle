@@ -99,10 +99,11 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
+    parameters = serializers.ReadOnlyField(source='input_parameters')
 
     class Meta:
         model = Analysis
-        fields = ('id', 'name', 'uploaded_file', 'project', 'file_type')
+        fields = ('id', 'name', 'uploaded_file', 'project', 'file_type', 'parameters')
 
 
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):

@@ -16,7 +16,8 @@
     "dependencies": {
         "react": "latest",
         "reflux": "latest",
-        "superagent": "latest"
+        "superagent": "latest",
+        "react-router": "latest"
     },
     "devDependencies": {
         "jshint": "latest",
@@ -31,8 +32,8 @@
     },
     "scripts": {
         "lint": "jshint js/**.js",
-        "test": "mocha miracle/static/js/tests/",
-        "build": "browserify -t reactify js/app.js -o miracle/static/js/miracle.min.js",
+        "test": "mocha js/tests/",
+        "build": "browserify -t reactify js/app.js -o miracle/static/js/react.min.js",
         "prepublish": "npm run build"
 
     }

@@ -83,15 +83,8 @@ class DatasetViewSet(viewsets.ModelViewSet):
     permission_classes = (CanViewReadOnlyOrEditProjectResource,)
 
     @property
-    def template_filename(self):
-        _action = self.action
-        if _action == 'retrieve':
-            _action = 'detail'
-        return '{}.html'.format(_action)
-
-    @property
     def template_name(self):
-        return 'dataset/{}'.format(self.template_filename)
+        return 'dataset/{}.html'.format(self.action)
 
     def get_queryset(self):
         return Dataset.objects.viewable(self.request.user)
@@ -104,15 +97,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     permission_classes = (CanViewReadOnlyOrEditProject,)
 
     @property
-    def template_filename(self):
-        _action = self.action
-        if _action == 'retrieve':
-            _action = 'detail'
-        return '{}.html'.format(_action)
-
-    @property
     def template_name(self):
-        return 'project/{}'.format(self.template_filename)
+        return 'project/{}.html'.format(self.action)
 
     def get_queryset(self):
         return Project.objects.viewable(self.request.user)

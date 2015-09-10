@@ -281,17 +281,23 @@ class Analysis(MiracleMetadataMixin):
     slug = AutoSlugField(populate_from='name', unique=True)
     project = models.ForeignKey(Project, related_name="analyses")
     provenance = PostgresJSONField()
-    input_parameters = PostgresJSONField(help_text=_("Supported input parameters for this analysis script"))
+    parameters_json = PostgresJSONField(help_text=_("Supported input parameters in JSON format for this analysis script"))
     uploaded_file = models.FileField(upload_to=_local_analysis_path)
     archived_file = models.FileField(blank=True, help_text=_("Archived script file to be run in a sandbox."))
     file_type = models.CharField(max_length=128, choices=FileType, default=FileType.R)
     authors = models.ManyToManyField(Author)
 
-    def get_deployr_input_dict(self, values=None):
+    @property
+    def input_parameters(self):
+# returns a list of dicts for easier JSON consumption
+        return [dict(name=k, **v) for k, v in self.get_deployr_parameters_dict().items()]
+
+
+    def get_deployr_parameters_dict(self, values=None):
         if values is None:
             values = {}
         return dict(
-            (p.name, {'type': 'primitive', 'rclass': p.data_type, 'value': values.get(p.name, p.default_value)})
+            (p.name, {'label': p.label, 'type': 'primitive', 'rclass': p.data_type, 'value': values.get(p.name, p.default_value)})
             for p in self.parameters.all()
         )
 
@@ -311,13 +317,17 @@ class AnalysisParameter(models.Model):
     )
 
     analysis = models.ForeignKey(Analysis, related_name='parameters')
-    name = models.CharField(max_length=255, help_text=_("Input parameter name used in this analysis script."))
+    name = models.CharField(max_length=255, help_text=_("Input parameter variable name used in this analysis script."))
+    label = models.CharField(max_length=255, help_text=_("Human-friendly label for this parameter."), blank=True)
     description = models.TextField(blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     data_type = models.CharField(max_length=128, choices=ParameterType, default=ParameterType.character)
     default_value = models.CharField(max_length=255, blank=True,
                                      help_text=_("default value for this analysis input parameter"))
+
+    def __unicode__(self):
+        return u'{} ({})'.format(self.label, self.name)
 
 
 class DatasetQuerySet(models.query.QuerySet):
@@ -383,7 +393,7 @@ class Dataset(MiracleMetadataMixin):
 
     @property
     def uploads_path(self):
-        return os.path.join(dataset.project.uploads_path, 'datasets', dataset.slug)
+        return os.path.join(self.project.uploads_path, 'datasets', self.slug)
 
     def get_absolute_url(self):
         return u"/dataset/{}".format(self.slug)

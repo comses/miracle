@@ -138,7 +138,7 @@ class AnalysisParametersTest(BaseMiracleTest):
         analysis = self.default_analysis
         for name, v in test_parameters.items():
             analysis.parameters.create(name=name, data_type=v[0], default_value=v[1])
-        d = analysis.get_deployr_input_dict()
+        d = analysis.get_deployr_parameters_dict()
         # d should only contain default values and be of the form:
         # { <parameter_name>: { 'type': 'primitive', 'rclass': <parameter_data_type>, 'value': <parameter_value> } }
         for k, v in d.items():
@@ -151,7 +151,7 @@ class AnalysisParametersTest(BaseMiracleTest):
             'c': 'Groof',
             'b': False,
         }
-        d = analysis.get_deployr_input_dict(values=updated_test_parameters)
+        d = analysis.get_deployr_parameters_dict(values=updated_test_parameters)
         for k, v in d.items():
             # FIXME: add type coercion so AnalysisParameter values are converted to the appropriate value type?
             self.assertEqual(unicode(v['value']), unicode(updated_test_parameters[k]))
