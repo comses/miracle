@@ -257,6 +257,11 @@ if not is_accessible(MIRACLE_ANALYSIS_DIRECTORY):
 
 MEDIA_URL = '/data/'
 
+# Celery settings: http://celery.readthedocs.org
+
+CELERY_BROKER_URL = 'redis+socket:///var/lib/redis/redis.sock'
+
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/

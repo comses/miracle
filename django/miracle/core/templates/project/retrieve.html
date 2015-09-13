@@ -109,7 +109,7 @@
         </div>
     </div>
 </div>
-<div class='modal fade' data-bind='modal: addAnalysisParameters'>
+<div class='modal fade' data-bind='modal: showAnalysisParameters'>
     <div class='modal-dialog'>
         <div class='modal-content'>
             <div class='modal-header'>
@@ -120,9 +120,9 @@
                 <form class='form form-horizontal' id='analysis-input-form' data-bind='foreach: analysisParameters'>
                     <span class='bg bg-info' data-bind='text: rclass'></span>
                     <div class='form-group'>
-                        <label for='value' class='control-label col-sm-2' data-bind='text: $data.label'></label>
+                        <label for='value' class='control-label col-sm-2' data-bind='text: label'></label>
                         <div class='col-sm-8'>
-                            <input type='text' data-bind='value: $data.value' class='form-control' id='value' required placeholder='Value'>
+                            <input type='number' step="any" data-bind='value: value' class='form-control' id='value' required placeholder='Value'>
                         </div>
                     </div>
                 </form>
@@ -149,23 +149,35 @@ $(function() {
         paramName: "file",
     };
     var model = new ProjectModel({data: {{ project_json|safe}}} );
-    model.addAnalysisParameters = ko.observable(false);
-    model.analysisParameters = ko.observableArray([]);
+    model.showAnalysisParameters = ko.observable(false);
+    model.selectedAnalysisId = ko.observable(-1);
+    model.analysisParameters = ko.observableArray();
     model.enterAnalysisParameters = function(analysis_detail_url) {
         console.debug("running analysis on: " + analysis_detail_url);
         $.get(analysis_detail_url, {format: 'json'}, function(response) {
             console.debug("success");
             console.debug(response);
             model.analysisParameters(response.parameters);
-            model.addAnalysisParameters(true);
+            model.selectedAnalysisId(response.id);
+            model.showAnalysisParameters(true);
         }).fail(function() {
             alert("Failed to retrieve analysis parameters");
         });
-        // show input arguments modal
     };
-    model.runAnalysis = function(analysis) {
+    model.runAnalysis = function(model) {
+        if (model.selectedAnalysisId() === -1) {
+            alert("No analysis selected.");
+            return;
+        }
         console.debug("running analysis with updated parameters");
-        console.debug(analysis.analysisParameters());
+        parameters = model.analysisParameters();
+        ko.utils.arrayForEach(parameters, function(parameter) {
+            parameter.value = parseFloat(parameter.value);
+        });
+        $.get('/analysis/run', {pk: model.selectedAnalysisId(), parameters: parameters}, function(response) {
+            console.debug("success");
+            console.debug(response);
+        });
     }
     ko.applyBindings(model);
     $('#project-tab a').click(function(e) {

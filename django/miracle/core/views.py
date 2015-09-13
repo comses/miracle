@@ -5,15 +5,15 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from extra_views import InlineFormSet, UpdateWithInlinesView
 from json import dumps
-from rest_framework import renderers, viewsets, generics
-from rest_framework.response import Response
-
-from .models import Project, ActivityLog, MiracleUser, Dataset, Analysis
-from .serializers import ProjectSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer
-from .permissions import CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource
-
+from rest_framework import renderers, viewsets, generics, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from .models import (Project, ActivityLog, MiracleUser, Dataset, Analysis)
+from .serializers import (ProjectSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer)
+from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
+
 
 import logging
 
@@ -61,6 +61,19 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
 
     def get_object(self):
         return self.request.user
+
+
+class RunAnalysisView(APIView):
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, pk=None, format=None):
+        """
+        Issues a celery request to run this analysis and return a 202 status URL to poll for the status of this request.
+        """
+        analysis = get_object_or_404(Analysis, pk=pk)
+
+
+
 
 
 class AnalysisViewSet(viewsets.ModelViewSet):
@@ -138,7 +151,8 @@ class FileUploadView(APIView):
         file_obj = request.FILES['file']
         project = get_object_or_404(Project, pk=request.data.get('id'))
         user = request.user
-        dataset = Dataset(name=file_obj.name, creator=user, project=project, datafile=file_obj)
+# should analyze payload
+        dataset = Dataset(name=file_obj.name, creator=user, project=project, uploaded_file=file_obj)
         dataset.save()
         return Response(status=201)
 

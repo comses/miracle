@@ -3,6 +3,7 @@ nodeenv
 # for web server
 requests>=2.5.1
 Django==1.8.4
+celery[redis]
 Fabric==1.10.2
 django-bootstrap3==6.2.2
 django-model-utils==2.3.1
