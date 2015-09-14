@@ -174,7 +174,7 @@ $(function() {
         ko.utils.arrayForEach(parameters, function(parameter) {
             parameter.value = parseFloat(parameter.value);
         });
-        $.get('/analysis/run', {pk: model.selectedAnalysisId(), parameters: parameters}, function(response) {
+        $.get('/analysis/run', {pk: model.selectedAnalysisId(), parameters: JSON.stringify(parameters)}, function(response) {
             console.debug("success");
             console.debug(response);
         });

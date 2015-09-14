@@ -262,6 +262,11 @@ MEDIA_URL = '/data/'
 CELERY_BROKER_URL = 'redis+socket:///var/lib/redis/redis.sock'
 CELERY_RESULT_BACKEND = 'redis'
 
+# DeployR settings
+DEPLOYR_USER = 'miracle'
+DEPLOYR_PASSWORD = ''
+DEPLOYR_URL = 'https://deployr.comses.net'
+
 
 
 # Static files (CSS, JavaScript, Images)

@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 from .models import (Project, ActivityLog, MiracleUser, Dataset, Analysis)
 from .serializers import (ProjectSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
+from .tasks import run_analysis_task
 
 
 import logging
@@ -66,13 +67,16 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
 class RunAnalysisView(APIView):
     permission_classes = (permissions.IsAuthenticated,)
 
-    def get(self, request, pk=None, format=None):
+    def get(self, request):
         """
         Issues a celery request to run this analysis and return a 202 status URL to poll for the status of this request.
         """
-        parameters = request.data.get('parameters')
+        query_params = request.query_params
+        pk = query_params.get('pk')
+        parameters = query_params.get('parameters')
+        logger.debug("running analysis id %s with parameters %s", pk, parameters)
         task_id = run_analysis_task.delay(pk, parameters)
-        return JsonResponse({'task_id': task_id}, status=202)
+        return Response({'task_id': task_id}, status=202)
 
 
 class AnalysisViewSet(viewsets.ModelViewSet):
