@@ -70,10 +70,9 @@ class RunAnalysisView(APIView):
         """
         Issues a celery request to run this analysis and return a 202 status URL to poll for the status of this request.
         """
-        analysis = get_object_or_404(Analysis, pk=pk)
-
-
-
+        parameters = request.data.get('parameters')
+        task_id = run_analysis_task.delay(pk, parameters)
+        return JsonResponse({'task_id': task_id}, status=202)
 
 
 class AnalysisViewSet(viewsets.ModelViewSet):
