@@ -109,7 +109,7 @@
         </div>
     </div>
 </div>
-<div class='modal fade' data-bind='modal: showAnalysisParameters'>
+<div id='analysis-input-modal' class='modal fade' data-bind='modal: showAnalysisParameters'>
     <div class='modal-dialog'>
         <div class='modal-content'>
             <div class='modal-header'>
@@ -129,7 +129,7 @@
             </div>
             <div class='modal-footer'>
                 <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" data-bind='click: $root.runAnalysis'><i class='fa fa-play-circle'></i> Run analysis</button>
+                <button type="button" class="btn btn-primary" data-dismiss='modal' data-bind='click: $root.runAnalysis'><i class='fa fa-play-circle'></i> Run analysis</button>
             </div>
         </div>
     </div>
@@ -177,6 +177,12 @@ $(function() {
         $.get('/analysis/run', {pk: model.selectedAnalysisId(), parameters: JSON.stringify(parameters)}, function(response) {
             console.debug("success");
             console.debug(response);
+        }).fail(function() {
+            console.debug("Failed to run analysis with parameters");
+            console.debug(parameters);
+        }).always(function() {
+            $('#analysis-input-modal').modal('hide');
+
         });
     }
     ko.applyBindings(model);

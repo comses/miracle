@@ -263,9 +263,9 @@ CELERY_BROKER_URL = 'redis+socket:///var/lib/redis/redis.sock'
 CELERY_RESULT_BACKEND = 'redis'
 
 # DeployR settings
-DEPLOYR_USER = 'miracle'
-DEPLOYR_PASSWORD = ''
-DEPLOYR_URL = 'https://deployr.comses.net'
+DEFAULT_DEPLOYR_USER = 'miracle'
+DEFAULT_DEPLOYR_PASSWORD = ''
+DEPLOYR_URL = 'https://deployr.comses.net/deployr'
 
 
 

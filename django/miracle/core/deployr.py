@@ -1,38 +1,69 @@
 from django.conf import settings
 
 import logging
+import os
 import requests
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_WORKING_DIRECTORY = getattr(settings, 'DEFAULT_WORKING_DIRECTORY_NAME', 'luxedemo')
+
 
 def deployr_url(uri):
-    return '{}/deployr/r/{}s'.format(settings.DEPLOYR_URL, uri)
+    return '{}/r/{}'.format(settings.DEPLOYR_URL, uri)
 
 
-def login():
-    username = settings.DEPLOYR_USER
-    password = settings.DEPLOYR_PASSWORD
-    return requests.post(deployr_url('user/login'),
-                         data={'format': 'json', 'username': username, 'password': password}
-                         )
+login_url = deployr_url('user/login')
+create_working_directory_url = deployr_url('repository/directory/create')
+upload_script_url = deployr_url('repository/file/upload')
+execute_script_url = deployr_url('repository/script/execute')
 
 
-def create_script_working_dir(dir_name='luxedemo'):
-    return requests.post(deployr_url('repository/directory/create'),
-                         data={'format': 'json', 'directory': dir_name})
+def get_auth_tuple(user=None):
+    if user is None:
+        # FIXME: currently using a single sandbox user - at some point we may want to switch to 1:1 deployr user <->
+        # miracle users
+        return (settings.DEFAULT_DEPLOYR_USER, settings.DEFAULT_DEPLOYR_PASSWORD)
+    else:
+        return (user.username, 'changeme')
 
 
-def run_script(analysis, parameters):
-    response = login()
+def create_script_working_dir(workdir=DEFAULT_WORKING_DIRECTORY, auth=None):
+    return requests.post(create_working_directory_url,
+                         data={'format': 'json', 'directory': workdir},
+                         auth=auth)
+
+
+def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=None, user=None):
+    if script_file is None or not os.path.isfile(script_file.name):
+        raise ValueError("No script file to execute {}".format(script_file))
+    if user is None:
+        raise ValueError("No user found to execute file {}".format(script_file))
+
+    logger.debug("user %s running script %s in working directory %s with parameters %s", user, script_file, workdir,
+                 parameters)
+    auth = get_auth_tuple()
     # parse and validate response
-    logger.debug("login response: %s", response)
     # FIXME: figure out how to handle script scratch space / working directory allocation in deployr
-    working_directory_name = 'luxedemo'
-    response = create_script_working_dir(working_directory_name)
-    logger.debug("create working directory response: %s", response)
-    requests.post(deployr_url('repository/file/upload'), files={'file': analysis.uploaded_file},
-                  data={'format': 'json',
-                        'filename': analysis.uploaded_file.name,
-                        'directory': working_directory_name
-                        })
+    response = create_script_working_dir(workdir, auth)
+    logger.debug("create working directory response: %s", response.text)
+    filename = script_file.name
+    response = requests.post(upload_script_url,
+                             files={'file': script_file},
+                             data={'format': 'json',
+                                   'filename': filename,
+                                   'directory': workdir
+                                   },
+                             auth=get_auth_tuple(user),
+                             )
+    logger.debug("upload script response: %s", response.text)
+    response = requests.post(execute_script_url,
+                             data={'format': 'json',
+                                   'filename': filename,
+                                   'directory': workdir,
+                                   # FIXME: does this need to be set to a deployR user?
+                                   'author': user.email,
+                                   },
+                             auth=get_auth_tuple(user))
+    logger.debug("execute script response: %s", response.text)
+

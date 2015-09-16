@@ -75,7 +75,7 @@ class RunAnalysisView(APIView):
         pk = query_params.get('pk')
         parameters = query_params.get('parameters')
         logger.debug("running analysis id %s with parameters %s", pk, parameters)
-        task_id = run_analysis_task.delay(pk, parameters)
+        task_id = run_analysis_task.delay(pk, parameters, user=request.user)
         return Response({'task_id': task_id}, status=202)
 
 
