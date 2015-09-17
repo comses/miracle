@@ -61,11 +61,14 @@ def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
                                   'directory': workdir
                                   })
     logger.debug("upload script response: %s", response.text)
-    response = session.post(execute_script_url,
-                            data={'format': 'json',
-                                  'filename': filename,
-                                  'directory': workdir,
-                                  # FIXME: does this need to be set to a deployR user?
-                                  'author': user.email,
-                                  })
+    execute_script_data = {
+        'format': 'json',
+        'filename': filename,
+        'directory': workdir,
+        # FIXME: does this need to be set to a deployR user?
+        'author': settings.DEFAULT_DEPLOYR_USER,
+    }
+    if parameters:
+        execute_script_data.update(inputs=parameters)
+    response = session.post(execute_script_url, data=execute_script_data)
     logger.debug("execute script response: %s", response.text)

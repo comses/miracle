@@ -271,6 +271,8 @@ def _local_analysis_path(analysis, filename):
 
 class Analysis(MiracleMetadataMixin):
 
+    # FIXME: rename to Script/ScriptParameter/ScriptOutput? Consider after the demo.
+
     FileType = Choices(
         ('R', _('R script')),
         ('Julia', _('Julia script')),
@@ -316,6 +318,14 @@ class AnalysisParameter(models.Model):
         ('complex', _('complex numbers')),
     )
 
+    TYPE_CONVERTERS = {
+        'integer': int,
+        'logical': bool,
+        'numeric': float,
+        'character': str,
+        'complex': complex,
+    }
+
     analysis = models.ForeignKey(Analysis, related_name='parameters')
     name = models.CharField(max_length=255, help_text=_("Input parameter variable name used in this analysis script."))
     label = models.CharField(max_length=255, help_text=_("Human-friendly label for this parameter."), blank=True)
@@ -326,8 +336,34 @@ class AnalysisParameter(models.Model):
     default_value = models.CharField(max_length=255, blank=True,
                                      help_text=_("default value for this analysis input parameter"))
 
+    def convert(self, value):
+        return TYPE_CONVERTERS[self.data_type](value)
+
     def __unicode__(self):
         return u'{} ({})'.format(self.label, self.name)
+
+
+class AnalysisOutput(models.Model):
+
+    analysis = models.ForeignKey(Analysis, related_name='outputs')
+    name = models.CharField(max_length=255, help_text=_("User assigned name for this script run"))
+    description = models.TextField(blank=True)
+    date_created = models.DateTimeField(auto_now_add=True)
+    creator = models.ForeignKey(User)
+    parameter_values_json = PostgresJSONField(help_text=_("Input parameter values used in the given analysis run"))
+
+
+class ParameterValue(models.Model):
+
+    parameter = models.ForeignKey(AnalysisParameter)
+    output = models.ForeignKey(AnalysisOutput, related_name='parameter_values')
+    value = models.CharField(max_length=255, help_text=_("Assigned value for the given input parameter"))
+
+
+class AnalysisOutputFile(models.Model):
+
+    output = models.ForeignKey(AnalysisOutput, related_name='files')
+    output_file = models.FilePathField(path=settings.OUTPUT_FILE_PATH)
 
 
 class DatasetQuerySet(models.query.QuerySet):

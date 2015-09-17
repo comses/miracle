@@ -240,6 +240,7 @@ REST_FRAMEWORK = {
 # Media files, see https://docs.djangoproject.com/en/1.8/ref/settings/#std:setting-MEDIA_ROOT for more details
 # This absolute path specifies where all uploaded datasets will be sent. Can be overridden in local.py
 MIRACLE_DATA_DIRECTORY = MEDIA_ROOT = '/opt/miracle/data/'
+OUTPUT_FILE_PATH = '/opt/miracle/data/output'
 MIRACLE_ANALYSIS_DIRECTORY = os.path.join(MIRACLE_DATA_DIRECTORY, "analyses")
 
 if not is_accessible(MIRACLE_ANALYSIS_DIRECTORY):
