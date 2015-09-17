@@ -19,19 +19,24 @@ upload_script_url = deployr_url('repository/file/upload')
 execute_script_url = deployr_url('repository/script/execute')
 
 
+def login(user=None):
+    auth_tuple = get_auth_tuple(user)
+    s = requests.Session()
+    r = s.post(login_url, data={'username': auth_tuple[0], 'password': auth_tuple[1], 'format': 'json'})
+    logger.debug(r.text)
+    return s
+
+
 def get_auth_tuple(user=None):
+    # FIXME: currently using a single sandbox user - at some point we may want to switch to 1:1 deployr user <-> miracle
+    # users
+    return (settings.DEFAULT_DEPLOYR_USER, settings.DEFAULT_DEPLOYR_PASSWORD)
+    """
     if user is None:
-        # FIXME: currently using a single sandbox user - at some point we may want to switch to 1:1 deployr user <->
-        # miracle users
         return (settings.DEFAULT_DEPLOYR_USER, settings.DEFAULT_DEPLOYR_PASSWORD)
     else:
-        return (user.username, 'changeme')
-
-
-def create_script_working_dir(workdir=DEFAULT_WORKING_DIRECTORY, auth=None):
-    return requests.post(create_working_directory_url,
-                         data={'format': 'json', 'directory': workdir},
-                         auth=auth)
+            return (user.username, 'changeme')
+    """
 
 
 def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=None, user=None):
@@ -42,28 +47,25 @@ def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
 
     logger.debug("user %s running script %s in working directory %s with parameters %s", user, script_file, workdir,
                  parameters)
-    auth = get_auth_tuple()
+    session = login(user)
     # parse and validate response
     # FIXME: figure out how to handle script scratch space / working directory allocation in deployr
-    response = create_script_working_dir(workdir, auth)
+    response = session.post(create_working_directory_url,
+                            data={'format': 'json', 'directory': workdir})
     logger.debug("create working directory response: %s", response.text)
-    filename = script_file.name
-    response = requests.post(upload_script_url,
-                             files={'file': script_file},
-                             data={'format': 'json',
-                                   'filename': filename,
-                                   'directory': workdir
-                                   },
-                             auth=get_auth_tuple(user),
-                             )
+    filename = os.path.basename(script_file.name)
+    response = session.post(upload_script_url,
+                            files={'file': script_file},
+                            data={'format': 'json',
+                                  'filename': filename,
+                                  'directory': workdir
+                                  })
     logger.debug("upload script response: %s", response.text)
-    response = requests.post(execute_script_url,
-                             data={'format': 'json',
-                                   'filename': filename,
-                                   'directory': workdir,
-                                   # FIXME: does this need to be set to a deployR user?
-                                   'author': user.email,
-                                   },
-                             auth=get_auth_tuple(user))
+    response = session.post(execute_script_url,
+                            data={'format': 'json',
+                                  'filename': filename,
+                                  'directory': workdir,
+                                  # FIXME: does this need to be set to a deployR user?
+                                  'author': user.email,
+                                  })
     logger.debug("execute script response: %s", response.text)
-
