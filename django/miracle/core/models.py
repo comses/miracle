@@ -423,7 +423,7 @@ class Dataset(MiracleMetadataMixin):
     uploaded_file = models.FileField(upload_to=_local_dataset_path, help_text=_("The original uploaded dataset file (loosely corresponding to a SIP)"))
     data_type = models.CharField(max_length=50, blank=True)
     properties = PostgresJSONField(help_text=_("Schema and metadata for this Dataset, applicable to all child DataTables"))
-    url = models.URLField(blank=True)
+    external_url = models.URLField(blank=True)
 
     objects = DatasetManager.for_queryset_class(DatasetQuerySet)()
 
@@ -432,7 +432,7 @@ class Dataset(MiracleMetadataMixin):
         return os.path.join(self.project.uploads_path, 'datasets', self.slug)
 
     def get_absolute_url(self):
-        return u"/dataset/{}".format(self.slug)
+        return reverse_lazy('core:dataset-detail', args=[self.pk])
 
 
 class DataTableQuerySet(models.query.QuerySet):

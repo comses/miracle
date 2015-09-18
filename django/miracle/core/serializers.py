@@ -22,6 +22,30 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('username', 'email',)
 
 
+class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
+    project = serializers.ReadOnlyField(source='project.name')
+    parameters = serializers.ReadOnlyField(source='input_parameters')
+
+    class Meta:
+        model = Analysis
+        extra_kwargs = {
+            'url': {'view_name': 'core:analysis-detail'}
+        }
+        fields = ('id', 'name', 'full_name', 'date_created', 'last_modified', 'description', 'uploaded_file', 'project',
+                  'file_type', 'parameters', 'url')
+
+
+class DatasetSerializer(serializers.HyperlinkedModelSerializer):
+    project = serializers.ReadOnlyField(source='project.name')
+
+    class Meta:
+        model = Dataset
+        extra_kwargs = {
+            'url': {'view_name': 'core:dataset-detail'}
+        }
+        fields = ('id', 'name', 'uploaded_file', 'project', 'url')
+
+
 class ProjectSerializer(serializers.ModelSerializer):
     group_members = StringListField()
     group = serializers.StringRelatedField()
@@ -32,8 +56,8 @@ class ProjectSerializer(serializers.ModelSerializer):
     detail_url = serializers.CharField(source='get_absolute_url', read_only=True)
     status = serializers.CharField(read_only=True)
     number_of_datasets = serializers.IntegerField(read_only=True)
-    datasets = serializers.HyperlinkedRelatedField(many=True, view_name='core:dataset-detail', read_only=True)
-    analyses = serializers.HyperlinkedRelatedField(many=True, view_name='core:analysis-detail', read_only=True)
+    datasets = DatasetSerializer(many=True, read_only=True)
+    analyses = AnalysisSerializer(many=True, read_only=True)
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)
@@ -97,18 +121,4 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
 
 
-class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
-    project = serializers.ReadOnlyField(source='project.name')
-    parameters = serializers.ReadOnlyField(source='input_parameters')
 
-    class Meta:
-        model = Analysis
-        fields = ('id', 'name', 'uploaded_file', 'project', 'file_type', 'parameters')
-
-
-class DatasetSerializer(serializers.HyperlinkedModelSerializer):
-    project = serializers.ReadOnlyField(source='project.name')
-
-    class Meta:
-        model = Dataset
-        fields = ('id', 'name', 'uploaded_file', 'project')
