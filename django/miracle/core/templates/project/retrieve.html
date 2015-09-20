@@ -60,12 +60,34 @@
                                 <h3 class='panel-title'><i class='fa fa-code'></i> Analyses</h3>
                             </div>
                             <div class='panel-body'>
-                                <ul class='list-group' data-bind='foreach: analyses'>
-                                    <li class='list-group-item'>
-                                        <a class='btn btn-sm btn-info' data-bind='click: $root.enterAnalysisParameters.bind($data)'><i class='fa fa-play'></i> Run analysis</a>
-                                        <a data-bind='attr: {href: url}, text: name'></a>
-                                    </li>
-                                </ul>
+                                <div class='list-group' data-bind='foreach: analyses'>
+                                    <h5><span data-bind='text: full_name'></span>
+                                        <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
+                                    </h5>
+                                    <hr>
+                                    <div class='well'>
+                                        <strong>Description</strong>:
+                                        <span data-bind='text: description() || "No description entered yet."'></span>
+                                        <br>
+                                        <strong>Authors</strong>:
+                                        <span data-bind='if: authors().length'>
+                                            <span data-bind='foreach: authors'>
+                                                <span data-bind='text: $data'></span>
+                                            </span>
+                                        </span>
+                                        <span data-bind='ifnot: authors().length'>
+                                            No authors listed.
+                                        </span>
+                                        <br>
+                                        <strong>Type</strong>: <span class='label label-warning' data-bind='text: file_type'></span>
+                                    </div>
+                                    <div class='btn-group' role='group'>
+                                        <button class='btn btn-sm btn-default' data-bind='click: $root.enterAnalysisParameters.bind($data)'><i class='fa fa-play'></i> Run script</button>
+                                        <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
+                                            <i class='fa fa-eye'></i> View details</span>
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class='panel panel-primary'>
@@ -75,7 +97,7 @@
                             <div class='panel-body'>
                                 <ul class='list-group' data-bind='foreach: datasets'>
                                     <li class='list-group-item'>
-                                        <a class='btn btn-sm btn-info' data-bind='attr: {href: url}'>
+                                        <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
                                             <i class='fa fa-download'></i> Download
                                         </a>
                                         <a data-bind='attr: {href: url}, text: name'></a>
@@ -108,19 +130,25 @@
     </div>
 </div>
 <div id='analysis-input-modal' class='modal fade' data-bind='modal: showAnalysisParameters'>
-    <div class='modal-dialog'>
+    <div class='modal-dialog modal-lg'>
         <div class='modal-content'>
             <div class='modal-header'>
                 <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
                 <h4 class='modal-title'>Enter input arguments</h4>
             </div>
             <div class='modal-body'>
-                <form class='form form-horizontal' id='analysis-input-form' data-bind='foreach: analysisParameters'>
-                    <span class='bg bg-info' data-bind='text: rclass'></span>
-                    <div class='form-group'>
-                        <label for='value' class='control-label col-sm-2' data-bind='text: label'></label>
-                        <div class='col-sm-8'>
-                            <input type='number' step="any" data-bind='value: value' class='form-control' id='value' required placeholder='Value'>
+                <form class='form form-horizontal' id='analysis-input-form'>
+                    <div data-bind='foreach: analysisParameters'>
+                        <div class='form-group'>
+                            <label data-bind='attr: { for: name }' class='control-label col-sm-3'>
+                                <span data-bind='text: label'></span>
+                            </label>
+                            <div class='col-sm-6'>
+                                <div class='input-group'>
+                                    <input type='number' step="any" data-bind='attr: {id: name}, value: value' class='form-control' required placeholder='Value'>
+                                    <span class='text-info input-group-addon'><mark data-bind='text: rclass'></mark></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -135,6 +163,7 @@
 {% endblock content %}
 
 {% block javascript %}
+<script src='//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js'></script>
 <script type='text/html' id='run-analysis-input'>
 </script>
 {% include "includes/ko.js" %}

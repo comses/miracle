@@ -264,6 +264,9 @@ class Author(models.Model):
     user = models.OneToOneField(User)
     attributes = PostgresJSONField()
 
+    def __unicode__(self):
+        return self.user.email
+
 
 def _local_analysis_path(analysis, filename):
     return os.path.join(analysis.project.upload_path, 'scripts', filename)

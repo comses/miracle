@@ -25,6 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
 class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
     parameters = serializers.ReadOnlyField(source='input_parameters')
+    authors = serializers.StringRelatedField(many=True)
 
     class Meta:
         model = Analysis
@@ -32,7 +33,7 @@ class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
             'url': {'view_name': 'core:analysis-detail'}
         }
         fields = ('id', 'name', 'full_name', 'date_created', 'last_modified', 'description', 'uploaded_file', 'project',
-                  'file_type', 'parameters', 'url')
+                  'file_type', 'parameters', 'url', 'authors')
 
 
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
