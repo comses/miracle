@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from collections import defaultdict
 from rest_framework import serializers
-from .models import (Project, Dataset, Analysis)
+from .models import (Project, Dataset, Analysis, AnalysisOutput, AnalysisOutputFile)
 
 import logging
 
@@ -22,6 +22,23 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ('username', 'email',)
 
 
+class OutputFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AnalysisOutputFile
+
+
+class AnalysisOutputSerializer(serializers.HyperlinkedModelSerializer):
+    analysis = serializers.StringRelatedField()
+    files = OutputFileSerializer(many=True)
+
+    class Meta:
+        model = AnalysisOutput
+        extra_kwargs = {
+            'url': {'view_name': 'core:output-detail'}
+        }
+        fields = ('id', 'name', 'date_created', 'creator', 'analysis', 'parameter_values_json')
+
+
 class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
     parameters = serializers.ReadOnlyField(source='input_parameters')
@@ -33,7 +50,7 @@ class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
             'url': {'view_name': 'core:analysis-detail'}
         }
         fields = ('id', 'name', 'full_name', 'date_created', 'last_modified', 'description', 'uploaded_file', 'project',
-                  'file_type', 'parameters', 'url', 'authors')
+                  'file_type', 'parameters', 'url', 'authors', 'outputs')
 
 
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
@@ -59,6 +76,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     number_of_datasets = serializers.IntegerField(read_only=True)
     datasets = DatasetSerializer(many=True, read_only=True)
     analyses = AnalysisSerializer(many=True, read_only=True)
+    outputs = AnalysisOutputSerializer(many=True)
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)

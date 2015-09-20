@@ -227,6 +227,10 @@ class Project(MiracleMetadataMixin):
     def number_of_datasets(self):
         return self.datasets.count()
 
+    @property
+    def outputs(self):
+        return AnalysisOutput.objects.filter(analysis__project=self)
+
     def get_absolute_url(self):
         return reverse_lazy('core:project-detail', args=[self.pk])
 
@@ -354,6 +358,11 @@ class AnalysisOutput(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User)
     parameter_values_json = PostgresJSONField(help_text=_("Input parameter values used in the given analysis run"))
+
+    def __unicode__(self):
+        return u'[{}] output from running {} on {} by {} with parameters {}'.format(
+            self.name, self.analysis, self.date_created, self.creator, self.parameter_values_json
+        )
 
 
 class ParameterValue(models.Model):

@@ -60,7 +60,7 @@
                                 <h3 class='panel-title'><i class='fa fa-code'></i> Analyses</h3>
                             </div>
                             <div class='panel-body'>
-                                <div class='list-group' data-bind='foreach: analyses'>
+                                <div data-bind='foreach: analyses'>
                                     <h5><span data-bind='text: full_name'></span>
                                         <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
                                     </h5>
@@ -110,7 +110,18 @@
                                 <h3 class='panel-title'><i class='fa fa-area-chart'></i> Outputs</h3>
                             </div>
                             <div class='panel-body'>
-                                Placeholder for analysis outputs (PNGs, etc)
+                                <div data-bind='foreach: outputs'>
+                                    <h5><span data-bind='text: name'></span>
+                                        <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
+                                    </h5>
+                                    <hr>
+                                    <div class='btn-group' role='group'>
+                                        <button class='btn btn-sm btn-default' data-bind='click: $root.enterAnalysisParameters.bind($data)'><i class='fa fa-play'></i> Run script</button>
+                                        <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
+                                            <i class='fa fa-eye'></i> View details</span>
+                                        </a>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
