@@ -83,8 +83,9 @@ function ProjectModel(params) {
         }
         if (!failCallback) {
             console.debug("assigning default fail callback");
-            failCallback = function() {
+            failCallback = function(response) {
                 console.debug("FAIL");
+                console.debug(response);
             }
         }
         var promise = $.ajax({

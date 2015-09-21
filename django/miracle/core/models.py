@@ -372,10 +372,18 @@ class ParameterValue(models.Model):
     value = models.CharField(max_length=255, help_text=_("Assigned value for the given input parameter"))
 
 
+def _analysis_output_path(instance, filename):
+    return os.path.join(settings.OUTPUT_FILE_PATH, self.project_slug)
+
+
 class AnalysisOutputFile(models.Model):
 
     output = models.ForeignKey(AnalysisOutput, related_name='files')
-    output_file = models.FilePathField(path=settings.OUTPUT_FILE_PATH)
+    output_file = models.FilePathField(path=_analysis_output_path)
+
+    @property
+    def project_slug(self):
+        return self.output.analysis.project.slug
 
 
 class DatasetQuerySet(models.query.QuerySet):

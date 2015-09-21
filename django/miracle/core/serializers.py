@@ -76,7 +76,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     number_of_datasets = serializers.IntegerField(read_only=True)
     datasets = DatasetSerializer(many=True, read_only=True)
     analyses = AnalysisSerializer(many=True, read_only=True)
-    outputs = AnalysisOutputSerializer(many=True)
+    outputs = AnalysisOutputSerializer(many=True, read_only=True)
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)
