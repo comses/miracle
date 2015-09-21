@@ -3,7 +3,13 @@ FROM centos:7
 ENV user_id 1000
 ENV user_name miracle
 
-RUN yum -y update; yum clean all; yum -y install wget git ed libcurl-devel gcc-c++
+RUN yum -y update && yum clean all && yum -y install \
+    wget \
+    git \
+    ed \
+    libcurl-devel \
+    gcc-c++
+
 RUN useradd -u $user_id $user_name
 
 WORKDIR /opt/
@@ -20,9 +26,9 @@ RUN wget https://download3.rstudio.org/centos5.9/x86_64/shiny-server-1.4.0.721-r
 	rm -rf shiny-server-1.4.0.721-rh5-x86_64.rpm
 # Install Radiant
 RUN R -e "install.packages('radiant', repos='http://vnijs.github.io/radiant_miniCRAN/')"
-RUN git clone --depth 1 https://github.com/vnijs/radiant.git; \
-	mkdir /srv/shiny-server/radiant; cd radiant/inst/base; cp -r . /srv/shiny-server/radiant; \
-	cd /opt; rm -rf radiant
+RUN git clone --depth 1 https://github.com/warmdev/radiant-mod.git; \
+	cp -r radiant-mod/inst/* /srv/shiny-server; cp -r radiant-mod/R /srv; \
+	rm -rf radiant-mod;
 # Add starting script
 RUN sed -i -e 's/run_as shiny/run_as miracle/g' /etc/shiny-server/shiny-server.conf
 ADD shiny-server.sh /usr/bin/shiny-server.sh
