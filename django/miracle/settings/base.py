@@ -139,6 +139,7 @@ USE_I18N = False
 
 USE_L10N = False
 
+
 # Logging
 # https://docs.djangoproject.com/en/1.8/topics/logging/
 
@@ -146,20 +147,27 @@ USE_L10N = False
 def is_accessible(directory_path):
     return os.path.isdir(directory_path) and os.access(directory_path, os.W_OK | os.X_OK)
 
-LOG_DIRECTORY = '/opt/miracle/logs'
 
-if not is_accessible(LOG_DIRECTORY):
-    try:
-        os.makedirs(LOG_DIRECTORY)
-    except OSError:
-        print("Cannot create absolute log directory [%s]. Using relative path 'logs' instead" % LOG_DIRECTORY,
-              file=sys.stderr)
-        LOG_DIRECTORY = 'logs'
-        if not is_accessible(LOG_DIRECTORY):
-            try:
-                os.makedirs(LOG_DIRECTORY)
-            except OSError:
-                print("Couldn't create any log directory, startup will fail", file=sys.stderr)
+def safe_make_paths(directory, fallback_directory, makedirs_callback):
+    if not is_accessible(directory):
+        try:
+            makedirs_callback(directory)
+        except OSError:
+            print(
+                "Cannot create absolute directory [%s]. Using relative path [%s] instead" %
+                (directory, fallback_directory),
+                file=sys.stderr)
+            directory = fallback_directory
+            if not is_accessible(directory):
+                try:
+                    makedirs_callback(directory)
+                except OSError:
+                    print("Couldn't create any [%s] directory, startup will fail" % directory,
+                          file=sys.stderr)
+    return directory
+
+
+LOG_DIRECTORY = safe_make_paths('/opt/miracle/logs', os.path.abspath('logs'), os.makedirs)
 
 LOGGING = {
     'version': 1,
@@ -243,20 +251,6 @@ MIRACLE_DATA_DIRECTORY = MEDIA_ROOT = '/opt/miracle/internal/'
 # data directory to be exposed to DeployR / Radiant containers
 MIRACLE_EXTERNAL_DATA_DIRECTORY = '/opt/miracle/external/data'
 OUTPUT_FILE_PATH = '/opt/miracle/internal/output/'
-MIRACLE_ANALYSIS_DIRECTORY = os.path.join(MIRACLE_DATA_DIRECTORY, "analyses")
-
-if not is_accessible(MIRACLE_ANALYSIS_DIRECTORY):
-    try:
-        os.makedirs(MIRACLE_ANALYSIS_DIRECTORY)
-    except OSError:
-        print("Cannot create absolute analysis directory [%s]. Using relative path 'analyses' instead" % MIRACLE_ANALYSIS_DIRECTORY,
-              file=sys.stderr)
-        MIRACLE_ANALYSIS_DIRECTORY = 'analyses'
-        if not is_accessible(MIRACLE_ANALYSIS_DIRECTORY):
-            try:
-                os.makedirs(MIRACLE_ANALYSIS_DIRECTORY)
-            except OSError:
-                print("Couldn't create any analyses directory, startup will fail", file=sys.stderr)
 
 MEDIA_URL = '/data/'
 
@@ -270,7 +264,18 @@ DEFAULT_DEPLOYR_USER = 'miracle'
 DEFAULT_DEPLOYR_PASSWORD = ''
 DEPLOYR_URL = 'https://deployr.comses.net/deployr'
 
+def make_project_paths(project_directory):
+    dirs = ['apps', 'archive', 'data', 'docs', 'output', 'src']
+    os.makedirs(project_directory)
+    for dirname in dirs:
+        os.makedirs(os.path.join(project_directory, dirname))
 
+
+MIRACLE_PROJECT_DIRECTORY = safe_make_paths('/opt/miracle/projects',
+                                            os.path.abspath('projects'), make_project_paths)
+MIRACLE_TMP_DIRECTORY = safe_make_paths('/opt/miracle/tmp',
+                                        os.path.abspath('tmp'), os.makedirs)
+MEDIA_URL = '/data/'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/

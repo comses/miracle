@@ -8,13 +8,15 @@ class MetadataTest(BaseMiracleTest):
         self.assertEqual(sanitize_ext(ext), ".zip")
 
     def test_shp(self):
-        data = load_metadata(self.get_test_data("cities.shp"))
+        test_data = self.get_test_data("cities.shp")
+        data = load_metadata(test_data)
         self.assertEqual(data.layers,
                          [{u'Density': 'Real', u'Name': 'String',
                            u'Created': 'Date', u'Population': 'Real'}])
 
     def test_asc(self):
-        data = load_metadata(self.get_test_data("sample.asc"))
+        test_data = self.get_test_data("sample.asc")
+        data = load_metadata(test_data)
         self.assertEqual(data.properties, {'width': 4, 'height': 6})
         self.assertEqual(data.layers, [{'description': u''}])
 

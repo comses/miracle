@@ -19,6 +19,18 @@
 ### load test data
 Data fixtures in `miracle/core/fixtures` can be loaded via `%./manage.py loaddata <fixture-name-without-file-extension>`. 
 
+Projects can be loaded from the command line using `manage.py load_project`. To load a project using testuser0:
+
+```
+./manage.py load_project --creator testuser0 --group-file "path/to/groupfile.yml" "path/to/archive"
+```
+
+Groupfiles for the luxe and DID_UT_RHEA projects are included in the `test_archive/` directory. If `luxe.7z` were in
+the `test_archive` directory it could be loaded by running
+
+```
+./manage.py load_project --creator testuser0 --group-file "/opt/miracle/tmp/luxe.miracle.yml" "/opt/miracle/tmp/luxe.7z"
+```
 
 ### Codebase Status
 [![Build Status](https://travis-ci.org/comses/miracle.svg?branch=master)](https://travis-ci.org/comses/miracle)

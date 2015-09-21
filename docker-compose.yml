@@ -1,27 +1,31 @@
 deployr_data:
   build: deployr
+  name: deployr_data
   volumes:
     - /home/miracle/deployr/7.4.1/deployr/database
   command: echo deployr_data
 deployr:
   build: deployr
+  name: deployr
   volumes:
-    - ./test_analyses/data:/home/miracle/deployr/7.4.1/deployr/external/data/public/data
-    - ./test_analyses/output:/home/miracle/deployr/7.4.1/deployr/external/data/public/output
+    - ./test_projects/data:/home/miracle/deployr/7.4.1/deployr/external/data/public/data
+    - ./test_projects/output:/home/miracle/deployr/7.4.1/deployr/external/data/public/output
   volumes_from:
     - deployr_data
   ports: 
     - "7400:7400"
 radiant:
   build: radiant
+  name: radiant
   volumes:
-    - ./test_analyses/apps:/srv/shiny-server/apps
-    - ./test_analyses/data:/srv/shiny-server/data
-    - ./test_analyses/output:/srv/shiny-server/output
+    - ./test_projects/apps:/srv/shiny-server/apps
+    - ./test_projects/data:/srv/shiny-server/data
+    - ./test_projects/output:/srv/shiny-server/output
   ports: 
     - "3838:3838"
 db:
   image: sameersbn/postgresql:9.4-3
+  name: db
   ports: 
     - "5432:15432"
   environment:
@@ -31,10 +35,12 @@ db:
     PSQL_TRUST_LOCALNET: true
 django:
   build: django
-  command: python /code/manage.py runserver 0.0.0.0:8000
+  name: django
   volumes:
     - ./django:/code
-    - ./test_analyses:/opt/miracle/analyses
+    - ./test_projects:/opt/miracle/analyses
+    - ./test_archives:/opt/miracle/tmp
+  command: python /code/manage.py runserver 0.0.0.0:8000
   ports:
     - "8000:8000"
   links:

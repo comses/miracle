@@ -16,8 +16,6 @@ import logging
 import os
 import re
 
-from .extractors import Extractor
-
 logger = logging.getLogger(__name__)
 
 
@@ -277,7 +275,6 @@ def _local_analysis_path(analysis, filename):
 
 
 class Analysis(MiracleMetadataMixin):
-
     # FIXME: rename to Script/ScriptParameter/ScriptOutput? Consider after the demo.
 
     FileType = Choices(

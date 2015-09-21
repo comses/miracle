@@ -10,31 +10,39 @@ from os import path
 from django.conf import settings
 from django.contrib.gis.gdal import DataSource, GDALRaster, GDALException
 
+import logging
 
-DatasetTypes = Enum('DatasetTypes', 'none archive code data document vizualization')
+logger = logging.getLogger(__name__)
+
+DataTypes = Enum('DataTypes', 'none archive code data document vizualization')
 
 
-class AnalysisMetadata(object):
-    def __init__(self, dataset_metadata, log):
-        self.dataset_metadata = dataset_metadata
+class ProjectMetadata(object):
+    def __init__(self, name, file_metadata, log):
+        self.name = name
+        self.file_metadata = file_metadata
         self.log = log
 
     def __repr__(self):
-        return "AnalysisMetadata(%s, %s)" % \
-               (self.dataset_metadata, self.log)
+        return "ProjectMetadata(%s, %s)" % \
+               (self.file_metadata, self.log)
 
 
 class Metadata(object):
-
-    def __init__(self, fullpath, datatype, properties, layers):
-        self.path = path.relpath(fullpath, settings.MIRACLE_ANALYSIS_DIRECTORY)
+    """
+    Metadata for one dataset instance. Dataset instances are grouped by the user
+    into Datasets later.
+    """
+    def __init__(self, fullpath, datatype, properties, layers, errors=[]):
+        self.path = fullpath
         self.datatype = datatype
         self.properties = properties
         self.layers = layers
+        self.errors = errors
 
     def __repr__(self):
-        res = "%s(%s, %s, %s, %s)\n" % \
-              (self.__class__, self.path, self.datatype, self.properties, self.layers)
+        res = "Metadata(%s, %s, %s, %s)\n" % \
+              (self.path, self.datatype, self.properties, self.layers)
         return res
 
 
@@ -64,7 +72,7 @@ class OGRLoader(object):
         properties = {}
         layers = [OGRLoader.from_layer(layer) for layer in datasource]
 
-        return Metadata(path, DatasetTypes.data, properties, layers)
+        return Metadata(path, DataTypes.data, properties, layers)
 
     OGR_DATATYPE_CONVERSIONS = {
         "OFTString": "String",
@@ -89,7 +97,7 @@ class MP4Loader(object):
             raise Exception("Unable to parse file %s" % path)
 
         metadata = extractMetadata(parser)
-        datatype = DatasetTypes.vizualization
+        datatype = DataTypes.vizualization
         properties = {"width": metadata.getText("width"),
                       "height": metadata.getText("height"),
                       "bit_rate": metadata.getText("bit_rate")}
@@ -102,7 +110,7 @@ class MP4Loader(object):
 class ArchiveLoader(object):
     @staticmethod
     def from_file(path):
-        return Metadata(path, DatasetTypes.archive, {}, [])
+        return Metadata(path, DataTypes.archive, {}, [])
 
 
 class TabularLoader(object):
@@ -133,13 +141,16 @@ class TabularLoader(object):
             properties = {"file_name": file_name, "model_name": model_name}
             layers = [{name: datatype for name, datatype in zip(colnames, datatypes)}]
 
-            return Metadata(path, DatasetTypes.data, properties, layers)
+            return Metadata(path, DataTypes.data, properties, layers)
 
     @staticmethod
     def _read_normal_csv(path):
         properties = {}
         with open(path, 'rb') as f:
-            has_header = csv.Sniffer().has_header(f.read(8192))
+            try:
+                has_header = csv.Sniffer().has_header(f.read(8192))
+            except Exception as e:
+                return Metadata(path, DataTypes.data, properties, [], [e])
 
             f.seek(0)
             layer = {}
@@ -157,7 +168,7 @@ class TabularLoader(object):
 
             layers = [layer]
 
-        return Metadata(path, DatasetTypes.data, properties, layers)
+        return Metadata(path, DataTypes.data, properties, layers)
 
     @staticmethod
     def _guess_type(element):
@@ -201,19 +212,19 @@ class TabularLoader(object):
 class CodeLoader(object):
     @staticmethod
     def from_file(path):
-        return Metadata(path, DatasetTypes.code, {}, [])
+        return Metadata(path, DataTypes.code, {}, [])
 
 
 class DocumentLoader(object):
     @staticmethod
     def from_file(path):
-        return Metadata(path, DatasetTypes.document, {}, [])
+        return Metadata(path, DataTypes.document, {}, [])
 
 
 class UnknownLoader(object):
     @staticmethod
     def from_file(path):
-        return Metadata(path, DatasetTypes.none, {}, [])
+        return Metadata(path, DataTypes.none, {}, [])
 
 CONSTRUCTOR_FORMATS = {
     ArchiveLoader.from_file: frozenset([".bzip2", ".gzip", ".zip", ".7z", ".tar"]),

@@ -20,7 +20,6 @@ class BaseMiracleTest(TestCase):
     """
 
     TEST_DATA_DIR = os.path.join(settings.BASE_DIR, 'miracle', 'core', 'tests', 'data')
-    MIRACLE_ANALYSIS_DIR = settings.MIRACLE_ANALYSIS_DIRECTORY
 
     def setUp(self, **kwargs):
         self.client = Client()

@@ -1,90 +1,148 @@
 import os
 import pyunpack
-from os import path
+
 import shutil
 import collections
+import json
+import yaml
 
 from django.conf import settings
-from .metadata import load_metadata, AnalysisMetadata
+from .metadata import load_metadata, ProjectMetadata, Metadata, DataTypes
+from .models import Analysis, Dataset, DataTable, Project, User
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MetaDataImportError(Exception):
     pass
 
 
-def fileext_gen(file_names):
-    for file_name in file_names:
-        yield os.path.splitext(file_name)
-
-
-class SHPFileGlob(object):
+def to_analysis(file_analysis, project):
     """
-    Shapefiles should be thought of as one unit
+    Convert file metadata tagged with the code datatype to an Analysis
 
-    e.g. A shapefile is composed of at least 4 files:
-     a .shp, a .dbf, a .prj and a .shx
+    :param file_analysis:
+
+    :type file_analysis: Metadata
+    :type project: Project
+
+    :return: an Analysis
+    :rtype: Analysis
     """
-    REQUIRED_EXTENSIONS = {".shp", ".dbf", ".prj", ".shx"}
+    base_dir, filename = os.path.split(file_analysis.path)
+    name, ext = os.path.splitext(filename)
+    ext = ext.lower()
 
-    @staticmethod
-    def from_files(file_names, log):
+    file_type = ""
+    if ext == ".jl":
+        file_type = "Julia"
+    elif ext == ".r":
+        file_type = "R"
+    elif ext == ".py":
+        file_type = "Python"
+    elif ext == ".pl":
+        file_type = "Perl"
 
-        shp_names = []
-        for name, ext in fileext_gen(file_names):
-            if ext == ".shp":
-                shp_names.append(name)
+    uploaded_file = file_analysis.path
+    return Analysis(name=name,
+                    creator=project.creator,
+                    project=project,
+                    file_type=file_type,
+                    uploaded_file=uploaded_file)
 
-        shp_file_groups = collections.defaultdict(set)
-        for name, ext in fileext_gen(file_names):
-            if name in shp_names:
-                shp_file_groups[name].add(ext)
 
-        names = []
-        for shp_name in shp_names:
-            if SHPFileGlob.is_valid(shp_file_groups[shp_name]):
-                names.append(shp_name + ".shp")
+def to_dataset(file_dataset, project):
+    """
+    Convert file metadata tagged with the data datatype to a Dataset and set of DataTables
+
+    :type file_dataset: Metadata
+    :type project: Project
+    """
+    base_dir, filename = os.path.split(file_dataset.path)
+    name, ext = os.path.splitext(filename)
+    ext = ext.lower()
+
+    data_type = ext
+    properties = json.dumps(
+        { "properties": file_dataset.properties
+        , "layers": file_dataset.layers })
+
+    return Dataset(name=name,
+                   creator=project.creator,
+                   project=project,
+                   data_type=data_type,
+                   properties=properties)
+
+
+def to_datatable(file_dataset, dataset):
+    base_dir, filename = os.path.split(file_dataset.path)
+    name, ext = os.path.splitext(filename)
+
+    return DataTable(name=name,
+                     creator=dataset.creator,
+                     datafile=file_dataset.path,
+                     dataset=dataset)
+
+
+def to_project_from_file(project_metadata, dataset_groupings_file, creator):
+    f = open(dataset_groupings_file)
+    dataset_groups = yaml.safe_load(f)['datasets']
+    f.close()
+    return to_project(project_metadata, dataset_groups, creator)
+
+
+def to_project(project_metadata, dataset_groups, creator):
+    project_name = project_metadata.name
+    project = Project.objects.create(name=project_metadata.name, creator=creator)
+    # check the file paths
+    datatable_path_to_dataset_name = {}
+    for dataset_group in dataset_groups:
+        name = dataset_group['name']
+        paths = dataset_group['instances']
+        for path in paths:
+            key_path = os.path.join(project_name, "data", project_name,
+                                    os.path.normpath(path))
+            datatable_path_to_dataset_name[key_path] = name
+
+
+    analyses = []
+    datasets = {}
+    for f in project_metadata.file_metadata:
+        if f.datatype == DataTypes.code:
+            analysis = to_analysis(f, project)
+            analysis.save()
+            analyses.append(analysis)
+
+        elif f.datatype == DataTypes.data:
+            path = f.path
+            if datatable_path_to_dataset_name.has_key(path):
+
+                name = datatable_path_to_dataset_name[path]
+                if not datasets.has_key(name):
+                    dataset = to_dataset(f, project)
+                    dataset.save()
+
+                    datatable = to_datatable(f, dataset)
+                    datatable.save()
+
+                    datasets[name] = dataset
+                else:
+                    datatable = to_datatable(f, datasets[name])
+                    datatable.save()
+
             else:
-                log.append("Shapefile is missing extensions {0} (only has {1})".
-                           format(shp_name, SHPFileGlob.REQUIRED_EXTENSIONS.difference(shp_file_groups[shp_name])))
+                dataset = to_dataset(f, project)
+                dataset.save()
 
-            for ext in shp_file_groups[shp_name]:
-                file_names.remove(shp_name + ext)
+                datatable = to_datatable(f, dataset)
+                datatable.save()
 
-        return names
-
-    @staticmethod
-    def is_valid(extensions):
-        return extensions.issuperset(SHPFileGlob.REQUIRED_EXTENSIONS)
-
-
-class OtherFileGlob(object):
-    @staticmethod
-    def from_files(file_names, log):
-        return file_names
-
-
-class FileGlobber(object):
-    """
-    Groups files that belong together and returns AnalysisMetadata
-    """
-    @staticmethod
-    def extract_metadata(analysis_path):
-        walker = os.walk(analysis_path)
-
-        metadata = []
-        log = []
-        for root, dirs, files in walker:
-            files = [f for f in files if not f[0] == '.']
-            dirs[:] = [d for d in dirs if not d[0] == '.']
-            shp_files = SHPFileGlob.from_files(files, log)
-            other_files = OtherFileGlob.from_files(files, log)
-
-            all_file_paths = other_files + shp_files
-            for rel_file_path in all_file_paths:
-                fullpath = path.join(root, rel_file_path)
-                metadata.append(load_metadata(fullpath))
-
-        return AnalysisMetadata(metadata, log)
+    project.analyses = analyses
+    project.datasets = datasets.values()
+    project.save()
+    return project
 
 
 class Extractor(object):
@@ -93,62 +151,118 @@ class Extractor(object):
     """
     ARCHIVE_FORMATS = [".7z", ".zip"]
 
-    def __init__(self, analysis_name, analysis_path):
-        self.analysis_path = analysis_path
-        self.analysis_name = analysis_name
+    def __init__(self, project_name, project_path, metadata):
+        self.project_path = project_path
+        self.project_name = project_name
+        self.metadata = metadata
 
     @staticmethod
-    def from_archive(fullpath, analysis_name):
+    def from_archive(fullpath,
+                     project_path=settings.MIRACLE_PROJECT_DIRECTORY,
+                     destroy_tmp=True,
+                     overwrite=True):
         """
         Extracts an archive to a new folder
 
-        :param fullpath: absolute path to where the analysis archive was
+        :param fullpath: absolute path to where the project archive was
                          uploaded
-        :param analysis_name: name of folder to name the analysis as
         :return: path to extracted analysis
         :raises: ValueError: unsupported archive format
-        :raises: NameError: analysis_name already exists
+        :raises: NameError: project_name already exists
         """
-        directory, filename_ext = path.split(fullpath)
-        filename, ext = path.splitext(filename_ext)
+        logger.debug("project_path: {}".format(project_path))
+
+
+        directory, filename = os.path.split(fullpath)
+        project_name, ext = os.path.splitext(filename)
+        if overwrite:
+            Extractor.delete_projects(project_name)
+
         if ext not in Extractor.ARCHIVE_FORMATS:
             raise ValueError("{} format not supported".format(ext))
 
-        analysis_path = os.path.join(settings.MIRACLE_ANALYSIS_DIRECTORY, analysis_name)
+        tmp_project_directory = os.path.join(directory, project_name)
+        logger.debug("tmp_project_directry: {}".format(tmp_project_directory))
+        if destroy_tmp:
+            shutil.rmtree(tmp_project_directory, ignore_errors=True)
 
-        if not path.exists(analysis_path):
-            pyunpack.Archive(fullpath).extractall(analysis_path, auto_create_dir=True)
+        if not os.path.exists(tmp_project_directory):
+            pyunpack.Archive(fullpath).extractall(tmp_project_directory, auto_create_dir=True)
         else:
-            raise NameError("'{}' already exists. Try a different name.".format(analysis_name))
+            raise NameError("'{}' already exists. Try a different name.".format(project_name))
+        logger.debug("Extracted Archive")
+        Extractor.cleanup(tmp_project_directory)
+        metadata = Extractor.extract_metadata(tmp_project_directory)
+        logger.debug("Extracted Metadata")
+        Extractor.move_project(tmp_project_directory, project_path)
 
-        Extractor._cleanup(analysis_name)
-        return Extractor(analysis_name, analysis_path)
+        if destroy_tmp:
+            shutil.rmtree(tmp_project_directory)
+
+        return Extractor(project_name, project_path, metadata)
 
     @staticmethod
-    def _cleanup(analysis_name):
+    def delete_projects(name):
+        search_dirs = ['apps', 'docs', 'data', 'output', 'src']
+        for d in search_dirs:
+            path = os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, d, name)
+            if os.path.exists(path):
+                shutil.rmtree(path)
+
+    @staticmethod
+    def move_project(fullpath, project_path):
+        """
+        Move the extracted project at `fullpath` to `project_path`
+        """
+        directory, project_name = os.path.split(fullpath)
+
+        dirs = [f for f in os.listdir(fullpath) if f in ['apps', 'docs', 'data', 'output', 'src']]
+        dirs = [d for d in dirs if os.path.exists(os.path.join(fullpath, d, project_name))]
+        for d in dirs:
+            shutil.copytree(os.path.join(fullpath, d, project_name),
+                            os.path.join(project_path, d, project_name))
+
+
+    @staticmethod
+    def cleanup(tmp_project_directory):
         """
         Move all analysis files up one directory, if only one subdirectory
         """
-        analysis_path = path.join(settings.MIRACLE_ANALYSIS_DIRECTORY, analysis_name)
-        dirs = os.listdir(analysis_path)
+        dirs = os.listdir(tmp_project_directory)
         if "__MACOSX" in dirs:
             dirs.remove("__MACOSX")
         if len(dirs) == 1:
             directory = dirs[0]
-            files = os.listdir(path.join(analysis_path, directory))
+            files = os.listdir(os.path.join(tmp_project_directory, directory))
 
             for file in files:
-                shutil.move(path.join(analysis_path, directory, file),
-                            path.join(analysis_path, file))
+                shutil.move(os.path.join(tmp_project_directory, directory, file),
+                            os.path.join(tmp_project_directory, file))
 
-            os.rmdir(path.join(analysis_path, directory))
+            os.rmdir(os.path.join(tmp_project_directory, directory))
 
-    def extract_metadata(self):
+    @staticmethod
+    def extract_metadata(fullpath):
         """
         Create metadata from the extracted archive
 
         :return: metadata for the analysis and all its datasets
-        :rtype: AnalysisMetadata
+        :rtype: ProjectMetadata
         """
-        analysis_metadata = FileGlobber.extract_metadata(self.analysis_path)
-        return analysis_metadata
+
+        base_dir, start_dir = os.path.split(fullpath)
+        os.chdir(base_dir)
+        walker = os.walk(fullpath)
+        base_dir, name = os.path.split(fullpath)
+
+        metadata = []
+        log = []
+        for root, dirs, files in walker:
+            rel_root = os.path.relpath(root, base_dir)
+            files = [f for f in files if not f[0] == '.']
+            dirs[:] = [d for d in dirs if not d[0] == '.']
+            for rel_file_path in files:
+                fullpath = os.path.join(rel_root, rel_file_path)
+                metadata.append(load_metadata(fullpath))
+
+        return ProjectMetadata(name, metadata, log)
