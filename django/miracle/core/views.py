@@ -78,7 +78,7 @@ class RunAnalysisView(APIView):
         logger.debug("running analysis id %s with parameters %s", pk, parameters)
         task_id = run_analysis_task.delay(pk, parameters, user=request.user)
         logger.debug("task id: %s", task_id)
-        return Response(status=202)
+        return Response(data={'task_id': task_id}, status=202)
 
 
 class AnalysisViewSet(viewsets.ModelViewSet):

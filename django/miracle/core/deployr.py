@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import requests
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -14,10 +15,16 @@ def deployr_url(uri):
     return '{}/r/{}'.format(settings.DEPLOYR_URL, uri)
 
 
+def deployr_post_data(**kwargs):
+    return dict(format='json', **kwargs)
+
+
 login_url = deployr_url('user/login')
 create_working_directory_url = deployr_url('repository/directory/create')
 upload_script_url = deployr_url('repository/file/upload')
-execute_script_url = deployr_url('job/submit')
+submit_job_url = deployr_url('job/submit')
+job_status_url = deployr_url('job/query')
+job_results_url = deployr_url('project/directory/list')
 
 
 def login(user=None):
@@ -38,6 +45,66 @@ def get_auth_tuple(user=None):
     else:
             return (user.username, 'changeme')
     """
+
+
+class Job(object):
+
+    def __init__(self, session=None, user=None):
+        if session is None:
+            if user is None:
+                raise ValueError("must provide an active session or user to login")
+            session = login(user)
+        self.session = session
+
+    def post(self, url, data=None, **kwargs):
+        if data is None:
+            data = kwargs
+        data.setdefault('format', 'json')
+        return self.session.post(url, data=data)
+
+    def submit(self, data):
+        logger.debug("submitting job with payload %s", data)
+        response = self.post(submit_job_url, data)
+        self.submit_response_json = response.json()
+        job_data = self.get_job_data(self.submit_response_json)
+        self.job_id = job_data['job']
+        self.submit_successful = self.submit_response_json['deployr']['response']['success']
+        return response
+
+    def check_status(self, wait=True, counter=0, limit=50, job_id=None):
+        if job_id is None:
+            job_id = getattr(self, 'job_id', None)
+            if job_id is None:
+                raise ValueError("Submit a job first or pass a valid job id into this method")
+
+        response = self.post(job_status_url, job=job_id)
+        response_json = response.json()
+        if not self.is_job_completed(response_json):
+            if wait and counter < limit:
+                # recur up to the limit
+                time.sleep(1000)
+                self.check_status(wait, counter + 1, limit, job_id)
+            return response
+        else:
+            self.project_id = self.get_project_id(response_json)
+            # retrieve results
+            response = self.post(job_results_url, project=self.project_id)
+        return response
+
+    def is_job_completed(self, response_json):
+        return self.get_job_data(response_json)['status'] == 'Completed'
+
+    def get_job_data(self, response_json):
+        try:
+            return response_json['deployr']['response']['job']
+        except:
+            raise ValueError("invalid json {}".format(response_json))
+
+    def get_job_id(self, response_json):
+        return self.get_job_data(response_json)['job']
+
+    def get_project_id(self, response_json):
+        return self.get_job_data(response_json)['project']
 
 
 def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=None, user=None, job_name=None):
@@ -74,7 +141,6 @@ def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
     if parameters:
         execute_script_data.update(inputs=json.loads(parameters))
     # submit job
-    logger.debug("executing script with payload %s", execute_script_data)
-    response = session.post(execute_script_url, data=execute_script_data)
-    logger.debug("execute script response: %s", response.text)
-    return response
+    job = Job(session)
+    job.submit(execute_script_data)
+    return job
