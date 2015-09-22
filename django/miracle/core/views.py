@@ -65,6 +65,7 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
 
 
 class RunAnalysisView(APIView):
+    renderer_classes = (renderers.JSONRenderer,)
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
@@ -76,7 +77,8 @@ class RunAnalysisView(APIView):
         parameters = query_params.get('parameters')
         logger.debug("running analysis id %s with parameters %s", pk, parameters)
         task_id = run_analysis_task.delay(pk, parameters, user=request.user)
-        return Response({'task_id': task_id}, status=202)
+        logger.debug("task id: %s", task_id)
+        return Response(status=202)
 
 
 class AnalysisViewSet(viewsets.ModelViewSet):

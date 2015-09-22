@@ -1,5 +1,6 @@
 from django.conf import settings
 
+import json
 import logging
 import os
 import requests
@@ -40,7 +41,7 @@ def get_auth_tuple(user=None):
 
 
 def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=None, user=None, job_name=None):
-    if script_file is None or not os.path.isfile(script_file.name):
+    if script_file is None or not os.path.isfile(script_file.path):
         raise ValueError("No script file to execute {}".format(script_file))
     if user is None:
         raise ValueError("No user found to execute file {}".format(script_file))
@@ -67,12 +68,13 @@ def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
         'format': 'json',
         'name': job_name,
         'rscriptname': filename,
-        'rscriptdirectory': workdir.DEFAULT_DEPLOYR_USER,
+        'rscriptdirectory': workdir,
         'rscriptauthor': 'miracle',  # FIXME: hardcoded
     }
     if parameters:
-        execute_script_data.update(inputs=parameters)
-# submit job
+        execute_script_data.update(inputs=json.loads(parameters))
+    # submit job
+    logger.debug("executing script with payload %s", execute_script_data)
     response = session.post(execute_script_url, data=execute_script_data)
     logger.debug("execute script response: %s", response.text)
     return response
