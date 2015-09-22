@@ -16,7 +16,7 @@ def deployr_url(uri):
 login_url = deployr_url('user/login')
 create_working_directory_url = deployr_url('repository/directory/create')
 upload_script_url = deployr_url('repository/file/upload')
-execute_script_url = deployr_url('repository/script/execute')
+execute_script_url = deployr_url('job/submit')
 
 
 def login(user=None):
@@ -39,11 +39,13 @@ def get_auth_tuple(user=None):
     """
 
 
-def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=None, user=None):
+def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=None, user=None, job_name=None):
     if script_file is None or not os.path.isfile(script_file.name):
         raise ValueError("No script file to execute {}".format(script_file))
     if user is None:
         raise ValueError("No user found to execute file {}".format(script_file))
+    if job_name is None:
+        job_name = '{}.job'.format(workdir)
 
     logger.debug("user %s running script %s in working directory %s with parameters %s", user, script_file, workdir,
                  parameters)
@@ -63,12 +65,14 @@ def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
     logger.debug("upload script response: %s", response.text)
     execute_script_data = {
         'format': 'json',
-        'filename': filename,
-        'directory': workdir,
-        # FIXME: does this need to be set to a deployR user?
-        'author': settings.DEFAULT_DEPLOYR_USER,
+        'name': job_name,
+        'rscriptname': filename,
+        'rscriptdirectory': workdir.DEFAULT_DEPLOYR_USER,
+        'rscriptauthor': 'miracle',  # FIXME: hardcoded
     }
     if parameters:
         execute_script_data.update(inputs=parameters)
+# submit job
     response = session.post(execute_script_url, data=execute_script_data)
     logger.debug("execute script response: %s", response.text)
+    return response

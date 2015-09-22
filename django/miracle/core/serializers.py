@@ -27,7 +27,7 @@ class OutputFileSerializer(serializers.ModelSerializer):
         model = AnalysisOutputFile
 
 
-class AnalysisOutputSerializer(serializers.HyperlinkedModelSerializer):
+class AnalysisOutputSerializer(serializers.ModelSerializer):
     analysis = serializers.StringRelatedField()
     files = OutputFileSerializer(many=True)
 
@@ -36,13 +36,14 @@ class AnalysisOutputSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             'url': {'view_name': 'core:output-detail'}
         }
-        fields = ('id', 'name', 'date_created', 'creator', 'analysis', 'parameter_values_json')
+        fields = ('id', 'name', 'date_created', 'creator', 'analysis', 'parameter_values_json', 'files')
 
 
 class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
     parameters = serializers.ReadOnlyField(source='input_parameters')
     authors = serializers.StringRelatedField(many=True)
+    outputs = AnalysisOutputSerializer(many=True, read_only=True)
 
     class Meta:
         model = Analysis
@@ -76,7 +77,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     number_of_datasets = serializers.IntegerField(read_only=True)
     datasets = DatasetSerializer(many=True, read_only=True)
     analyses = AnalysisSerializer(many=True, read_only=True)
-    outputs = AnalysisOutputSerializer(many=True, read_only=True)
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)

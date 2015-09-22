@@ -355,6 +355,7 @@ class AnalysisOutput(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User)
     parameter_values_json = PostgresJSONField(help_text=_("Input parameter values used in the given analysis run"))
+    response = PostgresJSONField(help_text=_("Internal raw HTTP response from executing the script against DeployR/OpenCPU"))
 
     def __unicode__(self):
         return u'[{}] output from running {} on {} by {} with parameters {}'.format(

@@ -26,7 +26,7 @@
         </ul>
     </div>
     <div class='col-md-9'>
-        <div class='panel panel-default'>
+        <div class='panel panel-primary'>
             <div class='panel-heading'>
                 <h2 class='panel-title'>{{project.name}} <span class='label label-badge label-primary pull-right'>{{project.status}}</span></h2>
             </div>
@@ -49,80 +49,64 @@
                         </form>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='explorer'>
+                        <a class='btn btn-xs btn-default' target='_blank' href='https://miracle.comses.net/radiant/'><i class='fa fa-external-link'></i> Open in new window</a>
                         <div class='embed-responsive embed-responsive-4by3'>
-                            <iframe src='//miracle.comses.net/radiant/'></iframe>
+                            <iframe id='radiant-iframe' src='//miracle.comses.net/radiant/'></iframe>
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='analysis'>
-                        {# FIXME: extract into a component (react or KO) #}
-                        <div class='panel panel-primary'>
-                            <div class='panel-heading'>
-                                <h3 class='panel-title'><i class='fa fa-code'></i> Analyses</h3>
+                        {# FIXME: should eventually extract into component (react or KO) #}
+                        <h3 class='panel-title'><i class='fa fa-code'></i> Analyses</h3>
+                        <div data-bind='foreach: analyses'>
+                            <h5><span data-bind='text: full_name'></span>
+                                <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
+                            </h5>
+                            <hr>
+                            <div class='well'>
+                                <strong>Description</strong>:
+                                <span data-bind='text: description() || "No description entered yet."'></span>
+                                <br>
+                                <strong>Authors</strong>:
+                                <span data-bind='if: authors().length'>
+                                    <span data-bind='foreach: authors'>
+                                        <span data-bind='text: $data'></span>
+                                    </span>
+                                </span>
+                                <span data-bind='ifnot: authors().length'>
+                                    No authors listed.
+                                </span>
+                                <br>
+                                <strong>Type</strong>: <span class='label label-warning' data-bind='text: file_type'></span>
                             </div>
-                            <div class='panel-body'>
-                                <div data-bind='foreach: analyses'>
-                                    <h5><span data-bind='text: full_name'></span>
-                                        <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
-                                    </h5>
-                                    <hr>
-                                    <div class='well'>
-                                        <strong>Description</strong>:
-                                        <span data-bind='text: description() || "No description entered yet."'></span>
-                                        <br>
-                                        <strong>Authors</strong>:
-                                        <span data-bind='if: authors().length'>
-                                            <span data-bind='foreach: authors'>
-                                                <span data-bind='text: $data'></span>
-                                            </span>
-                                        </span>
-                                        <span data-bind='ifnot: authors().length'>
-                                            No authors listed.
-                                        </span>
-                                        <br>
-                                        <strong>Type</strong>: <span class='label label-warning' data-bind='text: file_type'></span>
-                                    </div>
-                                    <div class='btn-group' role='group'>
-                                        <button class='btn btn-sm btn-default' data-bind='click: $root.enterAnalysisParameters.bind($data)'><i class='fa fa-play'></i> Run script</button>
-                                        <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
-                                            <i class='fa fa-eye'></i> View details</span>
-                                        </a>
-                                    </div>
-                                </div>
+                            <div class='btn-group' role='group'>
+                                <button class='btn btn-sm btn-default' data-bind='click: $root.enterAnalysisParameters.bind($data)'><i class='fa fa-play'></i> Run script</button>
+                                <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
+                                    <i class='fa fa-eye'></i> View details</span>
+                                </a>
                             </div>
-                        </div>
-                        <div class='panel panel-primary'>
-                            <div class='panel-heading'>
-                                <h3 class='panel-title'><i class='fa fa-database'></i> Data</h3>
-                            </div>
-                            <div class='panel-body'>
-                                <ul class='list-group' data-bind='foreach: datasets'>
-                                    <li class='list-group-item'>
-                                        <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
-                                            <i class='fa fa-download'></i> Download
-                                        </a>
-                                        <a data-bind='attr: {href: url}, text: name'></a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class='panel panel-primary'>
-                            <div class='panel-heading'>
-                                <h3 class='panel-title'><i class='fa fa-area-chart'></i> Outputs</h3>
-                            </div>
-                            <div class='panel-body'>
+                            <div class='well'>
+                                <h5><i class='fa fa-area-chart'></i> Outputs</h5>
                                 <div data-bind='foreach: outputs'>
                                     <h5><span data-bind='text: name'></span>
                                         <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
                                     </h5>
                                     <hr>
                                     <div class='btn-group' role='group'>
-                                        <button class='btn btn-sm btn-default' data-bind='click: $root.enterAnalysisParameters.bind($data)'><i class='fa fa-play'></i> Run script</button>
-                                        <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
-                                            <i class='fa fa-eye'></i> View details</span>
-                                        </a>
+                                        <i class='fa fa-eye'></i> View details</span>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <h3 class='panel-title'><i class='fa fa-database'></i> Data</h3>
+                        <div class='panel-body'>
+                            <ul class='list-group' data-bind='foreach: datasets'>
+                                <li class='list-group-item'>
+                                    <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
+                                        <i class='fa fa-download'></i> Download
+                                    </a>
+                                    <a data-bind='attr: {href: url}, text: name'></a>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
@@ -187,6 +171,9 @@ $(function() {
         paramName: "file",
     };
     var model = new ProjectModel({data: {{ project_json|safe}}} );
+    model.toggleFullScreen = function(id) {
+        $(id).toggleClass("maximized-iframe");
+    };
     model.showAnalysisParameters = ko.observable(false);
     model.selectedAnalysisId = ko.observable(-1);
     model.analysisParameters = ko.observableArray();
