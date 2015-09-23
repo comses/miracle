@@ -371,7 +371,7 @@ class ParameterValue(models.Model):
 
 
 def _analysis_output_path(instance, filename):
-    return os.path.join(settings.OUTPUT_FILE_PATH, instance.project_slug)
+    return os.path.join(settings.OUTPUT_FILE_PATH, instance.project_slug, filename)
 
 
 class AnalysisOutputFile(models.Model):
@@ -434,7 +434,7 @@ class Dataset(MiracleMetadataMixin):
     the OAIS reference model (http://www2.archivists.org/groups/standards-committee/open-archival-information-system-oais)
     """
 
-    slug = AutoSlugField(populate_from='name', unique=True)
+    slug = AutoSlugField(populate_from='name', unique=True, overwrite=True)
     project = models.ForeignKey(Project, related_name="datasets")
     provenance = PostgresJSONField()
     authors = models.ManyToManyField(Author)
