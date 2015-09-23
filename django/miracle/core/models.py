@@ -298,6 +298,19 @@ class Analysis(MiracleMetadataMixin):
 # returns a list of dicts for easier JSON consumption
         return [dict(name=k, **v) for k, v in self.get_deployr_parameters_dict().items()]
 
+    def to_deployr_input_parameters(self, parameters_list):
+        """
+        Converts list of parameters [{'name': 'fooparamname', 'value': 'bar', 'label': 'baz', ...}, ...] into a single dict
+        object for consumption by the DeployR API of the form
+        { 'fooparamname': {'value: 'bar', 'label': 'baz', ...}, ... }
+        NOTE: Assumes that value has already been set on the parameter.
+        """
+        deployr_input_parameters = {}
+        for parameter_dict in parameters_list:
+            name = parameter_dict.pop('name')
+            # assign the rest of the parameter attributes dict to the param name as is
+            deployr_input_parameters[name] = parameter_dict
+        return deployr_input_parameters
 
     def get_deployr_parameters_dict(self, values=None):
         if values is None:

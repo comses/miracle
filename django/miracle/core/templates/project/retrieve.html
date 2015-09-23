@@ -189,6 +189,31 @@ $(function() {
     model.showAnalysisParameters = ko.observable(false);
     model.selectedAnalysisId = ko.observable(-1);
     model.analysisParameters = ko.observableArray();
+    model.currentInterval = ko.observable();
+    model.setCurrentInterval = function(intervalId) {
+        model.clearCurrentInterval();
+        model.currentInterval(intervalId);
+    }
+    model.clearCurrentInterval = function() {
+        if (model.currentInterval()) {
+            clearInterval(model.currentInterval());
+            model.currentInterval(undefined);
+        }
+    }
+    model.checkAnalysisRunStatus = function(task_id) {
+        // FIXME: replace with websockets / sockjs if/when more realtime notifications are needed
+        return function() {
+            $.get('/analysis/status/', {task_id: task_id}, function(response) {
+                console.debug("SUCCESS response");
+                console.debug(response);
+                model.clearCurrentInterval();
+            }).fail(function(response) {
+                console.debug("FAIL response failed to check status of " + task_id + " -- clearing interval");
+                console.debug(response);
+                model.clearCurrentInterval();
+            });
+        }
+    }
     model.enterAnalysisParameters = function(analysis) {
         console.debug("running analysis on: " + analysis);
         var analysis_detail_url = analysis.url();
@@ -207,20 +232,27 @@ $(function() {
             alert("No analysis selected.");
             return;
         }
+        if (model.currentInterval()) {
+            alert("Analysis already running, please wait until it has completed.");
+            return;
+        }
         console.debug("running analysis with updated parameters");
         parameters = model.analysisParameters();
         ko.utils.arrayForEach(parameters, function(parameter) {
             parameter.value = parseFloat(parameter.value);
         });
-        $.get('/analysis/run', {pk: model.selectedAnalysisId(), parameters: JSON.stringify(parameters)}, function(response) {
+        $.get('/analysis/run/', {pk: model.selectedAnalysisId(), parameters: JSON.stringify(parameters)}, function(response) {
             console.debug("success");
             console.debug(response);
+            // start checking on the run after 6 seconds.
+            setTimeout(function() {
+                model.setCurrentInterval(setInterval(model.checkAnalysisRunStatus(response.task_id), 2000));
+            }, 5000);
         }).fail(function() {
             console.debug("Failed to run analysis with parameters");
             console.debug(parameters);
         }).always(function() {
             $('#analysis-input-modal').modal('hide');
-
         });
     }
     ko.applyBindings(model);

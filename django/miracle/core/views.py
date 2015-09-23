@@ -1,3 +1,4 @@
+from celery.result import AsyncResult
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse_lazy
@@ -11,7 +12,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import (Project, ActivityLog, MiracleUser, Dataset, Analysis)
-from .serializers import (ProjectSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer)
+from .serializers import (ProjectSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer,
+                          AnalysisOutputSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task
 
@@ -62,6 +64,29 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
 
     def get_object(self):
         return self.request.user
+
+
+class CheckAnalysisStatusView(APIView):
+    renderer_classes = (renderers.JSONRenderer,)
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request):
+        query_params = request.query_params
+        task_id = query_params.get('task_id')
+        async_result = AsyncResult(task_id)
+        data = {'ready': async_result.ready(), 'status': async_result.status}
+        if async_result.ready():
+            result = async_result.result
+            if isinstance(result, Exception):
+                logger.debug("raised error")
+                data.update(error_message=unicode(result))
+            else:
+# run succeeded, serialize the result
+                logger.debug("async result output: type(%s) - %s", type(result), result)
+                serializer = AnalysisOutputSerializer(result)
+                data.update(output=serializer.data)
+        # query celery task status
+        return Response(data, status=200)
 
 
 class RunAnalysisView(APIView):
@@ -136,7 +161,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return response
 
     def perform_update(self, serializer):
-        logger.debug("performing update with serializer: %s", serializer)
         user = self.request.user
         project = serializer.save(user=user)
         logger.debug("modified data: %s", serializer.modified_data_text)
