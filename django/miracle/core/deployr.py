@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import requests
+import tempfile
 import time
 
 logger = logging.getLogger(__name__)
@@ -56,6 +57,9 @@ class Job(object):
             session = login(user)
         self.session = session
 
+    def get(self, url, **kwargs):
+        return self.session.get(url, **kwargs)
+
     def post(self, url, data=None, **kwargs):
         if data is None:
             data = kwargs
@@ -71,25 +75,63 @@ class Job(object):
         self.submit_successful = self.submit_response_json['deployr']['response']['success']
         return response
 
-    def check_status(self, wait=True, counter=0, limit=50, job_id=None):
+    def check_status(self, retry=True, counter=0, limit=30, job_id=None):
         if job_id is None:
             job_id = getattr(self, 'job_id', None)
             if job_id is None:
                 raise ValueError("Submit a job first or pass a valid job id into this method")
 
+        logger.debug("checking status of job %s with counter %s", job_id, counter)
         response = self.post(job_status_url, job=job_id)
         response_json = response.json()
-        if not self.is_job_completed(response_json):
-            if wait and counter < limit:
+        completed = self.is_job_completed(response_json)
+        logger.debug("job was completed? %s with response %s", completed, response.text)
+        if not completed:
+            logger.debug("job wasn't completed, trying again in 10 seconds.")
+            if retry and counter < limit:
                 # recur up to the limit
-                time.sleep(1000)
-                self.check_status(wait, counter + 1, limit, job_id)
-            return response
+                time.sleep(10)
+                logger.debug("done sleeping, about to retry")
+                return self.check_status(retry, counter=counter + 1, limit=limit, job_id=job_id)
+            else:
+                logger.debug("job took too long to complete - aborting")
         else:
             self.project_id = self.get_project_id(response_json)
+            logger.debug("project id %s", self.project_id)
             # retrieve results
             response = self.post(job_results_url, project=self.project_id)
-        return response
+            logger.debug("results response: %s", response.text)
+            self.results = self.get_results(response.json())
+            logger.debug("results: %s", self.results)
+        self.response = response
+        self.completed = completed
+        return (response, completed)
+
+    def get_results(self, response_json):
+        return response_json['deployr']['response']['directory']['files']
+
+    def retrieve_files(self):
+        """
+        Returns a list of (File, JSON metadata about the file) tuples.
+        """
+        results = getattr(self, 'results', None)
+        if results is None or not self.completed:
+            raise ValueError("No results available, try running check_status again.")
+        files = []
+        temp_directory = tempfile.mkdtemp(prefix=self.project_id)
+        for result in results:
+            url = result['url']
+            filename = result['filename']
+            response = self.get(url, stream=True)
+            if not response.ok:
+                logger.error("unable to retrieve file %s at url %s.\nResponse: %s", filename, url, response)
+                continue
+            result_file = os.path.join(temp_directory, filename)
+            with open(result_file, 'wb') as f:
+                for block in response.iter_content(1024):
+                    f.write(block)
+                files.append((f.name, result))
+        return files
 
     def is_job_completed(self, response_json):
         return self.get_job_data(response_json)['status'] == 'Completed'
@@ -97,8 +139,8 @@ class Job(object):
     def get_job_data(self, response_json):
         try:
             return response_json['deployr']['response']['job']
-        except:
-            raise ValueError("invalid json {}".format(response_json))
+        except KeyError as e:
+            raise ValueError("invalid json {}: {}".format(response_json, e))
 
     def get_job_id(self, response_json):
         return self.get_job_data(response_json)['job']
@@ -117,30 +159,33 @@ def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
 
     logger.debug("user %s running script %s in working directory %s with parameters %s", user, script_file, workdir,
                  parameters)
-    session = login(user)
-    # parse and validate response
-    # FIXME: figure out how to handle script scratch space / working directory allocation in deployr
-    response = session.post(create_working_directory_url,
-                            data={'format': 'json', 'directory': workdir})
-    logger.debug("create working directory response: %s", response.text)
-    filename = os.path.basename(script_file.name)
-    response = session.post(upload_script_url,
-                            files={'file': script_file},
-                            data={'format': 'json',
-                                  'filename': filename,
-                                  'directory': workdir
-                                  })
-    logger.debug("upload script response: %s", response.text)
-    execute_script_data = {
-        'format': 'json',
-        'name': job_name,
-        'rscriptname': filename,
-        'rscriptdirectory': workdir,
-        'rscriptauthor': 'miracle',  # FIXME: hardcoded
-    }
-    if parameters:
-        execute_script_data.update(inputs=json.loads(parameters))
-    # submit job
-    job = Job(session)
-    job.submit(execute_script_data)
-    return job
+    with login(user) as session:
+        # parse and validate response
+        # FIXME: figure out how to handle script scratch space / working directory allocation in deployr
+        response = session.post(create_working_directory_url,
+                                data={'format': 'json', 'directory': workdir})
+        logger.debug("create working directory response: %s", response.text)
+        filename = os.path.basename(script_file.name)
+        response = session.post(upload_script_url,
+                                files={'file': script_file},
+                                data={'format': 'json',
+                                      'filename': filename,
+                                      'directory': workdir
+                                      })
+        logger.debug("upload script response: %s", response.text)
+        execute_script_data = {
+            'format': 'json',
+            'name': job_name,
+            'rscriptname': filename,
+            'rscriptdirectory': workdir,
+            'rscriptauthor': 'miracle',  # FIXME: hardcoded
+        }
+        if parameters:
+            execute_script_data.update(inputs=json.loads(parameters))
+        # submit job
+        job = Job(session)
+        job.submit(execute_script_data)
+        time.sleep(15)
+        (response, completed) = job.check_status()
+        logger.debug("script execution completed: success? [{}] response: {}".format(completed, response))
+        return job

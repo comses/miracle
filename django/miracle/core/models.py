@@ -371,13 +371,14 @@ class ParameterValue(models.Model):
 
 
 def _analysis_output_path(instance, filename):
-    return os.path.join(settings.OUTPUT_FILE_PATH, self.project_slug)
+    return os.path.join(settings.OUTPUT_FILE_PATH, instance.project_slug)
 
 
 class AnalysisOutputFile(models.Model):
 
     output = models.ForeignKey(AnalysisOutput, related_name='files')
-    output_file = models.FilePathField(path=_analysis_output_path)
+    output_file = models.FileField(upload_to=_analysis_output_path)
+    metadata = PostgresJSONField(help_text=_("Additional metadata provided by analysis execution engine"))
 
     @property
     def project_slug(self):
