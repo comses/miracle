@@ -256,7 +256,7 @@ MEDIA_URL = '/data/'
 
 # Celery settings: http://celery.readthedocs.org
 
-CELERY_BROKER_URL = 'redis+socket:///var/lib/redis/redis.sock'
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis'
 
 # DeployR settings
