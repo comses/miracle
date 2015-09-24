@@ -16,11 +16,12 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
         raise ValueError("Must pass in a Django User to execute analysis {}".format(user))
     logger.debug("user %s requesting script execution (%s) with parameters (type: %s) %s", user, analysis_id, type(parameters), parameters)
     analysis = Analysis.objects.get(pk=analysis_id)
+
     output = AnalysisOutput.objects.create(analysis=analysis, name='Demo Analysis Output', creator=user,
                                            parameter_values_json=parameters)
     deployr_input_parameters_dict = analysis.to_deployr_input_parameters(json.loads(parameters))
     self.update_state(state='PROCESSING')
-    job = deployr.run_script(script_file=analysis.uploaded_file, parameters=json.dumps(deployr_input_parameters_dict),
+    job = deployr.run_script(script_file=analysis.uploaded_file, parameters=deployr_input_parameters_dict,
                              user=user, job_name='{}-{}'.format(analysis.name, output.pk))
     output.response = job.response.text
     output.save()

@@ -12,6 +12,7 @@ from django_extensions.db.fields import AutoSlugField
 from model_utils import Choices
 from model_utils.managers import PassThroughManager
 
+import json
 import logging
 import os
 import re
@@ -182,7 +183,7 @@ class ProjectQuerySet(ActivePublishedQuerySet):
 
 class Project(MiracleMetadataMixin):
 
-    slug = AutoSlugField(populate_from='name', unique=True)
+    slug = AutoSlugField(populate_from='name', unique=True, overwrite=True)
     group = models.OneToOneField(Group, editable=False,
                                  help_text=_("Members of this group can edit this project's datasets and metadata"),
                                  null=True)
@@ -284,7 +285,7 @@ class Analysis(MiracleMetadataMixin):
         ('Perl', _('Perl script')),
     )
 
-    slug = AutoSlugField(populate_from='name', unique=True)
+    slug = AutoSlugField(populate_from='name', unique=True, overwrite=True)
     project = models.ForeignKey(Project, related_name="analyses")
     provenance = PostgresJSONField()
     parameters_json = PostgresJSONField(help_text=_("Supported input parameters in JSON format for this analysis script"))
@@ -295,7 +296,7 @@ class Analysis(MiracleMetadataMixin):
 
     @property
     def input_parameters(self):
-# returns a list of dicts for easier JSON consumption
+        # returns a list of dicts for easier JSON consumption
         return [dict(name=k, **v) for k, v in self.get_deployr_parameters_dict().items()]
 
     def to_deployr_input_parameters(self, parameters_list):
@@ -354,7 +355,7 @@ class AnalysisParameter(models.Model):
                                      help_text=_("default value for this analysis input parameter"))
 
     def convert(self, value):
-        return TYPE_CONVERTERS[self.data_type](value)
+        return AnalysisParameter.TYPE_CONVERTERS[self.data_type](value)
 
     def __unicode__(self):
         return u'{} ({})'.format(self.label, self.name)
@@ -369,6 +370,10 @@ class AnalysisOutput(models.Model):
     creator = models.ForeignKey(User)
     parameter_values_json = PostgresJSONField(help_text=_("Input parameter values used in the given analysis run"))
     response = PostgresJSONField(help_text=_("Internal raw HTTP response from executing the script against DeployR/OpenCPU"))
+
+    @property
+    def parameter_values_text(self):
+        return json.dumps(self.parameter_values_json)
 
     def __unicode__(self):
         return u'[{}] output from running {} on {} by {} with parameters {}'.format(

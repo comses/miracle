@@ -23,8 +23,10 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class OutputFileSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = AnalysisOutputFile
+        fields = ('id', 'metadata', 'output_file')
 
 
 class AnalysisOutputSerializer(serializers.ModelSerializer):
@@ -33,10 +35,7 @@ class AnalysisOutputSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AnalysisOutput
-        extra_kwargs = {
-            'url': {'view_name': 'core:output-detail'}
-        }
-        fields = ('id', 'name', 'date_created', 'creator', 'analysis', 'parameter_values_json', 'files')
+        fields = ('id', 'name', 'date_created', 'creator', 'analysis', 'parameter_values_text', 'files')
 
 
 class AnalysisSerializer(serializers.HyperlinkedModelSerializer):

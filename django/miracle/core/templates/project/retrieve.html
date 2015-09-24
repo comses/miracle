@@ -92,19 +92,44 @@
                                     </a>
                                 </div>
                                 <hr>
-                                <h5><i class='fa fa-area-chart'></i> Outputs</h5>
+                                <h5><i class='fa fa-area-chart'></i> Outputs <span class='pull-right label label-badge label-primary' data-bind='text: outputs().length'></span></h5>
+                                <hr>
                                 <div data-bind='ifnot: outputs().length'>
                                     No outputs recorded yet.
                                 </div>
-                                <div data-bind='foreach: outputs'>
-                                    <h5><span data-bind='text: name'></span>
-                                        <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
-                                    </h5>
-                                    <hr>
-                                    <div class='btn-group' role='group'>
-                                        <i class='fa fa-eye'></i> View details</span>
-                                    </div>
-                                </div>
+                                <ul class='list-group' data-bind='foreach: outputs'>
+                                    <li class='list-group-item'>
+                                        <h5><span data-bind='text: name'></span>
+                                            <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
+                                        </h5>
+                                        <div class='collapse' data-bind='attr: {id: "collapseOutput" + id() }'>
+                                            <div class='well'>
+                                                <code>Parameters:</code>
+                                                <pre data-bind='text: $root.prettyprint(parameter_values_text())'>
+                                                </pre>
+                                                <b>Output files:</b>
+                                                <ul class='list-inline' data-bind='foreach: files'>
+                                                    <li data-bind='text: output_file'></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class='btn-group' role='group'>
+                                            <a class='btn btn-primary' role='button' data-toggle='collapse'
+                                                aria-expanded='false'
+                                                data-bind='attr: {href: "#collapseOutput" + id()}'>
+                                                <i class='fa fa-eye'></i> View details
+                                            </a>
+                                            <a class='btn btn-success' role='button' data-bind='click: $root.shareOutput.bind($data)'>
+                                                <i class='fa fa-share'></i> Share
+                                            </a>
+                                        </div>
+                                        <div class='btn-group pull-right' role='group'>
+                                            <a class='btn btn-danger' role='button' data-bind='click: $root.deleteOutput.bind($data)'>
+                                                <i class='fa fa-trash'></i> Delete
+                                            </a>
+                                        </div>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                         <div class='bs-callout bs-callout-default'>
@@ -147,14 +172,13 @@
                 <form class='form form-horizontal' id='analysis-input-form'>
                     <div data-bind='foreach: analysisParameters'>
                         <div class='form-group'>
-                            <label data-bind='attr: { for: name }' class='control-label col-sm-3'>
+                            <label data-bind='attr: { for: name }' class='control-label col-sm-5'>
                                 <span data-bind='text: label'></span>
+                                <i>(<small data-bind='text: name'></small>)</i>
+                                <span class='label label-badge label-primary' data-bind='text: rclass'></span>
                             </label>
-                            <div class='col-sm-6'>
-                                <div class='input-group'>
-                                    <input type='number' step="any" data-bind='attr: {id: name}, value: value' class='form-control' required placeholder='Value'>
-                                    <span class='text-info input-group-addon'><mark data-bind='text: rclass'></mark></span>
-                                </div>
+                            <div class='col-sm-7'>
+                                <input type='number' step="0.1" data-bind='attr: {id: name}, value: value' class='form-control' required placeholder='Value'>
                             </div>
                         </div>
                     </div>
@@ -200,6 +224,14 @@ $(function() {
             model.currentInterval(undefined);
         }
     }
+    model.shareOutput = function(output) {
+        console.debug("sharing output");
+        console.debug(output);
+    }
+    model.deleteOutput = function(output) {
+        console.debug("deleting output");
+        console.debug(output);
+    }
     model.checkAnalysisRunStatus = function(task_id) {
         // FIXME: replace with websockets / sockjs if/when more realtime notifications are needed
         return function() {
@@ -227,6 +259,9 @@ $(function() {
             alert("Failed to retrieve analysis parameters");
         });
     };
+    model.prettyprint = function(json_string) {
+        return JSON.stringify(JSON.parse(json_string), null, 4);
+    }
     model.runAnalysis = function(model) {
         if (model.selectedAnalysisId() === -1) {
             alert("No analysis selected.");
