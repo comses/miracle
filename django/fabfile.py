@@ -1,6 +1,7 @@
 from fabric.api import local, sudo, cd, env, execute, roles, task, run
 from fabric.context_managers import prefix
 from fabric.contrib import django, console
+from django.conf import settings as miracle_settings
 
 import logging
 import os
@@ -28,7 +29,7 @@ env.deploy_user = 'nginx'
 env.deploy_group = 'comses'
 env.db_user = 'miracle'
 env.databases = ('miracle_metadata', 'miracle_data')
-env.deploy_parent_dir = '/opt/'
+env.deploy_parent_dir = '/comses/apps/'
 env.git_url = 'https://github.com/comses/miracle.git'
 env.services = 'nginx14-nginx redis supervisord'
 env.docs_path = os.path.join(env.project_path, 'docs')
@@ -39,7 +40,6 @@ env.vcs = 'git'
 
 # django integration for access to settings, etc.
 django.project(env.project_name)
-from django.conf import settings as miracle_settings
 
 
 @task
@@ -201,12 +201,13 @@ def deploy(branch, user):
     if user is None:
         user = env.deploy_user
     env.user = user
-    env.deploy_dir = env.deploy_parent_dir + env.project_name
+    env.deploy_dir = os.path.join(env.deploy_parent_dir, env.project_name)
+    env.django_dir = os.path.join(env.deploy_dir, 'django')
     env.branch = branch
     env.virtualenv_path = '/comses/virtualenvs/{}'.format(env.project_name)
     env.vcs_command = 'export GIT_WORK_TREE={} && git checkout -f {} && git pull'.format(env.deploy_dir, env.branch)
     if console.confirm("Deploying '%(branch)s' branch to host %(host)s : \n\r%(vcs_command)s\nContinue? " % env):
-        with cd(env.deploy_dir):
+        with cd(env.django_dir):
             sudo_chain(
                 env.vcs_command,
                 'chmod g+s logs',
@@ -217,7 +218,7 @@ def deploy(branch, user):
                 _virtualenv(sudo, 'pip install -Ur requirements.txt', user=env.deploy_user)
             if console.confirm("Run database migrations?"):
                 _virtualenv(sudo, '%(python)s manage.py migrate' % env, user=env.deploy_user)
-            _virtualenv(sudo, '%(python)s manage.py collectstatic' % env)
+            _virtualenv(sudo, '%(python)s manage.py collectstatic' % env, user=env.deploy_user)
             sudo_chain(
                 'chmod -R ug+rw .',
                 'find %(static_root)s %(virtualenv_path)s -type d -exec chmod a+x {} \;' % env,
