@@ -28,7 +28,7 @@
     <div class='col-md-9'>
         <div class='panel panel-primary'>
             <div class='panel-heading'>
-                <h1 class='panel-title'>PROJECT: {{project.name}} <span class='label label-badge label-danger pull-right'>{{project.status}}</span></h1>
+                <h1 class='panel-title'>PROJECT: {{project.name}} <span class='label label-badge label-info pull-right'>{{project.status}}</span></h1>
             </div>
             <div class='panel-body'>
                 <div class='tab-content'>
@@ -64,6 +64,10 @@
                                 <h5><span data-bind='text: full_name'></span>
                                     <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
                                 </h5>
+                                <div>
+                                    <strong>Status</strong>:
+                                    <mark data-bind='text: job_status'></mark>
+                                </div>
                                 <div>
                                     <strong>Description</strong>:
                                     <span data-bind='text: description() || "No description entered yet."'></span>
@@ -109,7 +113,7 @@
                                                 </pre>
                                                 <b>Output files:</b>
                                                 <ul class='list-inline' data-bind='foreach: files'>
-                                                    <li data-bind='text: output_file'></li>
+                                                    <li><a data-bind='attr: {href: url}, text: name'></a></li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -202,16 +206,18 @@
 {% include "includes/csrf.js" %}
 {% include "project/includes/detail-form.html" %}
 <script>
+var gm;
 $(function() {
     Dropzone.options.myDropzone = {
         paramName: "file",
     };
     var model = new ProjectModel({data: {{ project_json|safe}}} );
+    gm = model;
     model.toggleFullScreen = function(id) {
         $(id).toggleClass("maximized-iframe");
     };
     model.showAnalysisParameters = ko.observable(false);
-    model.selectedAnalysisId = ko.observable(-1);
+    model.selectedAnalysis = ko.observable();
     model.analysisParameters = ko.observableArray();
     model.currentInterval = ko.observable();
     model.setCurrentInterval = function(intervalId) {
@@ -236,9 +242,14 @@ $(function() {
         // FIXME: replace with websockets / sockjs if/when more realtime notifications are needed
         return function() {
             $.get('/analysis/status/', {task_id: task_id}, function(response) {
-                console.debug("SUCCESS response");
+                console.debug("SUCCESS analysis check response");
                 console.debug(response);
-                model.clearCurrentInterval();
+                var status = response.status;
+                model.selectedAnalysis().job_status(status);
+                if (status === "COMPLETED") {
+                    model.clearCurrentInterval();
+                    model.selectedAnalysis(undefined);
+                }
             }).fail(function(response) {
                 console.debug("FAIL response failed to check status of " + task_id + " -- clearing interval");
                 console.debug(response);
@@ -247,13 +258,14 @@ $(function() {
         }
     }
     model.enterAnalysisParameters = function(analysis) {
-        console.debug("running analysis on: " + analysis);
+        console.debug("running analysis on: ");
+        console.debug(analysis);
         var analysis_detail_url = analysis.url();
+        model.selectedAnalysis(analysis);
         $.get(analysis_detail_url, {format: 'json'}, function(response) {
             console.debug("success");
             console.debug(response);
             model.analysisParameters(response.parameters);
-            model.selectedAnalysisId(response.id);
             model.showAnalysisParameters(true);
         }).fail(function() {
             alert("Failed to retrieve analysis parameters");
@@ -263,7 +275,7 @@ $(function() {
         return JSON.stringify(JSON.parse(json_string), null, 4);
     }
     model.runAnalysis = function(model) {
-        if (model.selectedAnalysisId() === -1) {
+        if (! model.selectedAnalysis()) {
             alert("No analysis selected.");
             return;
         }
@@ -276,9 +288,11 @@ $(function() {
         ko.utils.arrayForEach(parameters, function(parameter) {
             parameter.value = parseFloat(parameter.value);
         });
-        $.get('/analysis/run/', {pk: model.selectedAnalysisId(), parameters: JSON.stringify(parameters)}, function(response) {
+        $.get('/analysis/run/', {pk: model.selectedAnalysis().id(), parameters: JSON.stringify(parameters)}, function(response) {
             console.debug("success");
             console.debug(response);
+            console.debug(model.selectedAnalysis());
+            model.selectedAnalysis().job_status("PROCESSING");
             // start checking on the run after 6 seconds.
             setTimeout(function() {
                 model.setCurrentInterval(setInterval(model.checkAnalysisRunStatus(response.task_id), 2000));

@@ -30,11 +30,13 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
     results = job.retrieve_files()
 # results is a list of tuples (file, metadata)
     for result in results:
+        temporary_file = result[0]
         metadata = result[1]
-        with open(result[0], 'rb') as of:
+        logger.debug("creating analysis output file from [%s, %s]", temporary_file, metadata)
+        with open(temporary_file, 'rb') as of:
             # metadata is a python dict at this point, still need to serialize it back to JSON before storing it
-            aof = output.files.create(metadata=json.dumps(metadata))
-            aof.output_file.save(metadata['filename'], files.File(of))
+            analysis_output_file = output.files.create(metadata=json.dumps(metadata))
+            analysis_output_file.output_file.save(metadata['filename'], files.File(of), save=True)
     self.update_state(state='COMPLETED',
                       meta={'output_id': output.pk})
     return output

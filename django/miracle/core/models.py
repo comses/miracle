@@ -191,7 +191,7 @@ class Project(MiracleMetadataMixin):
 
     @property
     def path(self):
-        return os.path.join(settings.MIRACLE_DATA_DIRECTORY, 'project', str(self.slug))
+        return os.path.join('project', str(self.slug))
 
     @property
     def uploads_path(self):
@@ -272,7 +272,7 @@ class Author(models.Model):
 
 
 def _local_analysis_path(analysis, filename):
-    return os.path.join(analysis.project.upload_path, 'scripts', filename)
+    return os.path.join(analysis.project.uploads_path, 'scripts', filename)
 
 
 class Analysis(MiracleMetadataMixin):
@@ -389,7 +389,7 @@ class ParameterValue(models.Model):
 
 
 def _analysis_output_path(instance, filename):
-    return os.path.join(settings.OUTPUT_FILE_PATH, instance.project_slug, filename)
+    return os.path.join(instance.project_path, filename)
 
 
 class AnalysisOutputFile(models.Model):
@@ -399,8 +399,11 @@ class AnalysisOutputFile(models.Model):
     metadata = PostgresJSONField(help_text=_("Additional metadata provided by analysis execution engine"))
 
     @property
-    def project_slug(self):
-        return self.output.analysis.project.slug
+    def project_path(self):
+        return self.output.analysis.project.path
+
+    def __unicode__(self):
+        return u"output file {}".format(self.output_file)
 
 
 class DatasetQuerySet(models.query.QuerySet):

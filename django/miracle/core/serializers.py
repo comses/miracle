@@ -23,10 +23,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class OutputFileSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True, source='output_file.name')
+    url = serializers.URLField(read_only=True, source='output_file.url')
 
     class Meta:
         model = AnalysisOutputFile
-        fields = ('id', 'metadata', 'output_file')
+        fields = ('id', 'metadata', 'url', 'name')
 
 
 class AnalysisOutputSerializer(serializers.ModelSerializer):
@@ -43,6 +45,10 @@ class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
     parameters = serializers.ReadOnlyField(source='input_parameters')
     authors = serializers.StringRelatedField(many=True)
     outputs = AnalysisOutputSerializer(many=True, read_only=True)
+    job_status = serializers.SerializerMethodField()
+
+    def get_job_status(self, obj):
+        return 'Not running'
 
     class Meta:
         model = Analysis
@@ -50,7 +56,7 @@ class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
             'url': {'view_name': 'core:analysis-detail'}
         }
         fields = ('id', 'name', 'full_name', 'date_created', 'last_modified', 'description', 'uploaded_file', 'project',
-                  'file_type', 'parameters', 'url', 'authors', 'outputs')
+                  'file_type', 'parameters', 'url', 'authors', 'outputs', 'job_status')
 
 
 class DatasetSerializer(serializers.HyperlinkedModelSerializer):
