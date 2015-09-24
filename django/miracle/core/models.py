@@ -317,7 +317,7 @@ class Analysis(MiracleMetadataMixin):
         if values is None:
             values = {}
         return dict(
-            (p.name, {'label': p.label, 'type': 'primitive', 'rclass': p.data_type, 'value': values.get(p.name, p.default_value)})
+            (p.name, {'label': p.label, 'description': p.description, 'type': 'primitive', 'rclass': p.data_type, 'value': values.get(p.name, p.default_value)})
             for p in self.parameters.all()
         )
 
@@ -379,6 +379,9 @@ class AnalysisOutput(models.Model):
         return u'[{}] output from running {} on {} by {} with parameters {}'.format(
             self.name, self.analysis, self.date_created, self.creator, self.parameter_values_json
         )
+
+    class Meta:
+        ordering = ['-date_created']
 
 
 class ParameterValue(models.Model):

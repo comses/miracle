@@ -67,6 +67,7 @@
                                 <div>
                                     <strong>Status</strong>:
                                     <mark data-bind='text: job_status'></mark>
+                                    <i class='fa fa-spinner fa-pulse' data-bind='visible: job_status() === "PROCESSING"'></i>
                                 </div>
                                 <div>
                                     <strong>Description</strong>:
@@ -113,7 +114,11 @@
                                                 </pre>
                                                 <b>Output files:</b>
                                                 <ul class='list-inline' data-bind='foreach: files'>
-                                                    <li><a data-bind='attr: {href: url}, text: name'></a></li>
+                                                    <li><a data-bind='attr: {href: url}, text: name'></a>
+                                                        <div data-bind='if: name().endsWith("png")'>
+                                                            <img class='img-responsive img-thumbnail' data-bind='attr: {src: url}'>
+                                                        </div>
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -176,7 +181,7 @@
                 <form class='form form-horizontal' id='analysis-input-form'>
                     <div data-bind='foreach: analysisParameters'>
                         <div class='form-group'>
-                            <label data-bind='attr: { for: name }' class='control-label col-sm-5'>
+                            <label data-toggle='tooltip' data-placement='bottom' data-bind='attr: { for: name, title: description }' class='control-label col-sm-5'>
                                 <span data-bind='text: label'></span>
                                 <i>(<small data-bind='text: name'></small>)</i>
                                 <span class='label label-badge label-primary' data-bind='text: rclass'></span>
@@ -247,6 +252,8 @@ $(function() {
                 var status = response.status;
                 model.selectedAnalysis().job_status(status);
                 if (status === "COMPLETED") {
+                    alert("Script results are ready");
+                    // FIXME: refresh model results.
                     model.clearCurrentInterval();
                     model.selectedAnalysis(undefined);
                 }
@@ -267,6 +274,7 @@ $(function() {
             console.debug(response);
             model.analysisParameters(response.parameters);
             model.showAnalysisParameters(true);
+            $('[data-toggle="tooltip"]').tooltip();
         }).fail(function() {
             alert("Failed to retrieve analysis parameters");
         });
@@ -295,8 +303,8 @@ $(function() {
             model.selectedAnalysis().job_status("PROCESSING");
             // start checking on the run after 6 seconds.
             setTimeout(function() {
-                model.setCurrentInterval(setInterval(model.checkAnalysisRunStatus(response.task_id), 2000));
-            }, 5000);
+                model.setCurrentInterval(setInterval(model.checkAnalysisRunStatus(response.task_id), 4000));
+            }, 6000);
         }).fail(function() {
             console.debug("Failed to run analysis with parameters");
             console.debug(parameters);

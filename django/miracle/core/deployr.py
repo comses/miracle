@@ -1,5 +1,6 @@
 from django.conf import settings
 
+import json
 import logging
 import os
 import requests
@@ -177,7 +178,8 @@ def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
             'rscriptauthor': 'miracle',  # FIXME: hardcoded
         }
         if parameters:
-            execute_script_data.update(inputs=parameters)
+            # Convert parameters dict to be JSON-encoded
+            execute_script_data.update(inputs=json.dumps(parameters))
         # submit job
         job = Job(session)
         job.submit(execute_script_data)
