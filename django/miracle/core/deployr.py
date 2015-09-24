@@ -1,6 +1,5 @@
 from django.conf import settings
 
-import json
 import logging
 import os
 import requests
@@ -16,24 +15,12 @@ def deployr_url(uri):
     return '{}/r/{}'.format(settings.DEPLOYR_URL, uri)
 
 
-def deployr_post_data(**kwargs):
-    return dict(format='json', **kwargs)
-
-
 login_url = deployr_url('user/login')
 create_working_directory_url = deployr_url('repository/directory/create')
 upload_script_url = deployr_url('repository/file/upload')
 submit_job_url = deployr_url('job/submit')
 job_status_url = deployr_url('job/query')
 job_results_url = deployr_url('project/directory/list')
-
-
-def login(user=None):
-    auth_tuple = get_auth_tuple(user)
-    s = requests.Session()
-    r = s.post(login_url, data={'username': auth_tuple[0], 'password': auth_tuple[1], 'format': 'json'})
-    logger.debug(r.text)
-    return s
 
 
 def get_auth_tuple(user=None):
@@ -46,6 +33,14 @@ def get_auth_tuple(user=None):
     else:
             return (user.username, 'changeme')
     """
+
+
+def login(user=None):
+    auth_tuple = get_auth_tuple(user)
+    s = requests.Session()
+    r = s.post(login_url, data={'username': auth_tuple[0], 'password': auth_tuple[1], 'format': 'json'})
+    logger.debug(r.text)
+    return s
 
 
 class Job(object):
@@ -160,11 +155,11 @@ def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
     logger.debug("user %s running script %s in working directory %s with parameters %s", user, script_file, workdir,
                  parameters)
     with login(user) as session:
-        # parse and validate response
-        # FIXME: figure out how to handle script scratch space / working directory allocation in deployr
+        # FIXME: encapsulate this logic into Job or another class.
         response = session.post(create_working_directory_url,
                                 data={'format': 'json', 'directory': workdir})
-        logger.debug("create working directory response: %s", response.text)
+        # FIXME: parse and validate response
+        logger.debug("CREATE WORKING DIRECTORY response: %s", response.text)
         filename = os.path.basename(script_file.name)
         response = session.post(upload_script_url,
                                 files={'file': script_file},
@@ -172,7 +167,8 @@ def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
                                       'filename': filename,
                                       'directory': workdir
                                       })
-        logger.debug("upload script response: %s", response.text)
+        # FIXME: parse and validate response
+        logger.debug("UPLOAD SCRIPT response: %s", response.text)
         execute_script_data = {
             'format': 'json',
             'name': job_name,
@@ -181,11 +177,11 @@ def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
             'rscriptauthor': 'miracle',  # FIXME: hardcoded
         }
         if parameters:
-            execute_script_data.update(inputs=json.loads(parameters))
+            execute_script_data.update(inputs=parameters)
         # submit job
         job = Job(session)
         job.submit(execute_script_data)
         time.sleep(15)
         (response, completed) = job.check_status()
-        logger.debug("script execution completed: success? [{}] response: {}".format(completed, response))
+        logger.debug("RUN SCRIPT successful? [{}] response: {}".format(completed, response.text))
         return job
