@@ -154,7 +154,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         user_serializer = UserSerializer(User.objects.all(), many=True)
         project = response.data
         response.data = {
-            'project': self.get_object(),
             'project_json': dumps(project),
             'users_json': dumps(user_serializer.data),
         }

@@ -60,18 +60,31 @@ function ProjectModel(params) {
     data = params.data;
     model = ko.mapping.fromJS(params.data);
     model.users = ko.observableArray({{users_json|safe}})
-    model.saveUrl = ko.pureComputed(function() {
+    model.detailUrl = ko.pureComputed(function() {
         var projectId = model.id();
         return (projectId === -1) ? {% url 'core:project-list' %} : {% url 'core:project-list' %} + projectId + "/";
     });
     model.toJSON = ko.pureComputed(function() {
         return ko.mapping.toJSON(model, {
-            ignore: ["saveUrl", "requestType", "toJSON"]
+            ignore: ["detailUrl", "requestType", "toJSON"]
         });
     });
     model.requestType = ko.pureComputed(function() {
         return model.id() === -1 ? "POST" : "PUT";
     });
+    model.refresh = function() {
+        console.debug("refreshing entire project model. this is mostly overkill, we should really switch to reactjs");
+        if (model.id() === -1) {
+            console.error("trying to refresh a transient model. stop doing that");
+            return;
+        }
+        $.get(model.detailUrl(), { format: 'json' }, function(response) {
+            console.debug("REFRESH SUCCESS");
+            console.debug(response);
+            ko.mapping.fromJSON(response.project_json, model);
+        });
+
+    }
     model.save = function(data, doneCallback, failCallback) {
         if (!doneCallback) {
             console.debug("assigning default done callback");
@@ -89,7 +102,7 @@ function ProjectModel(params) {
             }
         }
         var promise = $.ajax({
-            url: model.saveUrl(),
+            url: model.detailUrl(),
             type: model.requestType(),
             data: model.toJSON(),
             contentType: 'application/json; charset=utf-8',

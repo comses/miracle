@@ -78,7 +78,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     published_on = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S %Z', read_only=True)
     date_created = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S %Z', read_only=True)
     detail_url = serializers.CharField(source='get_absolute_url', read_only=True)
-    status = serializers.CharField(read_only=True)
+    status = serializers.ReadOnlyField()
     number_of_datasets = serializers.IntegerField(read_only=True)
     datasets = DatasetSerializer(many=True, read_only=True)
     analyses = AnalysisSerializer(many=True, read_only=True)

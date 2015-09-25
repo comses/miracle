@@ -1,6 +1,5 @@
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse_lazy
-from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.db import models, connections
 from django.db.models.signals import post_save
