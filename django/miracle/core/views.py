@@ -11,7 +11,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import (Project, ActivityLog, MiracleUser, Dataset, Analysis)
+from .models import (Project, ActivityLog, MiracleUser, Dataset, Analysis, AnalysisOutput)
 from .serializers import (ProjectSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer,
                           AnalysisOutputSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
@@ -66,8 +66,9 @@ class UserProfileView(LoginRequiredMixin, UpdateWithInlinesView):
         return self.request.user
 
 
-class CheckAnalysisStatusView(APIView):
+class CheckAnalysisRunStatusView(APIView):
     renderer_classes = (renderers.JSONRenderer,)
+    # FIXME: need to revisit permissions
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
@@ -89,8 +90,23 @@ class CheckAnalysisStatusView(APIView):
         return Response(data, status=200)
 
 
+class ShareOutputView(APIView):
+    renderer_classes = (renderers.JSONRenderer,)
+    # FIXME: revisit permissions
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def post(self, request):
+        user = request.user
+        output_id = request.data.get('id')
+        email = request.data.get('email')
+        message = request.data.get('message')
+        logger.debug("user %s sharing output %s with [%s]: %s", user, output_id, email, message)
+        return Response(status=200)
+
+
 class RunAnalysisView(APIView):
     renderer_classes = (renderers.JSONRenderer,)
+    # FIXME: revisit permissions
     permission_classes = (permissions.IsAuthenticated,)
 
     def get(self, request):
@@ -104,6 +120,20 @@ class RunAnalysisView(APIView):
         async_result = run_analysis_task.delay(pk, parameters, user=request.user)
         logger.debug("running analysis task with id %s", async_result.id)
         return Response({'task_id': async_result.id}, status=202)
+
+
+class OutputViewSet(viewsets.ModelViewSet):
+    serializer_class = AnalysisOutputSerializer
+    renderer_classes = (renderers.JSONRenderer,)
+    permission_classes = (CanViewReadOnlyOrEditProjectResource,)
+
+    def get_queryset(self):
+        # FIXME: replace with viewable QuerySet
+        return AnalysisOutput.objects.all()
+
+    @property
+    def template_name(self):
+        return 'output/{}.html'.format(self.action)
 
 
 class AnalysisViewSet(viewsets.ModelViewSet):

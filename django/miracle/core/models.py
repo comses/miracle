@@ -371,6 +371,10 @@ class AnalysisOutput(models.Model):
     response = PostgresJSONField(help_text=_("Internal raw HTTP response from executing the script against DeployR/OpenCPU"))
 
     @property
+    def project(self):
+        return self.analysis.project
+
+    @property
     def parameter_values_text(self):
         return json.dumps(self.parameter_values_json)
 

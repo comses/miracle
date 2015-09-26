@@ -250,8 +250,7 @@
 
 {% block javascript %}
 <script src='//cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js'></script>
-<script type='text/html' id='run-analysis-input'>
-</script>
+<script src='//cdnjs.cloudflare.com/ajax/libs/bootbox.js/4.4.0/bootbox.min.js'></script>
 {% include "includes/ko.js" %}
 {% include "includes/dropzone.js" %}
 {% include "includes/csrf.js" %}
@@ -284,14 +283,12 @@ $(function() {
         }
     }
     model.showShareOutputForm = function(output) {
-        console.debug("DISPLAY SHARE output form for");
-        console.debug(output);
         model.selectedOutput(output);
         model.displayShareOutputForm(true);
     }
     model.shareOutput = function() {
         var formData = $('#share-output-form').serialize();
-        $.post('/analysis/share/', formData, function(response) {
+        $.post("{% url 'core:share-output' %}", formData, function(response) {
             console.debug("SUCCESSFUL SHARE");
             console.debug(response);
             humane.log("Message sent!");
@@ -301,13 +298,32 @@ $(function() {
         });
     }
     model.deleteOutput = function(output) {
-        console.debug("deleting output");
-        console.debug(output);
+        bootbox.confirm("Delete this analysis output? This cannot be undone.", function(result) {
+            if (result) {
+                console.debug("deleting output.");
+                $.ajax({
+                    url: '/outputs/' + output.id(),
+                    method: "DELETE",
+                    data: {id: output.id()},
+                    success: function(response) {
+                        console.debug("deleted output: ");
+                        console.debug(output);
+                        model.refresh();
+                    }
+                })
+                .fail(function(response) {
+                    console.error("DELETE OUTPUT FAILURE");
+                    console.error(response);
+                    humane.log("Unable to delete output file.");
+                });
+            }
+        });
+
     }
     model.checkAnalysisRunStatus = function(task_id) {
         // FIXME: replace with websockets / sockjs if/when more realtime notifications are needed
         return function() {
-            $.get('/analysis/status/', {task_id: task_id}, function(response) {
+            $.get("{% url 'core:check-analysis-run-status' %}", {task_id: task_id}, function(response) {
                 console.debug("SUCCESS analysis check response");
                 console.debug(response);
                 var status = response.status;
@@ -353,7 +369,7 @@ $(function() {
         ko.utils.arrayForEach(parameters, function(parameter) {
             parameter.value = parseFloat(parameter.value);
         });
-        $.get('/analysis/run/', {pk: model.selectedAnalysis().id(), parameters: JSON.stringify(parameters)}, function(response) {
+        $.get("{% url 'core:run-analysis' %}", {pk: model.selectedAnalysis().id(), parameters: JSON.stringify(parameters)}, function(response) {
             model.selectedAnalysis().job_status("PROCESSING");
             humane.log("Analysis run started.");
             // start checking on the run after 6 seconds.
