@@ -250,7 +250,6 @@ REST_FRAMEWORK = {
 MIRACLE_DATA_DIRECTORY = MEDIA_ROOT = '/opt/miracle/internal/'
 # data directory to be exposed to DeployR / Radiant containers
 MIRACLE_EXTERNAL_DATA_DIRECTORY = '/opt/miracle/external/data'
-OUTPUT_FILE_PATH = '/opt/miracle/internal/output/'
 
 MEDIA_URL = '/data/'
 
@@ -275,8 +274,6 @@ MIRACLE_PROJECT_DIRECTORY = safe_make_paths('/opt/miracle/projects',
                                             os.path.abspath('projects'), make_project_paths)
 MIRACLE_TMP_DIRECTORY = safe_make_paths('/opt/miracle/tmp',
                                         os.path.abspath('tmp'), os.makedirs)
-MEDIA_URL = '/data/'
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 

@@ -395,7 +395,7 @@ class ParameterValue(models.Model):
 
 
 def _analysis_output_path(instance, filename):
-    return os.path.join(instance.project_path, filename)
+    return os.path.join(instance.project_path, 'outputs', filename)
 
 
 class AnalysisOutputFile(models.Model):
