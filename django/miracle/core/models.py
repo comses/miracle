@@ -294,6 +294,10 @@ class Analysis(MiracleMetadataMixin):
     authors = models.ManyToManyField(Author)
 
     @property
+    def default_output_name(self):
+        return u"{} Output".format(self.full_name)
+
+    @property
     def input_parameters(self):
         # returns a list of dicts for easier JSON consumption
         return [dict(name=k, **v) for k, v in self.get_deployr_parameters_dict().items()]
@@ -322,6 +326,9 @@ class Analysis(MiracleMetadataMixin):
 
     def __unicode__(self):
         return u'{} {}'.format(self.name, self.uploaded_file.url)
+
+    class Meta:
+        ordering = ['date_created']
 
 
 class AnalysisParameter(models.Model):

@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from collections import defaultdict
 from rest_framework import serializers
-from .models import (Project, Dataset, Analysis, AnalysisOutput, AnalysisOutputFile)
+from .models import (Project, Dataset, Analysis, AnalysisOutput, AnalysisOutputFile, Author)
 
 import logging
 
@@ -14,12 +14,12 @@ class StringListField(serializers.ListField):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(read_only=True)
-    email = serializers.CharField(read_only=True)
+    username = serializers.ReadOnlyField()
+    email = serializers.ReadOnlyField()
+    full_name = serializers.ReadOnlyField(source='get_full_name')
 
     class Meta:
         model = User
-        fields = ('username', 'email',)
 
 
 class OutputFileSerializer(serializers.ModelSerializer):
@@ -40,15 +40,23 @@ class AnalysisOutputSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'date_created', 'creator', 'analysis', 'parameter_values_text', 'files')
 
 
+class AuthorSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer()
+
+    class Meta:
+        model = Author
+
+
 class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
     parameters = serializers.ReadOnlyField(source='input_parameters')
-    authors = serializers.StringRelatedField(many=True)
+    authors = AuthorSerializer(many=True)
     outputs = AnalysisOutputSerializer(many=True, read_only=True)
     job_status = serializers.SerializerMethodField()
 
     def get_job_status(self, obj):
-        return 'Not running'
+        return 'IDLE'
 
     class Meta:
         model = Analysis
@@ -143,6 +151,3 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-
-
-

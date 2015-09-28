@@ -17,7 +17,7 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
     logger.debug("user %s requesting script execution (%s) with parameters (type: %s) %s", user, analysis_id, type(parameters), parameters)
     analysis = Analysis.objects.get(pk=analysis_id)
 
-    output = AnalysisOutput.objects.create(analysis=analysis, name='Demo Analysis Output', creator=user,
+    output = AnalysisOutput.objects.create(analysis=analysis, name=analysis.default_output_name, creator=user,
                                            parameter_values_json=parameters)
     deployr_input_parameters_dict = analysis.to_deployr_input_parameters(json.loads(parameters))
     self.update_state(state='PROCESSING')
