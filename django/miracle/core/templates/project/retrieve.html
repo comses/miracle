@@ -212,7 +212,7 @@
                     <h5 data-bind='text: name'></h5>
                     <code>Parameters:</code>
                     <pre data-bind='text: $root.prettyprint(parameter_values_text())'></pre>
-                    <b>Output files:</b>
+                    <code>Output files:</code>
                     <ul class='list-group' data-bind='foreach: files'>
                         <li class='list-group-item'><a data-bind='attr: {href: url}, text: name'></a>
                             <div data-bind='if: name().endsWith("png")'>

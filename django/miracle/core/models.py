@@ -295,7 +295,7 @@ class Analysis(MiracleMetadataMixin):
 
     @property
     def default_output_name(self):
-        return u"{} Output".format(self.full_name)
+        return u"{} output".format(self.full_name)
 
     @property
     def input_parameters(self):
