@@ -1,8 +1,0 @@
-# Ignore all files
-*
-
-# Except group files
-!*.miracle.yml
-
-# Except this file
-!.gitignore

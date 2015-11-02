@@ -273,10 +273,8 @@ def make_project_paths(project_directory):
         os.makedirs(os.path.join(project_directory, dirname))
 
 
-MIRACLE_PROJECT_DIRECTORY = safe_make_paths('/opt/miracle/projects',
+MIRACLE_PROJECT_DIRECTORY = safe_make_paths('/miracle',
                                             os.path.abspath('projects'), make_project_paths)
-MIRACLE_TMP_DIRECTORY = safe_make_paths('/opt/miracle/tmp',
-                                        os.path.abspath('tmp'), os.makedirs)
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 

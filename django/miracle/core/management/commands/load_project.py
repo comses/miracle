@@ -1,9 +1,9 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from ...extractors import Extractor, to_project_from_file
-from ...models import User
+from ...metadata_interface import add_project
+from ...models import Project, User
 import logging
-import os, shutil
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -14,18 +14,14 @@ class Command(BaseCommand):
     help = 'Import a project'
 
     def add_arguments(self, parser):
-        parser.add_argument('--overwrite-project',
-                            dest='overwrite',
-                            default=True,
-                            help='Delete the project with the same name before adding the project')
         parser.add_argument('--creator',
                             nargs=1,
                             type=str,
-                            help='The user created the project')
-        parser.add_argument('--group-file',
+                            help='The creator of the project')
+        parser.add_argument('--project',
                             nargs=1,
                             type=str,
-                            help='A file that describes how to group the datatables into datasets')
+                            help='The project')
         parser.add_argument('archive_file',
                             nargs=1,
                             type=str,
@@ -35,21 +31,40 @@ class Command(BaseCommand):
         logger.debug(args)
         logger.debug(options)
 
-        overwrite = options['overwrite']
         creator_name = options['creator'][0]
+        project_name = options['project'][0]
         archive_path = options['archive_file'][0]
-        group_file = options['group_file'][0]
 
+        self.extract(creator_name, project_name, archive_path)
+        self.stdout.write("Successfully imported data")
+
+    @staticmethod
+    def create_user(username='testuser', email='miracle-test@mailinator.com',
+                    first_name='Default', last_name='Testuser', password='test'):
+        user = User.objects.get(username=username)
+        if not user:
+            return User.objects.create_user(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                password=password
+            )
+        else:
+            return user
+
+
+    @staticmethod
+    def extract(creator_name, project_name, archive_path):
+        logger.debug("working directory", os.getcwd())
         logger.debug("path: %s", settings.MIRACLE_PROJECT_DIRECTORY)
 
-        creator = User.objects.get(username=creator_name)
+        creator = Command.create_user(username=creator_name)
+        project, created = Project.objects.get_or_create(name=project_name, creator=creator)
 
         logger.debug(archive_path)
         try:
             logger.debug("Extracting archive...")
-            extractor = Extractor.from_archive(archive_path, overwrite=overwrite)
-            metadata = extractor.metadata
-            to_project_from_file(metadata, group_file, creator)
-            self.stdout.write("Successfully imported data")
+            add_project(project, archive_path)
         except Exception as e:
             print e

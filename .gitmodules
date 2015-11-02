@@ -1,6 +1,0 @@
-[submodule "radiant"]
-	path = radiant
-	url = https://github.com/warmdev/radiant-docker
-[submodule "deployr"]
-	path = deployr
-	url = https://github.com/warmdev/deployr-docker.git

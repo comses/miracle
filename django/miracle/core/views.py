@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import (Project, ActivityLog, MiracleUser, Dataset, Analysis, AnalysisOutput)
-from .serializers import (ProjectSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer,
+from .serializers import (ProjectSerializer, ProjectPathSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer,
                           AnalysisOutputSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task
@@ -202,6 +202,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.deactivate(self.request.user)
 
+class ProjectPathViewSet(viewsets.ModelViewSet):
+    serializer_class = ProjectPathSerializer
+    renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
+    permission_classes = (CanViewReadOnlyOrEditProject,)
 
 class FileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser,)
@@ -212,7 +216,7 @@ class FileUploadView(APIView):
         project = get_object_or_404(Project, pk=request.data.get('id'))
         user = request.user
 # should analyze payload
-        dataset = Dataset(name=file_obj.name, creator=user, project=project, uploaded_file=file_obj)
+        dataset = Dataset(name=file_obj.name, creator=user, project=project, path=file_obj)
         dataset.save()
         return Response(status=201)
 

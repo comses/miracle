@@ -3,6 +3,7 @@ from django.core import files
 from miracle.core import deployr
 from miracle.celery import app
 from miracle.core.models import Analysis, AnalysisOutput
+from miracle.core.metadata_interface import add_project, associate_metadata_with_file
 
 import json
 import logging
@@ -21,7 +22,7 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
                                            parameter_values_json=parameters)
     deployr_input_parameters_dict = analysis.to_deployr_input_parameters(json.loads(parameters))
     self.update_state(state='PROCESSING')
-    job = deployr.run_script(script_file=analysis.uploaded_file, parameters=deployr_input_parameters_dict,
+    job = deployr.run_script(script_file=analysis.path.filepath, parameters=deployr_input_parameters_dict,
                              user=user, job_name='{}-{}'.format(analysis.name, output.pk))
     output.response = job.response.text
     output.save()
@@ -40,3 +41,7 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
     self.update_state(state='COMPLETED',
                       meta={'output_id': output.pk})
     return output
+
+@app.task(bind=True)
+def add_project_task(project, archive, projects_folder):
+    return add_project(project, archive, projects_folder)
