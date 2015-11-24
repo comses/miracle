@@ -103,6 +103,11 @@ def server(ip="127.0.0.1", port=8000):
     dj('runserver {ip}:{port}'.format(ip=ip, port=port), capture=False)
 
 
+@task
+def celery():
+    _virtualenv(local, 'celery -A miracle worker -l info')
+
+
 @roles('staging')
 @task(alias='dev')
 def staging():

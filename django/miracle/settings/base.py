@@ -257,6 +257,7 @@ MEDIA_URL = '/data/'
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis'
+CELERY_ACCEPT_CONTENT = ['json',]
 
 # DeployR settings
 DEFAULT_DEPLOYR_USER = 'miracle'

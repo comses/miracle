@@ -1,26 +1,26 @@
-# for js
-nodeenv
-# for web server
+# Web
 requests>=2.5.1
-Django==1.8.4
-celery[redis]
-Fabric==1.10.2
+Django==1.8.6
+djangorestframework==3.3.1
+celery-with-redis>=3.0
 django-bootstrap3==6.2.2
 django-model-utils==2.3.1
-python-coveralls==2.5.0
 psycopg2==2.6.1
-python-social-auth==0.2.12
-djangorestframework==3.2.4
-# better django shell_plus
-django-extensions==1.5.7
+python-social-auth==0.2.13
+django-extensions==1.5.9
 django-extra-views==0.7.1
-raven==5.7.2
+raven==5.8.1
 dealer==2.0.4
-ipython
-django-debug-toolbar
-pytest
-# for metadata
+enum34==1.0.4
+# Metadata Extraction
 pyunpack==0.0.3
 patool==1.8
 python-dateutil==2.4.2
-enum34==1.0.4
+# dev tooling
+Fabric==1.10.2
+python-coveralls==2.5.0
+ipython
+django-debug-toolbar
+pytest
+nodeenv
+
