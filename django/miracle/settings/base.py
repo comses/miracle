@@ -41,6 +41,7 @@ DJANGO_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 )
 
 THIRD_PARTY_APPS = (
@@ -48,6 +49,7 @@ THIRD_PARTY_APPS = (
     'bootstrap3',
     'social.apps.django_app.default',
     'raven.contrib.django.raven_compat',
+    'django_comments',
 )
 
 MIRACLE_APPS = (
@@ -281,6 +283,8 @@ MIRACLE_TMP_DIRECTORY = safe_make_paths('/opt/miracle/tmp',
 STATIC_URL = '/static/'
 
 STATIC_ROOT = "/var/www/miracle/static/"
+
+SITE_ID = 1
 
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'miracle', 'static'),

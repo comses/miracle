@@ -21,6 +21,8 @@ urlpatterns = [
         {'template_name': 'account/password-reset-done.html'}, name='password_reset_done'),
     url(r'^account/password-reset-complete/$', auth_views.password_reset_complete,
         {'template_name': 'account/password-reset-complete.html'}, name='password_reset_complete'),
+# django-contrib-comments URLs
+    url(r'^comments/', include('django_comments.urls')),
     # fallback, core.urls will catch all other unmatched urls
     url(r'', include('miracle.core.urls', namespace='core', app_name='core')),
 ]

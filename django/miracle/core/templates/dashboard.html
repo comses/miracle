@@ -30,8 +30,7 @@
                 </tbody>
             </table>
             </div>
-            <div data-bind='ifnot: projects().length'>
-                <div class='alert alert-success'>
+            <div style='display: none;' class='alert alert-success' data-bind='visible: projects().length === 0'>
                     No available projects. <span class='btn btn-warning' data-bind='click: createNewProject'><i class='fa fa-plus'></i> Create one?</span>
                 </div>
             </div>

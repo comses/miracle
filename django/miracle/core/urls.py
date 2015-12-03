@@ -23,7 +23,7 @@ urlpatterns = [
     url(r'^analysis/run/status/$', views.CheckAnalysisRunStatusView.as_view(), name='check-analysis-run-status'),
     url(r'^analysis/output/share/$', views.ShareOutputView.as_view(), name='share-output'),
     url(r'^account/profile/$', views.UserProfileView.as_view(), name='profile'),
-    url(r'^file-upload/$', views.FileUploadView.as_view(), name='upload')
+    url(r'^file-upload/$', views.FileUploadView.as_view(), name='upload'),
 ]
 
 router = routers.DefaultRouter()

@@ -187,6 +187,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             'project_json': dumps(project),
             'users_json': dumps(user_serializer.data),
         }
+        if request.accepted_renderer.format == 'html':
+            response.data['project'] = self.get_object()
         return response
 
     def perform_update(self, serializer):

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load comments %}
 
 {% block head %}
 {{ block.super }}
@@ -23,6 +24,9 @@
             <li role='presentation'>
                 <a href='#upload' aria-controls='upload' role='tab' data-toggle='tab'><i class='fa fa-cloud-upload'></i> Upload datasets</a>
             </li>
+            <li role='presentation'>
+                <a href='#comments' aria-controls='comments' role='tab' data-toggle='tab'><i class='fa fa-comment'></i> Comments</a>
+            </li>
         </ul>
     </div>
     <div class='col-md-9'>
@@ -35,12 +39,6 @@
                     <div role='tabpanel' class='tab-pane active' id='overview'>
                         <form class='form-horizontal' data-bind='submit: save'>
                             <project-detail-form params='model: $root'></project-detail-form>
-                            <div class='well'>
-                                <h3>Uploaded datasets</h3>
-                                <ul class='list-group' data-bind='foreach: datasets'>
-                                    <li class='list-group-item'><a data-bind='attr: {href: url}, text: name'></a></li>
-                                </ul>
-                            </div>
                             <div class='form-group'>
                                 <div class='col-sm-offset-2 col-sm-8'>
                                     <button type='submit' class='btn btn-primary'><i class='fa fa-save'></i> Save</button>
@@ -165,6 +163,36 @@
                             </div>
                         </form>
                     </div>
+                    <div role='tabpanel' class='tab-pane' id='comments'>
+                        <h4><i class='fa fa-comment'></i> Comments</h4>
+                        <hr>
+                        {# FIXME: add to Project serializer and manage via JS #}
+                        {% render_comment_list for project %}
+                        <hr>
+                        {% get_comment_form for project as comment_form %}
+                        <form data-bind='submit: $root.postComment' class='form' id='project-comment-form'>
+                            {% csrf_token %}
+                            {% for field in comment_form %}
+                            {% if field.is_hidden %}
+                            <div>{{ field }}</div>
+                            {% endif %}
+                            {% if field.name == "comment" %}
+                            <div class='form-group'>
+                                <label for='id_comment'><b>Post a comment</b></label>
+                                <textarea name='comment' id='id_comment' class='form-control' rows='5'></textarea>
+                            </div>
+                            {% endif %}
+                            {% if field.name == 'honeypot' %}
+                            <div style='display:none;'>
+                                {{ field.label_tag }} {{ field }}
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                            <div class='form-group'>
+                                <button type='submit' class='btn btn-primary'>Post</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -272,6 +300,13 @@ $(function() {
     model.selectedOutput = ko.observable();
     model.analysisParameters = ko.observableArray();
     model.currentInterval = ko.observable();
+    model.postComment = function() {
+        var formData = $('#project-comment-form').serialize();
+        console.debug(formData);
+        $.post('{% comment_form_target %}', formData, function(response) {
+            console.debug(response);
+        });
+    }
     model.setCurrentInterval = function(intervalId) {
         model.clearCurrentInterval();
         model.currentInterval(intervalId);
