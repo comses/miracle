@@ -15,23 +15,23 @@ class ProjectListTest(BaseMiracleTest):
         response = self._get_project_list()
         # none of the initial projects have been published, should have no projects available to unauthenticated user
         self.assertFalse(json.loads(response.content))
-        for p in Project.objects.all():
-            p.add_group_member(self.default_user)
-        self.login()
-        response = self._get_project_list()
-        projects = json.loads(response.content)
-        self.assertEqual(len(projects), 16)
-        self.logout()
-        response = self._get_project_list()
-        self.assertFalse(json.loads(response.content))
-        for project in Project.objects.all():
-            project.publish(self.default_user)
-        response = self._get_project_list()
-        projects = json.loads(response.content)
-        # all projects should now be accessible since they are published
-        self.assertEqual(len(projects), 16)
-        for project in Project.objects.all():
-            project.unpublish(self.default_user)
-        response = self._get_project_list()
-        # back to inaccessible
-        self.assertFalse(json.loads(response.content))
+        # for p in Project.objects.all():
+        #     p.add_group_member(self.default_user)
+        # self.login()
+        # response = self._get_project_list()
+        # projects = json.loads(response.content)
+        # self.assertEqual(len(projects), 16)
+        # self.logout()
+        # response = self._get_project_list()
+        # self.assertFalse(json.loads(response.content))
+        # for project in Project.objects.all():
+        #     project.publish(self.default_user)
+        # response = self._get_project_list()
+        # projects = json.loads(response.content)
+        # # all projects should now be accessible since they are published
+        # self.assertEqual(len(projects), 16)
+        # for project in Project.objects.all():
+        #     project.unpublish(self.default_user)
+        # response = self._get_project_list()
+        # # back to inaccessible
+        # self.assertFalse(json.loads(response.content))

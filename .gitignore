@@ -104,3 +104,4 @@ vignettes/*.pdf
 
 # Vagrant
 .vagrant
+.Rproj.user

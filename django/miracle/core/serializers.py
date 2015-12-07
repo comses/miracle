@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from collections import defaultdict
 from rest_framework import serializers
-from .models import (Project, Dataset, Analysis, AnalysisOutput, AnalysisOutputFile, Author)
+from .models import (Project, ProjectPath, Dataset, Analysis, AnalysisOutput, AnalysisOutputFile, Author)
 
 import logging
 
@@ -63,7 +63,7 @@ class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             'url': {'view_name': 'core:analysis-detail'}
         }
-        fields = ('id', 'name', 'full_name', 'date_created', 'last_modified', 'description', 'uploaded_file', 'project',
+        fields = ('id', 'name', 'full_name', 'date_created', 'last_modified', 'description', 'path', 'project',
                   'file_type', 'parameters', 'url', 'authors', 'outputs', 'job_status')
 
 
@@ -75,7 +75,14 @@ class DatasetSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             'url': {'view_name': 'core:dataset-detail'}
         }
-        fields = ('id', 'name', 'uploaded_file', 'project', 'url')
+        fields = ('id', 'name', 'files', 'project', 'url')
+
+
+class ProjectPathSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = ProjectPath
+        fields = ('id', 'filepath', 'ignored')
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -90,6 +97,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     number_of_datasets = serializers.IntegerField(read_only=True)
     datasets = DatasetSerializer(many=True, read_only=True)
     analyses = AnalysisSerializer(many=True, read_only=True)
+    projectpath = ProjectPathSerializer(many=True, read_only=True)
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)

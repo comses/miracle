@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.test.client import RequestFactory, Client
 from django.utils.http import urlencode
 
-from ..models import (Analysis, Project, Dataset, DataTable, DataTableColumn)
+from ..models import (Analysis, Project, ProjectPath, Dataset, DataTable, DataTableColumn)
 
 import logging
 import os
@@ -27,6 +27,8 @@ class BaseMiracleTest(TestCase):
         self.logger = logger
         self.default_user = self.create_user()
         self.default_project = self.create_project()
+        self.default_project_path = self.create_project_path(project=self.default_project,
+                                                             filepath="README.md")
         self.default_analysis = self.create_analysis(creator=self.default_user)
 
     @property
@@ -62,19 +64,20 @@ class BaseMiracleTest(TestCase):
             password=password
         )
 
-    def create_analysis(self, name=None, project=None, datapath=None, creator=None):
+    def create_analysis(self, name=None, project=None, projectpath=None, creator=None):
         if name is None:
             name = self.default_analysis_name
-        if datapath is None:
-            datapath = os.path.join("/vagrant/miracle/core/tests/data", name)
+        if projectpath is None:
+            projectpath = self.default_project_path
         if project is None:
             project = self.default_project
         if creator is None:
             creator = self.default_user
-        return Analysis.objects.create(creator=creator,
+        analysis = Analysis.objects.create(creator=creator,
                                        name=name,
                                        project=project,
-                                       uploaded_file=datapath)
+                                       path=projectpath)
+        return analysis
 
     def create_project(self, name=None, user=None):
         if name is None:
@@ -86,14 +89,18 @@ class BaseMiracleTest(TestCase):
         project.save()
         return project
 
-    def create_dataset(self, project=None, name=None, creator=None, datafile=None):
+    def create_project_path(self, project, filepath):
+        projectpath = ProjectPath.objects.create(filepath = filepath, project = project)
+        return projectpath
+
+    def create_dataset(self, project=None, name=None, creator=None, projectpath=None):
         if project is None:
             project = self.default_project
         if creator is None:
             creator = project.creator
-        if datafile is None:
-            datafile = self.get_test_data('head.csv')
-        dataset = Dataset(project=project, name=name, creator=creator, uploaded_file=datafile)
+        if projectpath is None:
+            projectpath = self.default_project_path
+        dataset = Dataset(project=project, name=name, creator=creator)
         dataset.full_clean()
         dataset.save()
         return dataset

@@ -1,45 +1,47 @@
+---
 deployr_data:
   build: deployr
-  name: deployr_data
   volumes:
     - /home/miracle/deployr/7.4.1/deployr/database
   command: echo deployr_data
+
 deployr:
   build: deployr
-  name: deployr
-  volumes:
-    - ./test_projects/data:/home/miracle/deployr/7.4.1/deployr/external/data/public/data
-    - ./test_projects/output:/home/miracle/deployr/7.4.1/deployr/external/data/public/output
   volumes_from:
+    - django_filesystem
     - deployr_data
   ports: 
     - "7400:7400"
+
 radiant:
   build: radiant
-  name: radiant
-  volumes:
-    - ./test_projects/apps:/srv/shiny-server/apps
-    - ./test_projects/data:/srv/shiny-server/data
-    - ./test_projects/output:/srv/shiny-server/output
+  volumes_from:
+    - django_filesystem
   ports: 
     - "3838:3838"
+
 db:
   image: sameersbn/postgresql:9.4-3
-  name: db
   ports: 
     - "5432:15432"
   environment:
     DB_USER: miracle
     DB_PASS: CHANGEME
     DB_NAME: 'miracle_data,miracle_metadata'
-    PSQL_TRUST_LOCALNET: true
+    PSQL_TRUST_LOCALNET: 'true'
+
+django_filesystem:
+  build: django
+  volumes:
+    - ./miracle:/miracle
+
 django:
   build: django
-  name: django
   volumes:
     - ./django:/code
-    - ./test_projects:/opt/miracle/analyses
-    - ./test_archives:/opt/miracle/tmp
+    - ./test_archives:/tmp
+  volumes_from:
+    - django_filesystem
   command: python /code/manage.py runserver 0.0.0.0:8000
   ports:
     - "8000:8000"

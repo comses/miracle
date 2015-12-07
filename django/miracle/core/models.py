@@ -7,6 +7,7 @@ from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import AutoSlugField
+from django.conf import settings
 
 from model_utils import Choices
 from model_utils.managers import PassThroughManager
@@ -190,7 +191,7 @@ class Project(MiracleMetadataMixin):
 
     @property
     def path(self):
-        return os.path.join('project', str(self.slug))
+        return str(self.slug)
 
     @property
     def uploads_path(self):
@@ -270,6 +271,13 @@ class Author(models.Model):
         return self.user.email
 
 
+class ProjectPath(models.Model):
+
+    ignored = models.BooleanField(default=False)
+    project = models.ForeignKey(Project)
+    filepath = models.FileField(help_text=_("The archived file corresponding to this ProjectPath"))
+
+
 def _local_analysis_path(analysis, filename):
     return os.path.join(analysis.project.uploads_path, 'scripts', filename)
 
@@ -286,11 +294,10 @@ class Analysis(MiracleMetadataMixin):
 
     slug = AutoSlugField(populate_from='name', unique=True, overwrite=True)
     project = models.ForeignKey(Project, related_name="analyses")
+    path = models.ForeignKey(ProjectPath)
     provenance = PostgresJSONField()
-    parameters_json = PostgresJSONField(help_text=_("Supported input parameters in JSON format for this analysis script"))
-    uploaded_file = models.FileField(upload_to=_local_analysis_path)
-    archived_file = models.FileField(blank=True, help_text=_("Archived script file to be run in a sandbox."))
     file_type = models.CharField(max_length=128, choices=FileType, default=FileType.R)
+    parameters_json = PostgresJSONField(help_text=_("Supported input parameters in JSON format for this analysis script"))
     authors = models.ManyToManyField(Author)
 
     @property
@@ -325,7 +332,7 @@ class Analysis(MiracleMetadataMixin):
         )
 
     def __unicode__(self):
-        return u'{} {}'.format(self.name, self.uploaded_file.url)
+        return u'{} {}'.format(self.name, self.path.filepath) # TODO
 
     class Meta:
         ordering = ['date_created']
@@ -473,10 +480,10 @@ class Dataset(MiracleMetadataMixin):
     provenance = PostgresJSONField()
     authors = models.ManyToManyField(Author)
     analyses = models.ManyToManyField(Analysis)
-    uploaded_file = models.FileField(upload_to=_local_dataset_path, help_text=_("The original uploaded dataset file (loosely corresponding to a SIP)"))
     data_type = models.CharField(max_length=50, blank=True)
     properties = PostgresJSONField(help_text=_("Schema and metadata for this Dataset, applicable to all child DataTables"))
     external_url = models.URLField(blank=True)
+    files = models.ManyToManyField(ProjectPath)
 
     objects = DatasetManager.for_queryset_class(DatasetQuerySet)()
 
@@ -512,7 +519,6 @@ class DataTable(MiracleMetadataMixin, DatasetConnectionMixin):
     """
 
     dataset = models.ForeignKey(Dataset, related_name='tables')
-    datafile = models.FileField(help_text=_("The archived plaintext file corresponding to this DataTable"))
     objects = DataTableManager.for_queryset_class(DataTableQuerySet)()
 
     @property
