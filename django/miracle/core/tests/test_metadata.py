@@ -17,12 +17,14 @@ class MetadataTest(BaseMiracleTest):
     def test_asc(self):
         test_data = self.get_test_data("sample.asc")
         data = load_metadata(test_data)
-        self.assertEqual(data.properties, {'width': 4, 'height': 6})
+        self.assertEqual(data.properties.get('width'), 4)
+        self.assertEqual(data.properties.get('height'), 6)
         self.assertEqual(data.layers, [{'description': u''}])
 
     def test_jpg(self):
         data = load_metadata(self.get_test_data("sample.jpg"))
-        self.assertEqual(data.properties, {'width': 192, 'height': 256})
+        self.assertEqual(data.properties.get('width'), 192)
+        self.assertEqual(data.properties.get('height'), 256)
         self.assertEqual(data.layers, [{'description': u''}, {'description': u''}, {'description': u''}])
 
     """ XXX: disabled for the interim, introduces hachoir dependency

@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from collections import defaultdict
 from rest_framework import serializers
-from .models import (Project, ProjectPath, Dataset, Analysis, AnalysisOutput, AnalysisOutputFile, Author)
+from .models import (Project, DatasetFile, Dataset, DataAnalysisScript, AnalysisOutput, AnalysisOutputFile, Author)
 
 import logging
 
@@ -59,7 +59,7 @@ class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
         return 'IDLE'
 
     class Meta:
-        model = Analysis
+        model = DataAnalysisScript
         extra_kwargs = {
             'url': {'view_name': 'core:analysis-detail'}
         }
@@ -78,11 +78,11 @@ class DatasetSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'name', 'files', 'project', 'url')
 
 
-class ProjectPathSerializer(serializers.HyperlinkedModelSerializer):
+class DatasetFileSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
-        model = ProjectPath
-        fields = ('id', 'filepath', 'ignored')
+        model = DatasetFile
+        fields = ('id', 'archived_file', 'ignored')
 
 
 class ProjectSerializer(serializers.ModelSerializer):
@@ -97,7 +97,6 @@ class ProjectSerializer(serializers.ModelSerializer):
     number_of_datasets = serializers.IntegerField(read_only=True)
     datasets = DatasetSerializer(many=True, read_only=True)
     analyses = AnalysisSerializer(many=True, read_only=True)
-    projectpath = ProjectPathSerializer(many=True, read_only=True)
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)

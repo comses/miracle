@@ -10,7 +10,7 @@ import tempfile
 from django.conf import settings
 from django.db import transaction
 from .metadata import load_metadata, ProjectMetadata, Metadata, DataTypes
-from .models import Analysis, Dataset, DataTable, Project, ProjectPath, User
+from .models import DataAnalysisScript, Dataset, DataTable, Project, DatasetFile, User
 import utils
 
 import logging
@@ -22,15 +22,15 @@ class MetadataFileExtractor(object):
     @staticmethod
     def to_analysis(file_analysis, projectpath):
         """
-        Convert file metadata tagged with the code datatype to an Analysis
+        Convert file metadata tagged with the code datatype to an DataAnalysisScript
 
         :param file_analysis:
 
         :type file_analysis: Metadata
         :type project: Project
 
-        :return: an Analysis
-        :rtype: Analysis
+        :return: an DataAnalysisScript
+        :rtype: DataAnalysisScript
         """
         project = projectpath.project
         base_dir, filename = os.path.split(file_analysis.path)
@@ -47,11 +47,11 @@ class MetadataFileExtractor(object):
         elif ext == ".pl":
             file_type = "Perl"
 
-        return Analysis(name=name,
-                        creator=project.creator,
-                        project=project,
-                        path=projectpath,
-                        file_type=file_type)
+        return DataAnalysisScript(name=name,
+                                  creator=project.creator,
+                                  project=project,
+                                  path=projectpath,
+                                  file_type=file_type)
 
     @staticmethod
     def to_dataset(file_dataset, projectpath):

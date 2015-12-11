@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse_lazy
 from django.contrib.auth.models import User, Group
+from django.contrib.postgres.fields import JSONField
 from django.db import models, connections
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -10,7 +11,6 @@ from django_extensions.db.fields import AutoSlugField
 from django.conf import settings
 
 from model_utils import Choices
-from model_utils.managers import PassThroughManager
 
 import json
 import logging
@@ -18,22 +18,6 @@ import os
 import re
 
 logger = logging.getLogger(__name__)
-
-
-class PostgresJSONField(models.TextField):
-
-    description = "PostgreSQL JSON Field"
-
-    def __init__(self, *args, **kwargs):
-        kwargs.setdefault('null', True)
-        kwargs.setdefault('blank', True)
-        super(PostgresJSONField, self).__init__(*args, **kwargs)
-
-    # FIXME: consider performing Python <-> JSON magic conversions. see
-    # https://docs.djangoproject.com/en/1.8/howto/custom-model-fields/ for more details
-
-    def db_type(self, connection):
-        return 'json'
 
 
 class DatasetConnectionMixin(object):
@@ -105,7 +89,7 @@ class MiracleMetadataMixin(models.Model):
         return self.deleted_on is not None
 
     @property
-    def status(self):
+    def publishing_status(self):
         if self.deleted:
             return "Deleted"
         elif self.published:
@@ -187,7 +171,8 @@ class Project(MiracleMetadataMixin):
     group = models.OneToOneField(Group, editable=False,
                                  help_text=_("Members of this group can edit this project's datasets and metadata"),
                                  null=True)
-    objects = PassThroughManager.for_queryset_class(ProjectQuerySet)()
+    submitted_archive = models.FileField(help_text=_("The uploaded zipfile containing all data and scripts for this Project"), null=True, blank=True)
+    objects = ProjectQuerySet.as_manager()
 
     @property
     def path(self):
@@ -218,7 +203,9 @@ class Project(MiracleMetadataMixin):
     def remove_group_member(self, user):
         return user.groups.remove(self.group)
 
-    def bookmark_for(self, user):
+    def bookmark_for(self, user=None):
+        if user is None:
+            raise ValueError("Specify a user to bookmark this project")
         bookmarked_project, created = BookmarkedProject.objects.get_or_create(project=self, user=user)
         return bookmarked_project
 
@@ -244,6 +231,10 @@ class Project(MiracleMetadataMixin):
 
 @receiver(post_save, sender=Project)
 def project_group_creator(sender, instance, created, raw, using, update_fields, **kwargs):
+    """
+    Signal handler to ensure that a permissions Group (named via Project.group_name) is always available to for basic
+    per-Project permissions management
+    """
     if created:
         group, created = Group.objects.get_or_create(name=instance.group_name)
         group.user_set.add(instance.creator)
@@ -265,25 +256,17 @@ class BookmarkedProject(models.Model):
 class Author(models.Model):
 
     user = models.OneToOneField(User)
-    attributes = PostgresJSONField()
+    attributes = JSONField(null=True, blank=True)
 
     def __unicode__(self):
         return self.user.email
-
-
-class ProjectPath(models.Model):
-
-    ignored = models.BooleanField(default=False)
-    project = models.ForeignKey(Project)
-    filepath = models.FileField(help_text=_("The archived file corresponding to this ProjectPath"))
 
 
 def _local_analysis_path(analysis, filename):
     return os.path.join(analysis.project.uploads_path, 'scripts', filename)
 
 
-class Analysis(MiracleMetadataMixin):
-    # FIXME: rename to Script/ScriptParameter/ScriptOutput? Consider after the demo.
+class DataAnalysisScript(MiracleMetadataMixin):
 
     FileType = Choices(
         ('R', _('R script')),
@@ -294,10 +277,11 @@ class Analysis(MiracleMetadataMixin):
 
     slug = AutoSlugField(populate_from='name', unique=True, overwrite=True)
     project = models.ForeignKey(Project, related_name="analyses")
-    path = models.ForeignKey(ProjectPath)
-    provenance = PostgresJSONField()
+    archived_file = models.FileField(help_text=_("The archived file corresponding to this AnalysisScript"))
+    provenance = JSONField(null=True, blank=True)
     file_type = models.CharField(max_length=128, choices=FileType, default=FileType.R)
-    parameters_json = PostgresJSONField(help_text=_("Supported input parameters in JSON format for this analysis script"))
+    parameters_json = JSONField(help_text=_("Supported input parameters in JSON format for this analysis script"),
+                                null=True, blank=True)
     authors = models.ManyToManyField(Author)
 
     @property
@@ -332,7 +316,7 @@ class Analysis(MiracleMetadataMixin):
         )
 
     def __unicode__(self):
-        return u'{} {}'.format(self.name, self.path.filepath) # TODO
+        return u'{} {}'.format(self.name, self.archived_file)
 
     class Meta:
         ordering = ['date_created']
@@ -357,7 +341,7 @@ class AnalysisParameter(models.Model):
         'complex': complex,
     }
 
-    analysis = models.ForeignKey(Analysis, related_name='parameters')
+    analysis = models.ForeignKey(DataAnalysisScript, related_name='parameters')
     name = models.CharField(max_length=255, help_text=_("Input parameter variable name used in this analysis script."))
     label = models.CharField(max_length=255, help_text=_("Human-friendly label for this parameter."), blank=True)
     description = models.TextField(blank=True)
@@ -376,13 +360,15 @@ class AnalysisParameter(models.Model):
 
 class AnalysisOutput(models.Model):
 
-    analysis = models.ForeignKey(Analysis, related_name='outputs')
+    analysis = models.ForeignKey(DataAnalysisScript, related_name='outputs')
     name = models.CharField(max_length=255, help_text=_("User assigned name for this script run"))
     description = models.TextField(blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User)
-    parameter_values_json = PostgresJSONField(help_text=_("Input parameter values used in the given analysis run"))
-    response = PostgresJSONField(help_text=_("Internal raw HTTP response from executing the script against DeployR/OpenCPU"))
+    parameter_values_json = JSONField(help_text=_("Input parameter values used in the given analysis run"),
+                                      null=True, blank=True)
+    response = JSONField(help_text=_("Internal raw HTTP response from executing the script against DeployR/OpenCPU"),
+                         null=True, blank=True)
 
     @property
     def project(self):
@@ -416,7 +402,7 @@ class AnalysisOutputFile(models.Model):
 
     output = models.ForeignKey(AnalysisOutput, related_name='files')
     output_file = models.FileField(upload_to=_analysis_output_path)
-    metadata = PostgresJSONField(help_text=_("Additional metadata provided by analysis execution engine"))
+    metadata = JSONField(help_text=_("Additional metadata provided by analysis execution engine"), null=True, blank=True)
 
     @property
     def project_path(self):
@@ -443,7 +429,7 @@ class DatasetQuerySet(models.query.QuerySet):
                            (models.Q(deleted_on__isnull=True) & models.Q(published_on__isnull=False))).distinct('id')
 
 
-class DatasetManager(PassThroughManager):
+class DatasetManager(models.Manager):
 
     use_for_related_fields = True
 
@@ -477,15 +463,16 @@ class Dataset(MiracleMetadataMixin):
 
     slug = AutoSlugField(populate_from='name', unique=True, overwrite=True)
     project = models.ForeignKey(Project, related_name="datasets")
-    provenance = PostgresJSONField()
+    provenance = JSONField(help_text=_("Provenance metadata for this Dataset, applicable to all children"),
+                           null=True, blank=True)
     authors = models.ManyToManyField(Author)
-    analyses = models.ManyToManyField(Analysis)
+    analyses = models.ManyToManyField(DataAnalysisScript)
     data_type = models.CharField(max_length=50, blank=True)
-    properties = PostgresJSONField(help_text=_("Schema and metadata for this Dataset, applicable to all child DataTables"))
+    schema = JSONField(help_text=_("Column schema for this Dataset, applicable to all child DataTables"),
+                       null=True, blank=True)
     external_url = models.URLField(blank=True)
-    files = models.ManyToManyField(ProjectPath)
 
-    objects = DatasetManager.for_queryset_class(DatasetQuerySet)()
+    objects = DatasetManager.from_queryset(DatasetQuerySet)()
 
     @property
     def uploads_path(self):
@@ -495,11 +482,18 @@ class Dataset(MiracleMetadataMixin):
         return reverse_lazy('core:dataset-detail', args=[self.pk])
 
 
+class DatasetFile(models.Model):
+
+    ignored = models.BooleanField(default=False)
+    dataset = models.ForeignKey(Dataset, related_name='files')
+    archived_file = models.FileField(help_text=_("Archival information package file"))
+
+
 class DataTableQuerySet(models.query.QuerySet):
     pass
 
 
-class DataTableManager(PassThroughManager):
+class DataTableManager(models.Manager):
 
     use_for_related_fields = True
 
@@ -519,7 +513,7 @@ class DataTable(MiracleMetadataMixin, DatasetConnectionMixin):
     """
 
     dataset = models.ForeignKey(Dataset, related_name='tables')
-    objects = DataTableManager.for_queryset_class(DataTableQuerySet)()
+    objects = DataTableManager.from_queryset(DataTableQuerySet)()
 
     @property
     def attributes(self):
@@ -537,7 +531,7 @@ class DataTable(MiracleMetadataMixin, DatasetConnectionMixin):
         Generates DDL and updates this model's name and full_name fields as well as its child columns.
         """
         self.sanitize_name(self.name)
-        for c in self.columns.all():
+        for c in self.dataset.columns.all():
             c.sanitize_name(c.name)
         create_table_statement = "CREATE TABLE {} ({})".format(self.name, self.attributes)
         logger.debug("create table statement: %s", create_table_statement)
@@ -557,7 +551,7 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
         ('text', _('text')),
     )
 
-    datatable = models.ForeignKey(DataTable, related_name='columns')
+    dataset = models.ForeignKey(Dataset, related_name='columns')
     name = models.CharField(max_length=64, default=None, help_text=_("Internal data table name"))
     full_name = models.CharField(max_length=255, blank=True)
     description = models.TextField()
@@ -590,7 +584,7 @@ class ActivityLogQuerySet(models.query.QuerySet):
         return self.filter(creator=user, **kwargs)
 
 
-class ActivityLogManager(PassThroughManager):
+class ActivityLogManager(models.Manager):
 
     def scheduled(self, message):
         return self.create(message=message, action=ActivityLog.ActionType.SCHEDULED)
@@ -613,7 +607,7 @@ class ActivityLog(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, blank=True, null=True)
     action = models.CharField(max_length=32, choices=ActionType, default=ActionType.SYSTEM)
-    objects = ActivityLogManager.for_queryset_class(ActivityLogQuerySet)()
+    objects = ActivityLogManager.from_queryset(ActivityLogQuerySet)()
 
     def __unicode__(self):
         return u"{} {} {}".format(self.creator, self.action, self.message)

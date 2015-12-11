@@ -24,7 +24,7 @@ class MetadataTest(BaseMiracleTest):
             self.create_table(dataset)
         datatable = dataset.tables.create(name='Tabular Table')
         with self.assertRaises(ValidationError):
-            self.create_column(datatable)
+            self.create_column(dataset)
 
     def test_slugs(self):
         project = self.default_project
@@ -67,28 +67,28 @@ class ProjectGroupMembershipTest(BaseMiracleTest):
 class DatasetTest(BaseMiracleTest):
 
     test_identifiers = (
-        ' this is a very long, harrowing name...111!!!111 and how. ',
-        " good gravy! it's a space kaiser! ",
-        "lots of spaces towards the end?                ",
-        "?!?!@#!&)&(*!)(#!#!@#http://www.postgresql.org/docs/9.4/static/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS",
-        ")(*&&^%$#@!\w",
+        "good gravy! it's a space kaiser!   ",
+        "       lots of whitespace              ",
+        "!@#$%^&*()?{}[]|\/.,<>;':\"http://www.postgresql.org/docs/9.4/static/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS",
         "normal",
         u'ko\u017eu\u0161\u010dek',
     )
 
     data_types = [dt[0] for dt in DataTableColumn.DataType]
 
-    def test_datatable_column_identifiers(self):
+    def test_dataset_column_identifiers(self):
         dataset = self.default_project.datasets.create(name='Test Miracle Dataset')
         number_of_data_types = len(self.data_types)
+        # Dataset holds the schema
+        for i in xrange(0, 15):
+            column_name = 'Column ' + string.ascii_uppercase[i]
+            data_type = self.data_types[i % number_of_data_types]
+            column = dataset.columns.create(name=column_name, data_type=data_type)
+            self.assertEqual(column.name, column_name)
+# every datatable in the Dataset shares the same schema
         for identifier in self.test_identifiers:
             datatable = dataset.tables.create(name=identifier)
             self.assertEqual(datatable.name, identifier)
-            for i in xrange(0, 15):
-                column_name = 'Column ' + string.ascii_uppercase[i]
-                data_type = self.data_types[i % number_of_data_types]
-                column = datatable.columns.create(name=column_name, data_type=data_type)
-                self.assertEqual(column.name, column_name)
             # identifier sanitization only happens when create_schema is explicitly invoked
             datatable.create_schema()
             sanitized_identifier = datatable.name
@@ -100,7 +100,7 @@ class DatasetTest(BaseMiracleTest):
             # all child columns should also be sanitized as well
             for i in xrange(0, 15):
                 column_name = 'Column ' + string.ascii_uppercase[i]
-                column = datatable.columns.get(full_name=column_name)
+                column = dataset.columns.get(full_name=column_name)
                 self.assertEqual(column.data_type, self.data_types[i % number_of_data_types])
 
 

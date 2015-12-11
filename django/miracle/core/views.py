@@ -11,8 +11,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import (Project, ActivityLog, MiracleUser, Dataset, Analysis, AnalysisOutput)
-from .serializers import (ProjectSerializer, ProjectPathSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer,
+from .models import (Project, ActivityLog, MiracleUser, Dataset, DataAnalysisScript, AnalysisOutput)
+from .serializers import (ProjectSerializer, DatasetFileSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer,
                           AnalysisOutputSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task
@@ -143,7 +143,7 @@ class AnalysisViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # FIXME: replace with viewable QuerySet
-        return Analysis.objects.all()
+        return DataAnalysisScript.objects.all()
 
     @property
     def template_name(self):
@@ -202,8 +202,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.deactivate(self.request.user)
 
-class ProjectPathViewSet(viewsets.ModelViewSet):
-    serializer_class = ProjectPathSerializer
+class DatasetFileViewSet(viewsets.ModelViewSet):
+    serializer_class = DatasetFileSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
     permission_classes = (CanViewReadOnlyOrEditProject,)
 

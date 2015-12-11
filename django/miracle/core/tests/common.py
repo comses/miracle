@@ -5,12 +5,13 @@ from django.test import TestCase
 from django.test.client import RequestFactory, Client
 from django.utils.http import urlencode
 
-from ..models import (Analysis, Project, ProjectPath, Dataset, DataTable, DataTableColumn)
+from ..models import (DataAnalysisScript, Project, DatasetFile, Dataset, DataTable, DataTableColumn)
 
 import logging
 import os
 
 logger = logging.getLogger(__name__)
+
 
 # Todo: add analysis test directory
 class BaseMiracleTest(TestCase):
@@ -27,8 +28,7 @@ class BaseMiracleTest(TestCase):
         self.logger = logger
         self.default_user = self.create_user()
         self.default_project = self.create_project()
-        self.default_project_path = self.create_project_path(project=self.default_project,
-                                                             filepath="README.md")
+        self.default_script_file = os.path.join(self.TEST_DATA_DIR, 'example.R')
         self.default_analysis = self.create_analysis(creator=self.default_user)
 
     @property
@@ -64,19 +64,19 @@ class BaseMiracleTest(TestCase):
             password=password
         )
 
-    def create_analysis(self, name=None, project=None, projectpath=None, creator=None):
+    def create_analysis(self, name=None, project=None, creator=None, script_file=None):
         if name is None:
             name = self.default_analysis_name
-        if projectpath is None:
-            projectpath = self.default_project_path
         if project is None:
             project = self.default_project
         if creator is None:
             creator = self.default_user
-        analysis = Analysis.objects.create(creator=creator,
-                                       name=name,
-                                       project=project,
-                                       path=projectpath)
+        if script_file is None:
+            script_file = self.default_script_file
+        analysis = DataAnalysisScript.objects.create(creator=creator,
+                                                     name=name,
+                                                     project=project,
+                                                     archived_file=script_file)
         return analysis
 
     def create_project(self, name=None, user=None):
@@ -89,17 +89,11 @@ class BaseMiracleTest(TestCase):
         project.save()
         return project
 
-    def create_project_path(self, project, filepath):
-        projectpath = ProjectPath.objects.create(filepath = filepath, project = project)
-        return projectpath
-
-    def create_dataset(self, project=None, name=None, creator=None, projectpath=None):
+    def create_dataset(self, project=None, name=None, creator=None):
         if project is None:
             project = self.default_project
         if creator is None:
             creator = project.creator
-        if projectpath is None:
-            projectpath = self.default_project_path
         dataset = Dataset(project=project, name=name, creator=creator)
         dataset.full_clean()
         dataset.save()
@@ -113,10 +107,10 @@ class BaseMiracleTest(TestCase):
         table.save()
         return table
 
-    def create_column(self, datatable=None, name=None):
-        if datatable is None:
-            self.fail("column requires parent table")
-        column = DataTableColumn(datatable=datatable, name=name)
+    def create_column(self, dataset=None, name=None):
+        if dataset is None:
+            self.fail("column requires parent dataset")
+        column = DataTableColumn(dataset=dataset, name=name)
         column.full_clean()
         column.save()
         return column

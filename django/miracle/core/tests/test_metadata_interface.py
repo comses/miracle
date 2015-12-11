@@ -3,11 +3,11 @@ import os
 from os import path
 from ..metadata_interface import add_project, associate_metadata_with_file
 from .common import BaseMiracleTest
-from ..models import ProjectPath
+from ..models import DatasetFile
 from django.conf import settings
 
 class MetadataInterfaceTest(BaseMiracleTest):
-    PROJECT_TESTS = "miracle/core/tests/projects"
+    PROJECT_TEST_DIR = "miracle/core/tests/projects"
 
     @staticmethod
     def make_archive(src):
@@ -22,17 +22,17 @@ class MetadataInterfaceTest(BaseMiracleTest):
     def test_packrat_extraction(self):
         token = "test"
         project = self.create_project(name=token)
-        src = path.join(self.PROJECT_TESTS, "skeleton")
+        src = path.join(self.PROJECT_TEST_DIR, "skeleton")
         archive = self.make_archive(src)
         try:
             packrat = add_project(project, archive)
             self.assertEqual(project.path, token)
             self.assertItemsEqual([projectpath.filepath for projectpath in packrat.paths],
                                   ["README.md", "src/init.R", "data/data.csv"])
-            analysis_projectpath = ProjectPath.objects.filter(filepath="src/init.R").first()
+            analysis_projectpath = DatasetFile.objects.filter(archived_file="src/init.R").first()
             analysis = associate_metadata_with_file(analysis_projectpath)
 
-            dataset_projectpath = ProjectPath.objects.filter(filepath="data/data.csv").first()
+            dataset_projectpath = DatasetFile.objects.filter(archived_file="data/data.csv").first()
             dataset = associate_metadata_with_file(dataset_projectpath)
         finally:
             self.cleanup(archive, token)
