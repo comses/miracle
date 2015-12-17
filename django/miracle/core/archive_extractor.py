@@ -20,9 +20,7 @@ ProjectFilePaths = namedtuple('ProjectFilePath', ['project_token', 'paths'])
 
 def extract(project, archive, projects_folder=settings.MIRACLE_PROJECT_DIRECTORY):
     """
-    Complete Phase 1 of the Metadata extraction process
-
-    Extract a project archive into the projects folder and upload its file paths to the database
+    Extract a project archive into the project folder
 
     :param project: a project to associate the archive with
     :type project: Project
@@ -54,6 +52,7 @@ def extract(project, archive, projects_folder=settings.MIRACLE_PROJECT_DIRECTORY
         if token not in project_folder_contents:
             raise PackratException("no project folder named {} exists".format(token))
 
+        _validate_project_structure(project_folder, token)
         project_folder_src, paths = _get_and_add_paths(project, token, project_folder)
         _move_project_to_projects(project_folder_src, projects_folder)
 
@@ -61,6 +60,23 @@ def extract(project, archive, projects_folder=settings.MIRACLE_PROJECT_DIRECTORY
 
     finally:
         _cleanup(tmpfolder)
+
+
+def _validate_project_structure(project_folder, token):
+    project_folder_src = path.join(project_folder, token)
+
+    has_src_folder = path.isdir(path.join(project_folder_src, "src"))
+    has_data_folder = path.isdir(path.join(project_folder_src, "data"))
+
+    error_messages = []
+    if not has_src_folder:
+        error_messages.append("missing a src folder")
+    if not has_data_folder:
+        error_messages.append("missing a data folder")
+
+    if error_messages:
+        error_message = "Project archive is " + " and ".join(error_messages)
+        raise PackratException(error_message)
 
 
 def _get_and_add_paths(project, token, project_folder):
@@ -109,4 +125,3 @@ def _move_project_to_projects(folder, projects_folder):
     dest = path.join(path.expanduser(projects_folder), token)
     shutil.move(folder, dest)
     return dest
-

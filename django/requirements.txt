@@ -24,4 +24,4 @@ ipython
 django-debug-toolbar
 pytest
 nodeenv
-
+mock
