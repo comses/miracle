@@ -10,9 +10,8 @@ from os import path
 from django.conf import settings
 from django.db import transaction
 
-from .filegroup_extractors import extract_metadata, Metadata, DataTypes
-from .metadatagrouper import MetadataAnalysis, MetadataDataTableGroup, GroupedMetadata
-from .models import DataAnalysisScript, Dataset, DataTable, Project, DatasetFile, DataTableColumn
+from . import MetadataAnalysis, MetadataDataTableGroup, MetadataProject
+from ..models import DataAnalysisScript, Dataset, DataTable, Project, DatasetFile, DataTableColumn
 
 logger = logging.getLogger(__name__)
 
@@ -110,20 +109,21 @@ def load_analyses(metadata_analyses, project):
     analyses = [to_analysis(metadata_analysis, project) for metadata_analysis in metadata_analyses]
     for analysis in analyses:
         analysis.save()
-    #DataAnalysisScript.objects.bulk_create(analyses)
 
 
-def load_project(grouped_metadata):
+def load_project(metadata_project):
     """
     Load all the extracted file metadata into the database
+
+    :type metadata_project: MetadataProject
     """
 
-    metadata_analyses = grouped_metadata.analyses
-    metadata_datatablegroups = grouped_metadata.datatablegroups
+    metadata_analyses = metadata_project.analyses
+    metadata_datatablegroups = metadata_project.datatablegroups
 
-    project = Project.objects.filter(name=grouped_metadata.project_token).first()
+    project = Project.objects.filter(name=metadata_project.project_token).first()
 
     with transaction.atomic():
-        datatablegroupfiles = load_datatablegroupfiles(grouped_metadata, project)
+        datatablegroupfiles = load_datatablegroupfiles(metadata_project, project)
         load_analyses(metadata_analyses, project)
         load_datatablegroups(metadata_datatablegroups, project, datatablegroupfiles)

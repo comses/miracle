@@ -8,23 +8,34 @@ ProjectFilePaths = namedtuple('ProjectFilePath', [
 
 ProjectGroupedFilePaths = namedtuple('ProjectGroupedFilePaths', [
     'project_token',
-    'grouped_paths',
+    'grouped_paths',    # metadata entries for a group of files
     'paths'
-])
-
-MetadataCollection = namedtuple('MetadataCollection', [
-    'project_token',
-    'metadata_file_groups',
-    'paths'
-])
-
-MetadataFileGroup = namedtuple('MetadataFileGroup', [
-    'group',
-    'metadata'
 ])
 
 DataTypes = Enum('DataTypes', 'none archive code data document vizualization')
 
+MetadataDataTable = namedtuple('MetadataDataTable', [
+    'path_ids',
+    'name'
+])
+
+MetadataDataTableGroup = namedtuple('MetadataDataTableGroup', [
+    'name',
+    'properties',
+    'datatables'
+])
+
+MetadataAnalysis = namedtuple('MetadataAnalysis', [
+    'name',
+    'path'
+])
+
+MetadataProject = namedtuple('MetadataProject', [
+    'project_token',
+    'datatablegroups',
+    'analyses',
+    'paths'
+])
 
 class PackratException(Exception):
     pass

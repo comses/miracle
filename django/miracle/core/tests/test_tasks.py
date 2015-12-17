@@ -2,6 +2,7 @@ from os import path
 import shutil
 import os
 
+from django.core.files import File
 from django.conf import settings
 from django.test.utils import override_settings
 
@@ -11,7 +12,7 @@ from miracle.core.tasks import run_metadata_pipeline
 
 class TaskTests(BaseMiracleTest):
 
-    PROJECT_TEST_DIR = "miracle/core/tests/projects"
+    TEST_PROJECT_DIRECTORY = "miracle/core/tests/projects"
 
     @staticmethod
     def make_archive(src):
@@ -19,7 +20,9 @@ class TaskTests(BaseMiracleTest):
         return src + ".zip"
 
     @staticmethod
-    def cleanup(src, token):
+    def cleanup(project):
+        token = project.name
+        src = project.archive_path
         os.unlink(src)
         folder = path.join(settings.MIRACLE_PROJECT_DIRECTORY, token)
         if path.exists(folder):
@@ -31,11 +34,13 @@ class TaskTests(BaseMiracleTest):
     def test_metadata_pipeline(self):
         token = "test"
         project = self.create_project(name=token)
-        src = path.join(self.PROJECT_TEST_DIR, "skeleton")
+        src = path.join(self.TEST_PROJECT_DIRECTORY, "skeleton")
         archive = self.make_archive(src)
+        file_archive = File(open(archive, 'r'))
+        project.write_archive(file_archive)
         try:
-            run_metadata_pipeline(project, archive).apply_async().get()
+            run_metadata_pipeline(project, project.archive_path).apply_async().get()
             self.assertEqual(len(Dataset.objects.filter(name="data")), 1)
             self.assertEqual(len(DataTableColumn.objects.all()), 2)
         finally:
-            self.cleanup(archive, token)
+            self.cleanup(project)

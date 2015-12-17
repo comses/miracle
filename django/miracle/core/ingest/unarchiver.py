@@ -1,12 +1,14 @@
-from os import path, listdir
+from os import path
+import os
 import shutil
 import pyunpack
-import utils
+from ...core import utils
 import tempfile
 
 from django.conf import settings
 
 from . import ProjectFilePaths, PackratException
+from ..models import Project
 
 
 def extract(project, archive, projects_folder=settings.MIRACLE_PROJECT_DIRECTORY):
@@ -29,7 +31,7 @@ def extract(project, archive, projects_folder=settings.MIRACLE_PROJECT_DIRECTORY
     try:
         _unpack(archive, tmpfolder)
 
-        files = listdir(tmpfolder)
+        files = os.listdir(tmpfolder)
         if len(files) != 1:
             raise PackratException("root folder is not unique. contains {}".format(files.__str__()))
 
@@ -37,7 +39,7 @@ def extract(project, archive, projects_folder=settings.MIRACLE_PROJECT_DIRECTORY
         if not path.isdir(project_folder):
             raise PackratException("root {} is nat a folder".format(projects_folder))
 
-        project_folder_contents = listdir(project_folder)
+        project_folder_contents = os.listdir(project_folder)
         if "packrat" not in project_folder_contents:
             raise PackratException("no Packrat folder")
         if token not in project_folder_contents:

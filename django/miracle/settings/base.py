@@ -249,9 +249,9 @@ REST_FRAMEWORK = {
 
 # Media files, see https://docs.djangoproject.com/en/1.8/ref/settings/#std:setting-MEDIA_ROOT for more details
 # This absolute path specifies where all uploaded datasets will be sent. Can be overridden in local.py
-MIRACLE_DATA_DIRECTORY = MEDIA_ROOT = '/opt/miracle/internal/'
+# MIRACLE_DATA_DIRECTORY = MEDIA_ROOT = '/opt/miracle/internal/'
 # data directory to be exposed to DeployR / Radiant containers
-MIRACLE_EXTERNAL_DATA_DIRECTORY = '/opt/miracle/external/data'
+# MIRACLE_EXTERNAL_DATA_DIRECTORY = '/opt/miracle/external/data'
 
 MEDIA_URL = '/data/'
 
@@ -259,7 +259,7 @@ MEDIA_URL = '/data/'
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis'
-CELERY_ACCEPT_CONTENT = ['json',]
+CELERY_ACCEPT_CONTENT = ['json', 'pickle']
 
 # DeployR settings
 DEFAULT_DEPLOYR_USER = 'miracle'
@@ -267,14 +267,15 @@ DEFAULT_DEPLOYR_PASSWORD = ''
 DEPLOYR_URL = 'https://deployr.comses.net/deployr'
 
 def make_project_paths(project_directory):
-    dirs = ['apps', 'archive', 'data', 'docs', 'output', 'src']
     os.makedirs(project_directory)
-    for dirname in dirs:
-        os.makedirs(os.path.join(project_directory, dirname))
 
+def make_archive_path(archive_directory):
+    os.makedirs('archives')
 
-MIRACLE_PROJECT_DIRECTORY = safe_make_paths('/miracle',
+MIRACLE_PROJECT_DIRECTORY = safe_make_paths('/miracle/projects',
                                             os.path.abspath('projects'), make_project_paths)
+MIRACLE_ARCHIVE_DIRECTORY = MEDIA_ROOT = safe_make_paths('/miracle/archives',
+                                            os.path.abspath('archives'), make_archive_path)
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 

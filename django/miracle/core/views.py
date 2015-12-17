@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from extra_views import InlineFormSet, UpdateWithInlinesView
 from json import dumps
-from rest_framework import renderers, viewsets, generics, permissions
+from rest_framework import renderers, viewsets, generics, permissions, status
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,7 +15,7 @@ from .models import (Project, ActivityLog, MiracleUser, Dataset, DataAnalysisScr
 from .serializers import (ProjectSerializer, DatasetFileSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer,
                           AnalysisOutputSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
-from .tasks import run_analysis_task
+from .tasks import run_analysis_task, run_metadata_pipeline
 
 
 import logging
@@ -211,14 +211,33 @@ class FileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser,)
     permission_classes = (CanViewReadOnlyOrEditProject,)
 
-    def post(self, request, format=None):
+    def post(self, request):
         file_obj = request.FILES['file']
         project = get_object_or_404(Project, pk=request.data.get('id'))
-        user = request.user
-# should analyze payload
-        dataset = Dataset(name=file_obj.name, creator=user, project=project, path=file_obj)
-        dataset.save()
-        return Response(status=201)
+        project.write_archive(file_obj)
+        # should analyze payload
+        task = run_metadata_pipeline(project, project.archive_path).apply_async()
+        response = Response(data=task.id, status=status.HTTP_202_ACCEPTED)
+        return response
+
+
+class FileUploadStatusView(APIView):
+    permission_classes = (CanViewReadOnlyOrEditProject,)
+
+    def get(self, request, task_id):
+        result = AsyncResult(task_id)
+        if result.ready():
+            if result.status == 'SUCCESS':
+                sc = status.HTTP_201_CREATED
+            elif result.status == 'FAILURE':
+                # TODO: add error data
+                sc = status.HTTP_400_BAD_REQUEST
+            else:
+                sc = status.HTTP_202_ACCEPTED
+
+            return Response(data=result.status, status=sc)
+        else:
+            return Response(data=result.status, status=status.HTTP_202_ACCEPTED)
 
 
 class FileUploadRetrieveDestroyView(generics.RetrieveDestroyAPIView):

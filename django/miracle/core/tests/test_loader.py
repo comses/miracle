@@ -1,6 +1,6 @@
 from .common import BaseMiracleTest
-from ..metadatagroup_loaders import load_datatablegroupfiles, load_analyses, load_datatablegroup
-from ..metadatagrouper import GroupedMetadata, MetadataAnalysis, MetadataDataTableGroup, MetadataDataTable
+from ..ingest.loader import load_datatablegroupfiles, load_analyses, load_datatablegroup
+from ..ingest.grouper import MetadataProject, MetadataAnalysis, MetadataDataTableGroup, MetadataDataTable
 from ..models import DataAnalysisScript, Dataset
 
 
@@ -32,7 +32,7 @@ class MetadataGroupLoadersTest(BaseMiracleTest):
 
     def grouped_metadata(self):
         project = self.create_project(name="test")
-        return (project, GroupedMetadata(project_token=project.name,
+        return (project, MetadataProject(project_token=project.name,
                                          datatablegroups=self.default_datatablegroups,
                                          analyses=self.default_analyses,
                                          paths=self.default_paths))

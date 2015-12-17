@@ -1,18 +1,19 @@
 from __future__ import absolute_import
+
 from django.core import files
 from django.conf import settings
+from celery import chain
+
 from miracle.core import deployr
 from miracle.celery import app
 from miracle.core.models import DataAnalysisScript, AnalysisOutput
 
-from celery import chain
 
 # Metadata Pipeline Imports
-from . import archive_extractor
-from . import filegrouper
-from . import filegroup_extractors
-from . import metadatagrouper
-from . import metadatagroup_loaders
+from .ingest import unarchiver
+from .ingest import analyzer
+from .ingest import grouper
+from .ingest import loader
 
 import json
 import logging
@@ -55,32 +56,26 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
 
 @app.task()
 def extract_archive(project, archive):
-    return archive_extractor.extract(project, archive, settings.MIRACLE_PROJECT_DIRECTORY)
+    return unarchiver.extract(project, archive, settings.MIRACLE_PROJECT_DIRECTORY)
 
 
 @app.task()
 def group_files(project_file_paths):
-    return filegrouper.group_files(project_file_paths)
-
-
-@app.task()
-def extract_metadata_groups(project_grouped_file_paths):
-    return filegroup_extractors.extract_metadata_groups(project_grouped_file_paths)
+    return analyzer.group_files(project_file_paths)
 
 
 @app.task()
 def group_metadata(metadata_collection):
-    return metadatagrouper.group_metadata(metadata_collection)
+    return grouper.group_metadata(metadata_collection)
 
 
 @app.task()
 def load_project(grouped_metadata):
-    return metadatagroup_loaders.load_project(grouped_metadata)
+    return loader.load_project(grouped_metadata)
 
 
 def run_metadata_pipeline(project, archive):
     return chain(extract_archive.s(project, archive),
                  group_files.s(),
-                 extract_metadata_groups.s(),
                  group_metadata.s(),
                  load_project.s())

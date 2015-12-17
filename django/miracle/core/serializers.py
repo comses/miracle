@@ -63,7 +63,7 @@ class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             'url': {'view_name': 'core:analysis-detail'}
         }
-        fields = ('id', 'name', 'full_name', 'date_created', 'last_modified', 'description', 'path', 'project',
+        fields = ('id', 'name', 'full_name', 'date_created', 'last_modified', 'description', 'project',
                   'file_type', 'parameters', 'url', 'authors', 'outputs', 'job_status')
 
 
@@ -75,7 +75,7 @@ class DatasetSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             'url': {'view_name': 'core:dataset-detail'}
         }
-        fields = ('id', 'name', 'files', 'project', 'url')
+        fields = ('id', 'name', 'project', 'url')
 
 
 class DatasetFileSerializer(serializers.HyperlinkedModelSerializer):
