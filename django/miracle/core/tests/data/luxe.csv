@@ -1,0 +1,2 @@
+agent_id, simulation_step, parcel_location_x, parcel_location_y, transaction_price, preference_for_distance, distance_to_city_centre, open_space_amenity, transportation_cost, agent_budget, utility
+4110,1.0,39.5,37.5,100.21868896484475,0.4,11.451754379272461,1.0,11.471754379272461,165.0,0.8835642833460818

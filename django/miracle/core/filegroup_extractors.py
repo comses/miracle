@@ -6,9 +6,11 @@ import os
 import collections
 import dateutil.parser as date
 from enum import Enum
-from os import path
-from django.conf import settings
+
+from .utils import Chdir
+from .filegrouper import ProjectGroupedFilePaths
 from django.contrib.gis.gdal import DataSource, GDALRaster, GDALException
+from django.conf import settings
 
 import logging
 
@@ -32,12 +34,18 @@ class Metadata(object):
     """
     Metadata for one dataset instance. Dataset instances are grouped by the user
     into Datasets later.
+
+    :type grouped_file_path: GroupedFilePath
+    :type properties: dict
+    :type layers: list
     """
-    def __init__(self, fullpath, datatype, properties, layers, errors=[]):
+    def __init__(self, fullpath, datatype, properties, layers, errors=None):
         self.path = fullpath
         self.datatype = datatype
         self.properties = properties
         self.layers = layers
+        if not errors:
+            self.errors = []
         self.errors = errors
 
     def __repr__(self):
@@ -56,13 +64,13 @@ class GDALLoader(object):
             properties["srs"] = datasource.srs
         except GDALException:
             pass
-        layers = [GDALLoader.from_layer(band) for band in datasource.bands]
+        layers = [(band.description or None, GDALLoader.from_layer(band)) for band in datasource.bands]
 
         return Metadata(path, "data", properties, layers)
 
     @staticmethod
     def from_layer(layer):
-        return {"description": layer.description}
+        return (("description", layer.description),)
 
 
 class OGRLoader(object):
@@ -70,7 +78,7 @@ class OGRLoader(object):
     def from_file(path):
         datasource = DataSource(path)
         properties = {}
-        layers = [OGRLoader.from_layer(layer) for layer in datasource]
+        layers = [(layer.name or None, OGRLoader.from_layer(layer)) for layer in datasource]
 
         return Metadata(path, DataTypes.data, properties, layers)
 
@@ -82,8 +90,8 @@ class OGRLoader(object):
 
     @staticmethod
     def from_layer(layer):
-        return {field: OGRLoader.OGR_DATATYPE_CONVERSIONS[datatype.__name__]
-                for (field, datatype) in zip(layer.fields, layer.field_types)}
+        return tuple((field, OGRLoader.OGR_DATATYPE_CONVERSIONS[datatype.__name__])
+                     for (field, datatype) in zip(layer.fields, layer.field_types))
 
 
 """
@@ -139,7 +147,7 @@ class TabularLoader(object):
             datatypes = [TabularLoader._guess_type(el) for el in datasample]
 
             properties = {"file_name": file_name, "model_name": model_name}
-            layers = [{name: datatype for name, datatype in zip(colnames, datatypes)}]
+            layers = [(None, tuple((name, datatype) for name, datatype in zip(colnames, datatypes)))]
 
             return Metadata(path, DataTypes.data, properties, layers)
 
@@ -148,25 +156,24 @@ class TabularLoader(object):
         properties = {}
         with open(path, 'rb') as f:
             try:
-                has_header = csv.Sniffer().has_header(f.read(8192))
+                has_header = csv.Sniffer().has_header(f.read(4096))
             except Exception as e:
                 return Metadata(path, DataTypes.data, properties, [], [e])
 
             f.seek(0)
-            layer = {}
+            layer = []
+            reader = csv.reader(f)
+            row = reader.next()
             if has_header:
-                reader = csv.DictReader(f)
-                row = reader.next()
-                for k, v in row.iteritems():
-                    layer[k] = TabularLoader._guess_type(v)
+                row_types = reader.next()
+                for k, v in zip(row, row_types):
+                    layer.append((k, TabularLoader._guess_type(v)))
             else:
-                reader = csv.reader(f)
-                row = reader.next()
                 n = len(row)
-                for i in xrange(n):
-                    layer["col%s" % i] = TabularLoader._guess_type(row[i])
+                for col in xrange(n):
+                    layer.append((None, TabularLoader._guess_type(row[col])))
 
-            layers = [layer]
+            layers = [(None, tuple(layer))]
 
         return Metadata(path, DataTypes.data, properties, layers)
 
@@ -189,24 +196,42 @@ class TabularLoader(object):
         """
         determine if file is NetLogo or regular formatted csv
         """
+
+        has_netlogo_in_first_row = False
+        has_netlogo_in_second_row = False
+        has_ragged_columns = False
+
         try:
             with open(path, 'rb') as f:
                 reader = csv.reader(f)
                 i = 0
 
-                row_len = len(next(reader))
-                while i < 6:
+                row_len = 1
+                row = next(reader)
+
+                if len(row) == 1:
+                    has_netlogo_in_first_row = row[0].find("(NetLogo") > 0
+
+                row = next(reader)
+                if len(row) == 1:
+                    has_netlogo_in_second_row = row[0].find(".nlogo") > 0
+
+                while i < 5:
                     row = next(reader)
                     n = len(row)
                     if n != row_len:
-                        return True
+                        has_ragged_columns = True
+                        break
 
                     i += 1
 
-            return False
-
         except StopIteration:
-            return False
+            pass
+
+        finally:
+            return has_netlogo_in_first_row and \
+                   has_netlogo_in_second_row and \
+                   has_ragged_columns
 
 
 class CodeLoader(object):
@@ -248,13 +273,42 @@ def sanitize_ext(ext):
     return ext.lower()
 
 
-def load_metadata(path):
+def extract_metadata(path, constructor=None):
     """
     Create metadata from a path based on its extension
 
     :param path: the path to the file/directory you want to load
+    :param constructor: the metadata extractor to use
     :return: metadata object of the file/directory you load
     """
+
+    if constructor:
+        return constructor(path)
+
     _, ext = os.path.splitext(path)
     ext = sanitize_ext(ext)
     return FORMAT_DISPATCH[ext](path)
+
+
+MetadataCollection = collections.namedtuple('MetadataCollection', ['project_token', 'metadata_file_groups', 'paths'])
+MetadataFileGroup = collections.namedtuple('MetadataFileGroup', ['group', 'metadata'])
+
+
+def extract_metadata_groups(project_grouped_file_paths):
+    """
+
+    :type project_grouped_file_paths: ProjectGroupedFilePaths
+    :return:
+    :rtype: MetadataCollection
+    """
+
+    with Chdir(os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, project_grouped_file_paths.project_token)):
+        metadata_list = []
+        grouped_file_paths = project_grouped_file_paths.grouped_paths
+        for grouped_file_path in grouped_file_paths:
+            extractor = FORMAT_DISPATCH[grouped_file_path.dispatch]
+            metadata_list.append(MetadataFileGroup(grouped_file_path, extractor(grouped_file_path.group_name)))
+
+    return MetadataCollection(project_token=project_grouped_file_paths.project_token,
+                              metadata_file_groups=metadata_list,
+                              paths=project_grouped_file_paths.paths)
