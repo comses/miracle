@@ -1,11 +1,14 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
-from ...metadata_interface import add_project
+from ...tasks import run_metadata_pipeline
 from ...models import Project, User
 import logging
 import os
+import sys
+import getpass
 
 logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
     """
@@ -21,7 +24,7 @@ class Command(BaseCommand):
         parser.add_argument('--project',
                             nargs=1,
                             type=str,
-                            help='The project')
+                            help='The name of the project')
         parser.add_argument('archive_file',
                             nargs=1,
                             type=str,
@@ -36,13 +39,14 @@ class Command(BaseCommand):
         archive_path = options['archive_file'][0]
 
         self.extract(creator_name, project_name, archive_path)
-        self.stdout.write("Successfully imported data")
 
     @staticmethod
     def create_user(username='testuser', email='miracle-test@mailinator.com',
-                    first_name='Default', last_name='Testuser', password='test'):
-        user = User.objects.get(username=username)
-        if not user:
+                    first_name='Default', last_name='Testuser'):
+        user_exists = User.objects.filter(username=username).exists()
+        if not user_exists:
+            sys.stdout.write("User {} does not exist yet\n".format(username))
+            password = getpass.getpass("Enter Password for {}: ".format(username))
             return User.objects.create_user(
                 username=username,
                 email=email,
@@ -51,20 +55,23 @@ class Command(BaseCommand):
                 password=password
             )
         else:
+            user = User.objects.get(username=username)
             return user
-
 
     @staticmethod
     def extract(creator_name, project_name, archive_path):
-        logger.debug("working directory", os.getcwd())
-        logger.debug("path: %s", settings.MIRACLE_PROJECT_DIRECTORY)
+        abs_archive_path = os.path.abspath(archive_path)
+        logger.debug("Extracting archive: {}".format(abs_archive_path))
+        logger.debug("Working Directory: {}".format(os.getcwd()))
+        logger.debug("project path: %s", settings.MIRACLE_PROJECT_DIRECTORY)
 
         creator = Command.create_user(username=creator_name)
         project, created = Project.objects.get_or_create(name=project_name, creator=creator)
 
         logger.debug(archive_path)
         try:
-            logger.debug("Extracting archive...")
-            add_project(project, archive_path)
+            res = run_metadata_pipeline(project, archive_path).apply()
+            logger.debug("Extraction succeeded for archive `{}`".format(abs_archive_path))
         except Exception as e:
+            logger.debug("Extraction failed for archive `{}`".format(abs_archive_path))
             print e

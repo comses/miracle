@@ -458,7 +458,7 @@ class Dataset(MiracleMetadataMixin):
 
     Although we aren't promising to be a digital preservation repository we should still loosely hold the concepts of
     Submission Information Packages, Archival Information Packages, and Dissemination Information Packages as defined by
-    the OAIS reference model (http://www2.archivists.org/groups/standards-committee/open-archival-information-system-oais)
+    the OAIS reference model (http://www2.archivists.org/_groups/standards-committee/open-archival-information-system-oais)
     """
 
     slug = AutoSlugField(populate_from='name', unique=True, overwrite=True)
@@ -480,13 +480,6 @@ class Dataset(MiracleMetadataMixin):
 
     def get_absolute_url(self):
         return reverse_lazy('core:dataset-detail', args=[self.pk])
-
-
-class DatasetFile(models.Model):
-
-    ignored = models.BooleanField(default=False)
-    dataset = models.ForeignKey(Dataset, related_name='files')
-    archived_file = models.FileField(help_text=_("Archival information package file"))
 
 
 class DataTableQuerySet(models.query.QuerySet):
@@ -552,7 +545,7 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
     )
 
     dataset = models.ForeignKey(Dataset, related_name='columns')
-    name = models.CharField(max_length=64, default=None, help_text=_("Internal data table name"))
+    name = models.CharField(max_length=64, blank=True, help_text=_("Internal data table name"))
     full_name = models.CharField(max_length=255, blank=True)
     description = models.TextField()
     data_type = models.CharField(max_length=128, choices=DataType, default=DataType.text)
@@ -565,6 +558,14 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
 
     def __unicode__(self):
         return u'{} (internal: {})'.format(self.full_name, self.name)
+
+
+class DatasetFile(models.Model):
+
+    ignored = models.BooleanField(default=False)
+    datatable = models.ForeignKey(DataTable, null=True, related_name='files')
+    project = models.ForeignKey(Project, related_name='datatablefiles')
+    archived_file = models.FileField(help_text=_("Archival information package file"))
 
 
 class MiracleUser(models.Model):
