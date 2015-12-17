@@ -32,9 +32,6 @@ class ProjectMetadata(object):
 
 class Metadata(object):
     """
-    Metadata for one dataset instance. Dataset instances are grouped by the user
-    into Datasets later.
-
     :type grouped_file_path: GroupedFilePath
     :type properties: dict
     :type layers: list
