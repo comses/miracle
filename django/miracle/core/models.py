@@ -3,8 +3,6 @@ from django.core.urlresolvers import reverse_lazy
 from django.contrib.auth.models import User, Group
 from django.contrib.postgres.fields import JSONField
 from django.db import models, connections
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import AutoSlugField
@@ -227,21 +225,6 @@ class Project(MiracleMetadataMixin):
             ('admin_project', 'Full admin over this project'),
             ('create_projects', 'Can create projects'),
         )
-
-
-@receiver(post_save, sender=Project)
-def project_group_creator(sender, instance, created, raw, using, update_fields, **kwargs):
-    """
-    Signal handler to ensure that a permissions Group (named via Project.group_name) is always available to for basic
-    per-Project permissions management
-    """
-    if created:
-        group, created = Group.objects.get_or_create(name=instance.group_name)
-        group.user_set.add(instance.creator)
-        instance.group = group
-        instance.save()
-    else:
-        assert instance.group is not None
 
 
 class BookmarkedProject(models.Model):
