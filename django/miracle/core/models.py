@@ -1,3 +1,4 @@
+from django.core.files import File
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse_lazy
 from django.contrib.auth.models import User, Group
@@ -174,11 +175,29 @@ class Project(MiracleMetadataMixin):
 
     @property
     def path(self):
-        return str(self.slug)
+        return os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, str(self.slug))
 
     @property
-    def uploads_path(self):
-        return os.path.join(self.path, 'uploads')
+    def archive_path(self):
+        return self.submitted_archive.path
+
+    def write_archive(self, f):
+        """
+        :type f: UploadedFile
+        """
+        _, ext = self.splitext(f.name)
+        filename = os.path.join(settings.MIRACLE_ARCHIVE_DIRECTORY, str(self.name) + ext)
+        self.submitted_archive.save(name=filename, content=f)
+
+    @staticmethod
+    def splitext(path):
+        """
+        Special splitext to handle .tar.gz files
+        """
+        ext = ".tar.gz"
+        if path.endswith(ext):
+                return path[:-len(ext)], path[-len(ext):]
+        return os.path.splitext(path)
 
     @property
     def group_name(self):

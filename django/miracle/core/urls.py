@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^analysis/output/share/$', views.ShareOutputView.as_view(), name='share-output'),
     url(r'^account/profile/$', views.UserProfileView.as_view(), name='profile'),
     url(r'^file-upload/$', views.FileUploadView.as_view(), name='upload'),
+    url(r'^file-upload-status/$', views.FileUploadStatusView.as_view(), name='upload-status')
 ]
 
 router = routers.DefaultRouter()

@@ -1,15 +1,18 @@
 import os
 from django.test.utils import override_settings
 
-from .common import BaseMiracleTest, logger
-from ..filegroup_extractors import extract_metadata, extract_metadata_groups, sanitize_ext
-from ..filegrouper import ProjectGroupedFilePaths, ShapefileFileGroup
+from ..ingest.analyzer import (group_files, ShapefileFileGroup, ProjectGroupedFilePaths,
+                               OtherFile, extract_metadata, sanitize_ext)
+from ..ingest.unarchiver import ProjectFilePaths
+from .common import BaseMiracleTest
 
-class MetadataTest(BaseMiracleTest):
 
+class AnalyzerTest(BaseMiracleTest):
     TEST_PROJECT_DIRECTORY = os.path.join(os.getcwd(),
                                           "miracle", "core", "tests", "projects",
                                           "skeleton", "test")
+    TEST_DATA_DIRECTORY = os.path.join(os.getcwd(),
+                                       "miracle", "core")
 
     def test_sanitize_ext(self):
         ext = ".ZIP"
@@ -64,12 +67,10 @@ class MetadataTest(BaseMiracleTest):
     @override_settings(MIRACLE_PROJECT_DIRECTORY=TEST_PROJECT_DIRECTORY)
     def test_groups_shp(self):
         files = map(lambda x: self.get_test_data(x), ['cities.dbf', 'cities.prj', 'cities.shp', 'cities.shx'])
-        project_grouped_file_paths = ProjectGroupedFilePaths(project_token = "test",
-                                                             grouped_paths = [ShapefileFileGroup(files, (0,1,2,3))],
+        project_grouped_file_paths = ProjectGroupedFilePaths(project_token="test",
+                                                             grouped_paths=[ShapefileFileGroup(files, (0, 1, 2, 3))],
                                                              paths=files)
-        result = extract_metadata_groups(project_grouped_file_paths)
-        columns = result.metadata_file_groups[0].metadata.layers[0][1]
+        columns = project_grouped_file_paths.grouped_paths[0].metadata.layers[0][1]
         self.assertItemsEqual(columns,
                               ((u'Density', 'Real'), (u'Name', 'String'),
                                (u'Created', 'Date'), (u'Population', 'Real')))
-

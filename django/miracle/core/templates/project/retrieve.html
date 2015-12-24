@@ -22,7 +22,7 @@
                 <a href='#analysis' aria-controls='analysis' role='tab' data-toggle='tab'><i class='fa fa-terminal'></i> Analysis and scripts</a>
             </li>
             <li role='presentation'>
-                <a href='#upload' aria-controls='upload' role='tab' data-toggle='tab'><i class='fa fa-cloud-upload'></i> Upload datasets</a>
+                <a href='#upload' aria-controls='upload' role='tab' data-toggle='tab'><i class='fa fa-cloud-upload'></i> Upload archive</a>
             </li>
             <li role='presentation'>
                 <a href='#comments' aria-controls='comments' role='tab' data-toggle='tab'><i class='fa fa-comment'></i> Comments</a>
@@ -154,7 +154,7 @@
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
-                        Add dataset upload for project<br>
+                        Upload project archive<br>
                         <form action="{% url 'core:upload' %}" class="dropzone" enctype="multipart/form-data" method="post" id="my-dropzone">
                             {% csrf_token %}
                             <input type="hidden" name="id" data-bind='value: id'>

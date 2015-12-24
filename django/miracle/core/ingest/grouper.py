@@ -2,50 +2,45 @@
 Explode metadata and group by column metadata
 """
 from os import path
-from collections import namedtuple
-from .filegroup_extractors import MetadataCollection, MetadataFileGroup
-
-MetadataDataTable = namedtuple('MetadataDataTable', ['path_ids', 'name'])
-MetadataDataTableGroup = namedtuple('MetadataDataTableGroup', ['name', 'properties', 'datatables'])
-MetadataAnalysis = namedtuple('MetadataAnalysis', ['name', 'path'])
-GroupedMetadata = namedtuple('GroupedMetadata', ['project_token', 'datatablegroups', 'analyses', 'paths'])
+from . import (ProjectGroupedFilePaths,
+            MetadataDataTableGroup, MetadataDataTable, MetadataAnalysis, MetadataProject)
 
 
 class MetadataLayersInvalid(Exception):
     pass
 
 
-def group_metadata(metadata_collection):
+def group_metadata(project_grouped_file_paths):
     """
 
-    :type metadata_collection: MetadataCollection
+    :type project_grouped_file_paths: ProjectGroupedFilePaths
     :return:
     """
-    metadata_file_groups = metadata_collection.metadata_file_groups
+    file_groups = project_grouped_file_paths.grouped_paths
 
     column_metadata = {}
     datatablegroups = []
     analyses = []
-    for metadata_file_group in metadata_file_groups:
-        if _in_data_folder(metadata_file_group):
-            to_datatablegroups(metadata_file_group, column_metadata, datatablegroups)
-        elif _is_analysis(metadata_file_group):
-            to_analysis(metadata_file_group, analyses)
+    for file_group in file_groups:
+        if _in_data_folder(file_group):
+            to_datatablegroups(file_group, column_metadata, datatablegroups)
+        elif _is_analysis(file_group):
+            to_analysis(file_group, analyses)
 
     datatablegroups += column_metadata.values()
-    return GroupedMetadata(project_token=metadata_collection.project_token,
+    return MetadataProject(project_token=project_grouped_file_paths.project_token,
                            datatablegroups=datatablegroups,
                            analyses=analyses,
-                           paths=metadata_collection.paths)
+                           paths=project_grouped_file_paths.paths)
 
 
 def to_analysis(metadata_file_group, analyses):
-    analysis = MetadataAnalysis(name=metadata_file_group.group.title,
-                                path=metadata_file_group.group.group_name)
+    analysis = MetadataAnalysis(name=metadata_file_group.title,
+                                path=metadata_file_group.group_name)
     analyses.append(analysis)
 
 
-def to_datatablegroups(metadata_file_group, grouped_datatablegroups, datatablegroups):
+def to_datatablegroups(file_group, grouped_datatablegroups, datatablegroups):
     """
     Convert a metadata object into one or more datatablegroups
 
@@ -58,17 +53,17 @@ def to_datatablegroups(metadata_file_group, grouped_datatablegroups, datatablegr
     to place two files in the same column group simply because they do
     not have column names and have the same number of columns
 
-    :type metadata_file_group: MetadataFileGroup
+    :type file_group:
     :type grouped_datatablegroups: dict
     :type datatablegroups: list
     :return:
     """
 
-    file_inds = metadata_file_group.group.inds
-    layers = metadata_file_group.metadata.layers
+    file_inds = file_group.inds
+    layers = file_group.metadata.layers
 
     datatable = MetadataDataTable(path_ids=file_inds,
-                                  name=metadata_file_group.group.title)
+                                  name=file_group.title)
     if len(layers) >= 1:
         column_info = layers[0][1]
 
@@ -102,16 +97,16 @@ def _has_all_valid_column_names(columns):
     return True
 
 
-def _in_project_folder(metadata_file_group, metadata_type):
+def _in_project_folder(file_group, metadata_type):
     """
-    Determine whether the `metadata_file_group` is a data or code
+    Determine whether the `file_group` is a data or code
     based on its base folder
 
-    :type metadata_file_group: MetadataFileGroup
+    :type file_group: MetadataFileGroup
     :return:
     """
 
-    name = metadata_file_group.group.group_name
+    name = file_group.group_name
     if path.commonprefix([metadata_type, name]):
         return True
     return False

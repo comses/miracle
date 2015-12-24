@@ -1,11 +1,12 @@
-import mock
-
 import shutil
+
+import mock
 import os
 from os import path
-from ..archive_extractor import extract, _validate_project_structure, PackratException
-from .common import BaseMiracleTest
 from django.conf import settings
+
+from ...core.ingest.unarchiver import extract, _validate_project_structure, PackratException
+from .common import BaseMiracleTest
 
 
 class ArchiveExtractorTest(BaseMiracleTest):
@@ -30,13 +31,13 @@ class ArchiveExtractorTest(BaseMiracleTest):
         archive = self.make_archive(src)
         try:
             project_folder = extract(project, archive)
-            self.assertEqual(project.path, token)
+            self.assertEqual(project.name, token)
             self.assertItemsEqual(project_folder.paths,
                                   ["README.md", "src/init.R", "data/data.csv"])
         finally:
             self.cleanup(archive, token)
 
-    @mock.patch('miracle.core.archive_extractor.path')
+    @mock.patch('miracle.core.ingest.unarchiver.path')
     def test_validate_project_structure(self, mock_path):
         mock_path.isdir.return_value = True
         _validate_project_structure("", "")
