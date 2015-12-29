@@ -285,6 +285,7 @@ class DataAnalysisScript(MiracleMetadataMixin):
     parameters_json = JSONField(help_text=_("Supported input parameters in JSON format for this analysis script"),
                                 null=True, blank=True)
     authors = models.ManyToManyField(Author)
+    enabled = models.BooleanField(default=False)
 
     @property
     def default_output_name(self):
