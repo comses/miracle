@@ -1,6 +1,6 @@
 # Web
 requests>=2.5.1
-Django==1.9
+Django==1.9.1
 djangorestframework==3.3.2
 django-contrib-comments==1.6.2
 celery-with-redis>=3.0
@@ -19,7 +19,7 @@ patool==1.10
 python-dateutil==2.4.2
 # dev tooling
 Fabric==1.10.2
-python-coveralls==2.5.0
+python-coveralls==2.6.0
 ipython
 django-debug-toolbar
 pytest

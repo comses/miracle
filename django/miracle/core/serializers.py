@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from collections import defaultdict
 from rest_framework import serializers
-from .models import (Project, DatasetFile, Dataset, DataAnalysisScript, AnalysisOutput, AnalysisOutputFile, Author)
+from .models import (Project, DataFile, DataTableGroup, DataAnalysisScript, AnalysisOutput, AnalysisOutputFile, Author)
 
 import logging
 
@@ -67,21 +67,21 @@ class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
                   'file_type', 'parameters', 'url', 'authors', 'outputs', 'job_status')
 
 
-class DatasetSerializer(serializers.HyperlinkedModelSerializer):
+class DataTableGroupSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
 
     class Meta:
-        model = Dataset
+        model = DataTableGroup
         extra_kwargs = {
             'url': {'view_name': 'core:dataset-detail'}
         }
         fields = ('id', 'name', 'project', 'url')
 
 
-class DatasetFileSerializer(serializers.HyperlinkedModelSerializer):
+class DataFileSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
-        model = DatasetFile
+        model = DataFile
         fields = ('id', 'archived_file', 'ignored')
 
 
@@ -95,7 +95,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     detail_url = serializers.CharField(source='get_absolute_url', read_only=True)
     status = serializers.ReadOnlyField()
     number_of_datasets = serializers.IntegerField(read_only=True)
-    datasets = DatasetSerializer(many=True, read_only=True)
+    datasets = DataTableGroupSerializer(many=True, read_only=True)
     analyses = AnalysisSerializer(many=True, read_only=True)
 
     def validate_group_members(self, value):

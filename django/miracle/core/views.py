@@ -11,8 +11,8 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import (Project, ActivityLog, MiracleUser, Dataset, DataAnalysisScript, AnalysisOutput)
-from .serializers import (ProjectSerializer, DatasetFileSerializer, UserSerializer, DatasetSerializer, AnalysisSerializer,
+from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnalysisScript, AnalysisOutput)
+from .serializers import (ProjectSerializer, DataFileSerializer, UserSerializer, DataTableGroupSerializer, AnalysisSerializer,
                           AnalysisOutputSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task, run_metadata_pipeline
@@ -150,17 +150,17 @@ class AnalysisViewSet(viewsets.ModelViewSet):
         return 'analysis/{}.html'.format(self.action)
 
 
-class DatasetViewSet(viewsets.ModelViewSet):
-    serializer_class = DatasetSerializer
+class DataTableGroupViewSet(viewsets.ModelViewSet):
+    serializer_class = DataTableGroupSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
     permission_classes = (CanViewReadOnlyOrEditProjectResource,)
 
     @property
     def template_name(self):
-        return 'dataset/{}.html'.format(self.action)
+        return 'data/{}.html'.format(self.action)
 
     def get_queryset(self):
-        return Dataset.objects.viewable(self.request.user)
+        return DataTableGroup.objects.viewable(self.request.user)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -202,8 +202,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.deactivate(self.request.user)
 
-class DatasetFileViewSet(viewsets.ModelViewSet):
-    serializer_class = DatasetFileSerializer
+class DataFileViewSet(viewsets.ModelViewSet):
+    serializer_class = DataFileSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
     permission_classes = (CanViewReadOnlyOrEditProject,)
 
@@ -242,4 +242,4 @@ class FileUploadStatusView(APIView):
 
 class FileUploadRetrieveDestroyView(generics.RetrieveDestroyAPIView):
     permission_classes = (CanViewReadOnlyOrEditProject,)
-    serializer_class = DatasetSerializer
+    serializer_class = DataTableGroupSerializer

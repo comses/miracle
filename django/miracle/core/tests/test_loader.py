@@ -1,7 +1,7 @@
 from .common import BaseMiracleTest
 from ..ingest.loader import load_datatablegroupfiles, load_analyses, load_datatablegroup
 from ..ingest.grouper import MetadataProject, MetadataAnalysis, MetadataDataTableGroup, MetadataDataTable
-from ..models import DataAnalysisScript, Dataset
+from ..models import DataAnalysisScript, DataTableGroup
 
 
 class MetadataGroupLoadersTest(BaseMiracleTest):
@@ -56,5 +56,5 @@ class MetadataGroupLoadersTest(BaseMiracleTest):
 
         load_datatablegroup(grouped_metadata.datatablegroups[0], project, datasetfiles)
 
-        a_datatablegroup = Dataset.objects.filter(name="datagroup a").first()
+        a_datatablegroup = DataTableGroup.objects.filter(name="datagroup a").first()
         self.assertEquals(len(a_datatablegroup.columns.filter(name="", data_type="String")), 1)

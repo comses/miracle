@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.test.client import RequestFactory, Client
 from django.utils.http import urlencode
 
-from ..models import (DataAnalysisScript, Project, DatasetFile, Dataset, DataTable, DataTableColumn)
+from ..models import (DataAnalysisScript, Project, DataColumn, DataTableGroup, DataFile)
 
 import logging
 import os
@@ -89,28 +89,31 @@ class BaseMiracleTest(TestCase):
         project.save()
         return project
 
-    def create_dataset(self, project=None, name=None, creator=None):
+    def create_data_table_group(self, project=None, name=None, creator=None):
         if project is None:
             project = self.default_project
         if creator is None:
             creator = project.creator
-        dataset = Dataset(project=project, name=name, creator=creator)
-        dataset.full_clean()
-        dataset.save()
-        return dataset
+        data_table_group = DataTableGroup(project=project, name=name, creator=creator)
+        data_table_group.full_clean()
+        data_table_group.save()
+        return data_table_group
 
-    def create_table(self, dataset=None, name=None):
-        if dataset is None:
-            self.fail("table requires parent dataset")
-        table = DataTable(dataset=dataset, name=name)
-        table.full_clean()
-        table.save()
-        return table
+    def create_data_file(self, data_table_group=None, project=None):
+        if project is None:
+            if data_table_group is None:
+                self.fail("DataFile requires parent data table group or project")
+            else:
+                project = data_table_group.project
+        df = DataFile(data_table_group=data_table_group, project=project)
+        df.full_clean()
+        df.save()
+        return df
 
-    def create_column(self, dataset=None, name=None):
+    def create_column(self, data_table_group=None, name=None):
         if dataset is None:
-            self.fail("column requires parent dataset")
-        column = DataTableColumn(dataset=dataset, name=name)
+            self.fail("column requires parent data_table_group")
+        column = DataColumn(data_table_group=data_table_group, name=name)
         column.full_clean()
         column.save()
         return column

@@ -4,9 +4,9 @@ from django.core import files
 from django.conf import settings
 from celery import chain
 
-from miracle.core import deployr
 from miracle.celery import app
-from miracle.core.models import DataAnalysisScript, AnalysisOutput
+from . import deployr
+from .models import DataAnalysisScript, AnalysisOutput
 
 
 # Metadata Pipeline Imports
@@ -45,10 +45,10 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
         temporary_file = result[0]
         metadata = result[1]
         logger.debug("creating analysis output file from [%s, %s]", temporary_file, metadata)
-        with open(temporary_file, 'rb') as of:
+        with open(temporary_file, 'rb') as output_file:
             # metadata is a python dict at this point, still need to serialize it back to JSON before storing it
             analysis_output_file = output.files.create(metadata=json.dumps(metadata))
-            analysis_output_file.output_file.save(metadata['filename'], files.File(of), save=True)
+            analysis_output_file.output_file.save(metadata['filename'], files.File(output_file), save=True)
     self.update_state(state='COMPLETED',
                       meta={'output_id': output.pk})
     return output

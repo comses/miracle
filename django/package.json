@@ -14,11 +14,13 @@
     },
     "license": "GPLv2",
     "dependencies": {
-        "react": "latest",
-        "reflux": "latest",
-        "superagent": "latest",
-        "react-router": "latest"
-    },
+		"react": "latest",
+		"react-dom": "latest",
+		"react-redux": "latest",
+		"redux": "latest",
+        "immutable": "latest",
+		"superagent": "latest"
+	},
     "devDependencies": {
         "jshint": "latest",
         "browserify": "latest",

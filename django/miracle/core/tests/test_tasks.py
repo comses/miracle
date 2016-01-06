@@ -7,7 +7,7 @@ from django.conf import settings
 from django.test.utils import override_settings
 
 from .common import BaseMiracleTest
-from ..models import Dataset, DataTableColumn, DataTable, DatasetFile, Project
+from ..models import DataTableGroup, DataColumn, DataFile, Project
 from miracle.core.tasks import run_metadata_pipeline
 
 class TaskTests(BaseMiracleTest):
@@ -40,7 +40,7 @@ class TaskTests(BaseMiracleTest):
         project.write_archive(file_archive)
         try:
             run_metadata_pipeline(project, project.archive_path).apply_async().get()
-            self.assertEqual(len(Dataset.objects.filter(name="data")), 1)
-            self.assertEqual(len(DataTableColumn.objects.all()), 2)
+            self.assertEqual(len(DataTableGroup.objects.filter(name="data")), 1)
+            self.assertEqual(len(DataColumn.objects.all()), 2)
         finally:
             self.cleanup(project)

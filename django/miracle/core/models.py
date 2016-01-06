@@ -49,7 +49,7 @@ class DatasetConnectionMixin(object):
         # characters into a single underscore
         sanitized_name = re.sub('[^\w]+', '_', name.lower())
         # ensure leading character is alphabetic and append pk for relative uniqueness across DataTables and
-        # DataTableColumns (i.e., DataTable names must be unique across all DataTables, DataTableColumn names must be
+        # DataColumn (i.e., DataTable names must be unique across all DataTables, DataColumn names must be
         # unique within the given DataTable).
         prefix += str(self.pk)
         if sanitized_name[0].isalpha():
@@ -415,11 +415,11 @@ class AnalysisOutputFile(models.Model):
         return u"output file {}".format(self.output_file)
 
 
-class DatasetQuerySet(models.query.QuerySet):
+class DataTableGroupQuerySet(models.query.QuerySet):
 
     def viewable(self, user, *args, **kwargs):
         """
-        Datasets are viewable when they:
+        DataTableGroups are viewable when they:
         1. are active
         2. are published
         3. are created by the given user
@@ -432,16 +432,16 @@ class DatasetQuerySet(models.query.QuerySet):
                            (models.Q(deleted_on__isnull=True) & models.Q(published_on__isnull=False))).distinct('id')
 
 
-class DatasetManager(models.Manager):
+class DataTableGroupManager(models.Manager):
 
     use_for_related_fields = True
 
     def create(self, *args, **kwargs):
         project = kwargs.get('project', None)
         if project is None:
-            raise ValidationError("Datasets must be associated with a Project")
+            raise ValidationError("DataTableGroups must be associated with a Project")
         kwargs.setdefault('creator', project.creator)
-        return super(DatasetManager, self).create(*args, **kwargs)
+        return super(DataTableGroupManager, self).create(*args, **kwargs)
 
 
 def _local_dataset_path(dataset, filename):
@@ -452,30 +452,30 @@ def _local_datatable_path(datatable, filename):
     return os.path.join(datatable.dataset.uploads_path, 'datatables', filename)
 
 
-class Dataset(MiracleMetadataMixin):
+class DataTableGroup(MiracleMetadataMixin):
     """
-    A Dataset maintains a schema + metadata for its associated DataTables. For example, an Excel file with N sheets
-    where each sheet has a different schema would be represented as N Datasets with single DataTables. Likewise,
-    a directory with 600 data files that all share the same schema would be represented as a single Dataset with 600
-    DataTables. A Dataset always has at least one DataTable, and a DataTable corresponds to a single file.
+    A DataTableGroup wraps schema + metadata for associated DataColumns. For example, an Excel file with N sheets
+    where each sheet has a different schema would be represented as N DataTableGroups with single DataTables. Likewise,
+    a directory with 600 data files that all share the same schema would be represented as a single DataTableGroup with 600
+    DataTableGroupFiles and share the same DataColumn relationships + metadata.
 
-    Although we aren't promising to be a digital preservation repository we should still loosely hold the concepts of
-    Submission Information Packages, Archival Information Packages, and Dissemination Information Packages as defined by
-    the OAIS reference model (http://www2.archivists.org/_groups/standards-committee/open-archival-information-system-oais)
+    We aren't building a true digital preservation repository, but we may get mileage out of the OAIS reference model
+    notions of Submission Information Packages, Archival Information Packages, and Dissemination Information Packages
+    (http://www2.archivists.org/_groups/standards-committee/open-archival-information-system-oais)
     """
 
     slug = AutoSlugField(populate_from='name', unique=True, overwrite=True)
-    project = models.ForeignKey(Project, related_name="datasets")
-    provenance = JSONField(help_text=_("Provenance metadata for this Dataset, applicable to all children"),
+    project = models.ForeignKey(Project, related_name="data_table_groups")
+    provenance = JSONField(help_text=_("Provenance metadata for this DataTableGroup, applicable to all children"),
                            null=True, blank=True)
     authors = models.ManyToManyField(Author)
     analyses = models.ManyToManyField(DataAnalysisScript)
     data_type = models.CharField(max_length=50, blank=True)
-    schema = JSONField(help_text=_("Column schema for this Dataset, applicable to all child DataTables"),
+    schema = JSONField(help_text=_("Column schema for this DataTableGroup, applicable to all child DataTables"),
                        null=True, blank=True)
     external_url = models.URLField(blank=True)
 
-    objects = DatasetManager.from_queryset(DatasetQuerySet)()
+    objects = DataTableGroupManager.from_queryset(DataTableGroupQuerySet)()
 
     @property
     def uploads_path(self):
@@ -485,59 +485,18 @@ class Dataset(MiracleMetadataMixin):
         return reverse_lazy('core:dataset-detail', args=[self.pk])
 
 
-class DataTableQuerySet(models.query.QuerySet):
-    pass
+class DataFile(models.Model):
+
+    ignored = models.BooleanField(default=False, help_text=_('Set to true if this file should be ignored'))
+    project = models.ForeignKey(Project, related_name='files')
+    data_table_group = models.ForeignKey(DataTableGroup, null=True, related_name='files')
+    archived_file = models.FileField(help_text=_("Archival data information package file"))
 
 
-class DataTableManager(models.Manager):
-
-    use_for_related_fields = True
-
-    def create(self, *args, **kwargs):
-        dataset = kwargs.get('dataset', None)
-        if dataset is None:
-            raise ValidationError("Every DataTable must be associated with a Dataset")
-        kwargs.setdefault('creator', dataset.creator)
-        return super(DataTableManager, self).create(*args, **kwargs)
-
-
-class DataTable(MiracleMetadataMixin, DatasetConnectionMixin):
+class DataColumn(models.Model, DatasetConnectionMixin):
 
     """
-    DataTable.name will be used for the internal RDBMS table name in the miracle_data database
-    DataTable.full_name is the user assigned data table name (e.g., CSV filename, Excel sheet name, user supplied name)
-    """
-
-    dataset = models.ForeignKey(Dataset, related_name='tables')
-    objects = DataTableManager.from_queryset(DataTableQuerySet)()
-
-    @property
-    def attributes(self):
-        return {
-            'column_a': 'bigint'
-        }
-
-    def select_all(self):
-        cursor = self.cursor
-        cursor.execute("SELECT * FROM {}".format(self.name))
-        return cursor.fetchall()
-
-    def create_schema(self):
-        """
-        Generates DDL and updates this model's name and full_name fields as well as its child columns.
-        """
-        self.sanitize_name(self.name)
-        for c in self.dataset.columns.all():
-            c.sanitize_name(c.name)
-        create_table_statement = "CREATE TABLE {} ({})".format(self.name, self.attributes)
-        logger.debug("create table statement: %s", create_table_statement)
-        return create_table_statement
-
-
-class DataTableColumn(models.Model, DatasetConnectionMixin):
-
-    """
-    Metadata for a Column in a given DataTable
+    Metadata for a Column in a given DataTableGroup to capture basic type and description info.
     """
     # FIXME: revisit + refine these data types
     DataType = Choices(
@@ -547,8 +506,8 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
         ('text', _('text')),
     )
 
-    dataset = models.ForeignKey(Dataset, related_name='columns')
-    name = models.CharField(max_length=64, blank=True, help_text=_("Internal data table name"))
+    data_table_group = models.ForeignKey(DataTableGroup, related_name='columns')
+    name = models.CharField(max_length=64, blank=True, help_text=_("Actual column name"))
     full_name = models.CharField(max_length=255, blank=True)
     description = models.TextField()
     data_type = models.CharField(max_length=128, choices=DataType, default=DataType.text)
@@ -563,12 +522,6 @@ class DataTableColumn(models.Model, DatasetConnectionMixin):
         return u'{} (internal: {})'.format(self.full_name, self.name)
 
 
-class DatasetFile(models.Model):
-
-    ignored = models.BooleanField(default=False)
-    datatable = models.ForeignKey(DataTable, null=True, related_name='files')
-    project = models.ForeignKey(Project, related_name='datatablefiles')
-    archived_file = models.FileField(help_text=_("Archival information package file"))
 
 
 class MiracleUser(models.Model):
