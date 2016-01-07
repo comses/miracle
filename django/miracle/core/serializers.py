@@ -95,7 +95,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     detail_url = serializers.CharField(source='get_absolute_url', read_only=True)
     status = serializers.ReadOnlyField()
     number_of_datasets = serializers.IntegerField(read_only=True)
-    datasets = DataTableGroupSerializer(many=True, read_only=True)
+    data_table_groups = DataTableGroupSerializer(many=True, read_only=True)
     analyses = AnalysisSerializer(many=True, read_only=True)
 
     def validate_group_members(self, value):

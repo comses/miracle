@@ -228,7 +228,7 @@ class Project(MiracleMetadataMixin):
 
     @property
     def number_of_datasets(self):
-        return self.datasets.count()
+        return self.data_table_groups.count()
 
     @property
     def outputs(self):
@@ -479,7 +479,7 @@ class DataTableGroup(MiracleMetadataMixin):
 
     @property
     def uploads_path(self):
-        return os.path.join(self.project.uploads_path, 'datasets', self.slug)
+        return os.path.join(self.project.uploads_path, 'data', self.slug)
 
     def get_absolute_url(self):
         return reverse_lazy('core:dataset-detail', args=[self.pk])
