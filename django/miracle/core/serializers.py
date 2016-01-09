@@ -124,24 +124,24 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         logger.debug("updating instance %s with validated data %s", instance, validated_data)
-        self._modified_data = defaultdict(tuple)
+        modified_data = self.modified_data
         incoming_group_members = validated_data.pop('group_members')
         user = validated_data.pop('user')
         published = validated_data.pop('published')
         for attr, value in validated_data.items():
             original_value = getattr(instance, attr, None)
             if original_value != value:
-                self._modified_data[attr] = (original_value, value)
+                modified_data[attr] = (original_value, value)
                 setattr(instance, attr, value)
         if published and not instance.published:
-            self._modified_data['published'] = (True, False)
+            modified_data['published'] = (True, False)
             instance.publish(user, defer=True)
         elif not published and instance.published:
-            self._modified_data['published'] = (False, True)
+            modified_data['published'] = (False, True)
             instance.unpublish(user, defer=True)
         existing_group_members = frozenset(instance.group_members)
         if existing_group_members.symmetric_difference(incoming_group_members):
-            self._modified_data['group_members'] = (existing_group_members, incoming_group_members)
+            modified_data['group_members'] = (existing_group_members, incoming_group_members)
             users = User.objects.filter(username__in=incoming_group_members)
             instance.set_group_members(users)
         instance.save()
@@ -151,7 +151,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     def validate(self, data):
         slug = data['slug']
         name = data['name']
-        pk = data.get('id', -1)
+        pk = -1 if self.instance is None else self.instance.pk
         if not slug:
             slug = text.slugify(name)
         # check if slug exists in project table already
@@ -161,7 +161,7 @@ class ProjectSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Sorry, this short name has already been taken. Please choose another.")
         else:
             data.update(slug=slug)
-            return data
+        return data
 
     @property
     def modified_data(self):

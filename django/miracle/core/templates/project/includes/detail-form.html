@@ -94,15 +94,16 @@ function ProjectModel(params) {
     }
     model.save = function(data, doneCallback, failCallback) {
         if (!doneCallback) {
-            console.debug("assigning default done callback");
+            console.debug("default done callback");
             doneCallback = function(data) {
                 console.debug("SUCCESS");
                 console.debug(data);
                 ko.mapping.fromJS(data, model);
+                humane.log("Your changes have been saved.")
             }
         }
         if (!failCallback) {
-            console.debug("assigning default fail callback");
+            console.debug("default fail callback");
             failCallback = function(response) {
                 console.debug(response);
                 var errors = $.parseJSON(response.responseText);
