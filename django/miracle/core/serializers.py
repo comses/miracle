@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
-from django.utils import timezone
+from django.core.validators import slug_re
+from django.db import transaction
+from django.utils import timezone, text
 from collections import defaultdict
 from rest_framework import serializers
 from .models import (Project, DataFile, DataTableGroup, DataAnalysisScript, AnalysisOutput, AnalysisOutputFile, Author)
@@ -97,6 +99,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     number_of_datasets = serializers.IntegerField(read_only=True)
     data_table_groups = DataTableGroupSerializer(many=True, read_only=True)
     analyses = AnalysisSerializer(many=True, read_only=True)
+    slug = serializers.CharField(allow_blank=True)
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)
@@ -143,6 +146,22 @@ class ProjectSerializer(serializers.ModelSerializer):
             instance.set_group_members(users)
         instance.save()
         return instance
+
+    @transaction.atomic
+    def validate(self, data):
+        slug = data['slug']
+        name = data['name']
+        pk = data.get('id', -1)
+        if not slug:
+            slug = text.slugify(name)
+        # check if slug exists in project table already
+        if not slug_re.match(slug):
+            raise serializers.ValidationError("Please enter a valid short name (no spaces) or leave blank to autogenerate one.")
+        elif Project.objects.filter(slug=slug).exclude(pk=pk).exists():
+            raise serializers.ValidationError("Sorry, this short name has already been taken. Please choose another.")
+        else:
+            data.update(slug=slug)
+            return data
 
     @property
     def modified_data(self):

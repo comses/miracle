@@ -166,7 +166,7 @@ class ProjectQuerySet(ActivePublishedQuerySet):
 
 class Project(MiracleMetadataMixin):
 
-    slug = AutoSlugField(populate_from='name', unique=True, overwrite=True)
+    slug = AutoSlugField(populate_from='name', unique=True)
     group = models.OneToOneField(Group, editable=False,
                                  help_text=_("Members of this group can edit this project's datasets and metadata"),
                                  null=True)

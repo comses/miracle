@@ -8,6 +8,12 @@
         </div>
     </div>
     <div class='form-group'>
+        <label for='slug' class='control-label col-sm-2'>Short name</label>
+        <div class='col-sm-8'>
+            <input type='text' data-bind='value: slug' class='form-control' id='slug' placeholder='Short name, must be unique'>
+        </div>
+    </div>
+    <div class='form-group'>
         <label for='description' class='control-label col-sm-2'>Description</label>
         <div class='col-sm-8'>
             <textarea class='form-control' rows="6" data-bind='value: description'></textarea>
@@ -39,6 +45,7 @@ function ProjectModel(params) {
         data: {
             id: -1,
             name: "",
+            slug: "",
             description: "",
             group_members: [],
             datasets: [],
@@ -73,9 +80,9 @@ function ProjectModel(params) {
         return model.id() === -1 ? "POST" : "PUT";
     });
     model.refresh = function() {
-        console.debug("refreshing entire project model. this is mostly overkill, we should really switch to reactjs");
+        console.debug("refreshing entire project model. this is overkill");
         if (model.id() === -1) {
-            console.error("trying to refresh a transient model. stop doing that");
+            console.error("trying to refresh a transient model. ignoring");
             return;
         }
         $.get(model.detailUrl(), { format: 'json' }, function(response) {
@@ -97,8 +104,10 @@ function ProjectModel(params) {
         if (!failCallback) {
             console.debug("assigning default fail callback");
             failCallback = function(response) {
-                console.debug("FAIL");
                 console.debug(response);
+                var errors = $.parseJSON(response.responseText);
+                var messages = Object.keys(errors).map(function(k) { return errors[k][0]; });
+                humane.log(messages);
             }
         }
         var promise = $.ajax({
