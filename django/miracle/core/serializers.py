@@ -124,24 +124,26 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         logger.debug("updating instance %s with validated data %s", instance, validated_data)
-        modified_data = self.modified_data
+        self._modified_data = defaultdict(tuple)
         incoming_group_members = validated_data.pop('group_members')
         user = validated_data.pop('user')
         published = validated_data.pop('published')
         for attr, value in validated_data.items():
             original_value = getattr(instance, attr, None)
             if original_value != value:
-                modified_data[attr] = (original_value, value)
+                logger.debug("original value %s (%s) appears to be different from incoming value %s (%s)", original_value,
+                             type(original_value), value, type(value))
+                self._modified_data[attr] = (original_value, value)
                 setattr(instance, attr, value)
         if published and not instance.published:
-            modified_data['published'] = (True, False)
+            self._modified_data['published'] = (True, False)
             instance.publish(user, defer=True)
         elif not published and instance.published:
-            modified_data['published'] = (False, True)
+            self._modified_data['published'] = (False, True)
             instance.unpublish(user, defer=True)
         existing_group_members = frozenset(instance.group_members)
         if existing_group_members.symmetric_difference(incoming_group_members):
-            modified_data['group_members'] = (existing_group_members, incoming_group_members)
+            self._modified_data['group_members'] = (existing_group_members, incoming_group_members)
             users = User.objects.filter(username__in=incoming_group_members)
             instance.set_group_members(users)
         instance.save()
@@ -177,3 +179,4 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
+        exclude = ('submitted_archive',)

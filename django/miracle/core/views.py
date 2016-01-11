@@ -194,10 +194,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         user = self.request.user
         project = serializer.save(user=user)
+        logger.debug("UPDATE modified data: %s", serializer.modified_data)
         if serializer.modified_data:
             modified_data_text = serializer.modified_data_text
             logger.debug("modified data: %s", modified_data_text)
-            ActivityLog.objects.log_user(user, 'UPDATE {}: {}'.format(project, modified_data_text))
+            ActivityLog.objects.log_project_update(user, project, modified_data_text)
 
     def perform_destroy(self, instance):
         instance.deactivate(self.request.user)

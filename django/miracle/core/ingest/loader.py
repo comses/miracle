@@ -42,9 +42,7 @@ def load_datatablegroup(metadata_datatablegroup, project, datatablegroupfiles):
     :rtype: DataTableGroup
     """
 
-    datatablegroup = DataTableGroup.objects.create(name=metadata_datatablegroup.name,
-                                            creator=project.creator,
-                                            project=project)
+    datatablegroup = DataTableGroup.objects.create_data_group(name=metadata_datatablegroup.name, project=project)
     load_datatablegroup_columns(metadata_datatablegroup.properties, datatablegroup)
     """ FIXME: Calvin, is there any essential work going on here?
     datatables = []

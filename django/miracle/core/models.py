@@ -436,12 +436,12 @@ class DataTableGroupManager(models.Manager):
 
     use_for_related_fields = True
 
-    def create(self, *args, **kwargs):
+    def create_data_group(self, *args, **kwargs):
         project = kwargs.get('project', None)
         if project is None:
             raise ValidationError("DataTableGroups must be associated with a Project")
         kwargs.setdefault('creator', project.creator)
-        return super(DataTableGroupManager, self).create(*args, **kwargs)
+        return DataTableGroup.objects.create(*args, **kwargs)
 
 
 def _local_dataset_path(dataset, filename):
@@ -549,6 +549,9 @@ class ActivityLogManager(models.Manager):
     def log(self, message):
         return self.create(message=message)
 
+    def log_project_update(self, user, project, message):
+        self.log_user(user, 'Metadata Update {}: {}'.format(project, message))
+
     def log_user(self, user, message):
         return self.create(creator=user, message=message, action=ActivityLog.ActionType.USER)
 
@@ -565,6 +568,9 @@ class ActivityLog(models.Model):
     creator = models.ForeignKey(User, blank=True, null=True)
     action = models.CharField(max_length=32, choices=ActionType, default=ActionType.SYSTEM)
     objects = ActivityLogManager.from_queryset(ActivityLogQuerySet)()
+
+    class Meta:
+        ordering = ['-date_created']
 
     def __unicode__(self):
         return u"{} {} {}".format(self.creator, self.action, self.message)
