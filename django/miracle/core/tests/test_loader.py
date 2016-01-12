@@ -1,15 +1,23 @@
+import os
+import mock
+import requests
+
 from .common import BaseMiracleTest
-from ..ingest.loader import load_datatablegroupfiles, load_analyses, load_datatablegroup
+from ..ingest.loader import load_datatablegroupfiles, load_analyses, load_datatablegroup, load_deployr
 from ..ingest.grouper import MetadataProject, MetadataAnalysis, MetadataDataTableGroup, MetadataDataTable
 from ..models import DataAnalysisScript, DataTableGroup
-
+from .. import utils
 
 class MetadataGroupLoadersTest(BaseMiracleTest):
+    TEST_PROJECT_DIRECTORY = os.path.join(os.getcwd(),
+                                          "miracle", "core", "tests", "projects",
+                                          "skeleton", "test")
+
     @property
     def default_analyses(self):
-        a1 = MetadataAnalysis(name="a", path="src/a.R")
-        a2 = MetadataAnalysis(name="b", path="src/b.R")
-        a3 = MetadataAnalysis(name="c", path="src/c.R")
+        a1 = MetadataAnalysis(name="a", path="src/a.R", parameters=[])
+        a2 = MetadataAnalysis(name="b", path="src/b.R", parameters=[])
+        a3 = MetadataAnalysis(name="c", path="src/c.R", parameters=[])
 
         return [a1, a2, a3]
 
@@ -58,3 +66,22 @@ class MetadataGroupLoadersTest(BaseMiracleTest):
 
         a_datatablegroup = DataTableGroup.objects.filter(name="datagroup a").first()
         self.assertEquals(len(a_datatablegroup.columns.filter(name="", data_type="String")), 1)
+
+    @mock.patch('miracle.core.ingest.loader.login')
+    @mock.patch('miracle.core.ingest.loader.DeployrAPI.upload_script')
+    @mock.patch('miracle.core.ingest.loader.DeployrAPI.create_working_directory')
+    def test_load_deployr(self, cwd, upload_script, login):
+        post_result_mock = mock.Mock()
+        post_result_mock.status_code = 200
+        cwd.return_value = post_result_mock
+        upload_script.return_value = post_result_mock
+
+        login_result_mock = mock.MagicMock(spec=requests.Session)
+        login.return_value = login_result_mock
+
+        project, grouped_metadata = self.grouped_metadata()
+        metadata_analysis = MetadataAnalysis(name="init",
+                                             path="src/init.R",
+                                             parameters=self.default_analysisscript_params)
+        with utils.Chdir(os.path.join(self.TEST_PROJECT_DIRECTORY, "test")):
+            load_deployr([metadata_analysis], project)

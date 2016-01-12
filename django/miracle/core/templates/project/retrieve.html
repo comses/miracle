@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 {% load comments %}
+{% load tags %}
 
 {% block head %}
 {{ block.super }}
@@ -14,6 +15,9 @@
         <ul class='nav nav-pills nav-stacked' role='tablist' id='project-tab'>
             <li role='presentation' class='active'>
                 <a href='#overview' aria-controls='overview' role='tab' data-toggle='tab'><i class='fa fa-table'></i> Overview</a>
+            </li>
+            <li role='presentation'>
+                <a href='#dependencies' aria-controls='dependencies' role='tab' data-toggle='tab'><i class='fa fa-archive'></i> Dependencies</a>
             </li>
             <li role='presentation'>
                 <a href='#explorer' aria-controls='explorer' role='tab' data-toggle='tab'><i class='fa fa-binoculars'></i> Data explorer</a>
@@ -50,6 +54,12 @@
                         <a class='btn btn-xs btn-default' target='_blank' href='https://miracle.comses.net/radiant/'><i class='fa fa-external-link'></i> Open in new window</a>
                         <div class='embed-responsive embed-responsive-4by3'>
                             <iframe id='radiant-iframe' src='//miracle.comses.net/radiant/'></iframe>
+                        </div>
+                    </div>
+                    <div role='tabpanel' class='tab-pane' id='dependencies'>
+                        <div class='bs-callout bs-callout-default'>
+                            <h4><i class='fa fa-archive'></i> Dependencies</h4>
+                            {{ dependencies|safe }}
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='analysis'>
@@ -430,6 +440,15 @@ $(function() {
     });
     var hash = window.location.hash;
     $('#project-tab a[href="' + hash + '"]').tab('show');
+
+    /*$.get("{#  {% url 'core:dependencies' %} #}", {pk: model.data.id})
+            .done(function(data) {
+                $('#dependencies')
+                        .append(data.dependencies);
+            })
+            .fail(function() {
+                console.log("dependency fetch failed");
+            });*/
 });
 </script>
 {% endblock %}

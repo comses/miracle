@@ -1,7 +1,9 @@
 import csv
 import collections
 import dateutil.parser as date
+import json
 import logging
+import re
 
 import abc
 
@@ -383,6 +385,59 @@ class TabularLoader(object):
                    has_ragged_columns
 
 
+class RLoader(object):
+    @staticmethod
+    def from_file(path):
+        contents = open(path, "rb").read()
+        inputs = RLoader._get_input_params(contents)
+        return Metadata(path, DataTypes.code, {}, inputs)
+
+    @staticmethod
+    def _process_matches(regex, contents):
+        matches = re.findall(regex, contents, flags=re.MULTILINE)
+        for i in xrange(len(matches)):
+            matches[i] = matches[i][2:-2]
+        return matches
+
+    @classmethod
+    def _get_input_params(cls, contents):
+        """
+        Extracts input parameters from file contents
+
+        Since a regular expression is being used there is the potential
+        for false positives (the expression could be part of a multiline string)
+        and false negatives (if the function call is being shadowed)
+
+        Since this is an uncommon expression it should not be a problem
+        """
+        matches = cls._process_matches(
+            "^deployrUtils::deployrInput([\S\t ]+)",
+            contents)
+        input_params = [json.loads(match) for match in matches]
+        return [input_param for input_param in input_params
+                if cls._is_valid_input_param(input_param)]
+
+    @staticmethod
+    def _is_valid_input_param(input_param):
+        """
+        :type input_param: dict
+        """
+        return input_param.has_key("name") and \
+               input_param.has_key("label") and \
+               input_param.has_key("render") and \
+               input_param.has_key("default")
+
+
+    @classmethod
+    def _get_dependencies(cls, contents):
+        """
+        Extracts package dependencies
+        """
+        matches = cls._process_matches("^deployrUtils::deployrPackage([\S ]+)",
+                                       contents)
+        return [json.loads(match) for match in matches]
+
+
 class CodeLoader(object):
     @staticmethod
     def from_file(path):
@@ -407,7 +462,8 @@ CONSTRUCTOR_FORMATS = {
     TabularLoader.from_file: frozenset([".csv", ".tsv"]),
     OGRLoader.from_file: frozenset([".shp"]),
     GDALLoader.from_file: frozenset([".jpg", ".gif", ".png", ".asc"]),
-    CodeLoader.from_file: frozenset([".r", ".java", ".py", ".pl", ".jl", ".nlogo", ".sh"]),
+    RLoader.from_file: frozenset([".r"]),
+    CodeLoader.from_file: frozenset([".java", ".py", ".pl", ".jl", ".nlogo", ".sh"]),
     DocumentLoader.from_file: frozenset(
         [".md", ".rmd", ".ipynb", ".rtf", ".pdf", ".doc", ".docx", ".rst", ".html", ".txt"])
 }

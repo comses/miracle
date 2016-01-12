@@ -56,7 +56,7 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
 
 @app.task()
 def extract_archive(project, archive):
-    return unarchiver.extract(project, archive, settings.MIRACLE_PROJECT_DIRECTORY)
+    return unarchiver.extract(project, archive)
 
 
 @app.task()

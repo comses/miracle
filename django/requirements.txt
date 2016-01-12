@@ -13,6 +13,8 @@ django-extra-views==0.7.1
 raven==5.9.2
 dealer==2.0.5
 enum34==1.1.2
+# Highlighting
+Pygments==2.0.2
 # Metadata Extraction
 pyunpack==0.0.3
 patool==1.10

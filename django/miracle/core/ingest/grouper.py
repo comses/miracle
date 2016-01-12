@@ -24,7 +24,7 @@ def group_metadata(project_grouped_file_paths):
     for file_group in file_groups:
         if _in_data_folder(file_group):
             to_datatablegroups(file_group, column_metadata, datatablegroups)
-        elif _is_analysis(file_group):
+        elif _in_src_folder(file_group):
             to_analysis(file_group, analyses)
 
     datatablegroups += column_metadata.values()
@@ -36,7 +36,8 @@ def group_metadata(project_grouped_file_paths):
 
 def to_analysis(metadata_file_group, analyses):
     analysis = MetadataAnalysis(name=metadata_file_group.title,
-                                path=metadata_file_group.group_name)
+                                path=metadata_file_group.group_name,
+                                parameters=metadata_file_group.metadata.layers)
     analyses.append(analysis)
 
 
@@ -116,7 +117,5 @@ def _in_data_folder(metadata_file_group):
     return _in_project_folder(metadata_file_group, "data")
 
 
-def _is_analysis(metadata_file_group):
-    return _in_project_folder(metadata_file_group, "src") or \
-           _in_project_folder(metadata_file_group, "apps") or \
-           _in_project_folder(metadata_file_group, "doc")
+def _in_src_folder(metadata_file_group):
+    return _in_project_folder(metadata_file_group, "src")

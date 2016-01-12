@@ -41,13 +41,6 @@ class AnalyzerTest(BaseMiracleTest):
                                        (None, (('description', u''),)),
                                        (None, (('description', u''),))])
 
-    """ XXX: disabled for the interim, introduces hachoir dependency
-    def test_mp4(self):
-        data = load_metadata(self.get_test_data("small.mp4"))
-        self.assertEqual(data.properties, {'width': u'560 pixels', 'bit_rate': None, 'height': u'320 pixels'})
-        self.assertFalse(data.layers)
-    """
-
     def test_headeredcsv(self):
         data = extract_metadata(self.get_test_data("head.csv"))
         self.assertEqual(data.layers[0], (None, (('ID', 'Real'), ('Town', 'String'))))
