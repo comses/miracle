@@ -6,6 +6,7 @@ from django.test.client import RequestFactory, Client
 from django.utils.http import urlencode
 
 from ..models import (DataAnalysisScript, Project, DataColumn, DataTableGroup, DataFile)
+from ..ingest.loader import load_analysisparameters
 
 import logging
 import os
@@ -13,7 +14,6 @@ import os
 logger = logging.getLogger(__name__)
 
 
-# Todo: add analysis test directory
 class BaseMiracleTest(TestCase):
 
     """
@@ -40,6 +40,19 @@ class BaseMiracleTest(TestCase):
         return "test_analysis.zip"
 
     @property
+    def default_analysisscript_params(self):
+        return [{"name": "sdp2",
+                 "label": "Standard deviation of preference to proximity",
+                 "render": "numeric",
+                 "default": 0.4,
+                 "valueList": [0, 0.1, 0.2, 0.3, 0.4, 0.5]},
+                {"name": "sdb3",
+                 "label": "Standard deviation of budget",
+                 "render": "integer",
+                 "default": 30,
+                 "valueRange": [0, 50, 10]}]
+
+    @property
     def login_url(self):
         return reverse('login')
 
@@ -64,7 +77,7 @@ class BaseMiracleTest(TestCase):
             password=password
         )
 
-    def create_analysis(self, name=None, project=None, creator=None, script_file=None):
+    def create_analysis(self, name=None, project=None, creator=None, script_file=None, parameters=None):
         if name is None:
             name = self.default_analysis_name
         if project is None:
@@ -73,10 +86,13 @@ class BaseMiracleTest(TestCase):
             creator = self.default_user
         if script_file is None:
             script_file = self.default_script_file
+        if parameters is None:
+            parameters = self.default_analysisscript_params
         analysis = DataAnalysisScript.objects.create(creator=creator,
                                                      name=name,
                                                      project=project,
                                                      archived_file=script_file)
+        load_analysisparameters(analysis, parameters)
         return analysis
 
     def create_project(self, name=None, user=None):
@@ -111,7 +127,7 @@ class BaseMiracleTest(TestCase):
         return df
 
     def create_column(self, data_table_group=None, name=None):
-        if dataset is None:
+        if data_table_group is None:
             self.fail("column requires parent data_table_group")
         column = DataColumn(data_table_group=data_table_group, name=name)
         column.full_clean()

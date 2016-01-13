@@ -261,11 +261,6 @@ CELERY_BROKER_URL = 'redis://localhost:6379/0'
 CELERY_RESULT_BACKEND = 'redis'
 CELERY_ACCEPT_CONTENT = ['json', 'pickle']
 
-# DeployR settings
-DEFAULT_DEPLOYR_USER = 'miracle'
-DEFAULT_DEPLOYR_PASSWORD = ''
-DEPLOYR_URL = 'https://deployr.comses.net/deployr'
-
 def make_project_paths(project_directory):
     os.makedirs(project_directory)
 
@@ -276,6 +271,8 @@ MIRACLE_PROJECT_DIRECTORY = safe_make_paths('/miracle/projects',
                                             os.path.abspath('projects'), make_project_paths)
 MIRACLE_ARCHIVE_DIRECTORY = MEDIA_ROOT = safe_make_paths('/miracle/archives',
                                             os.path.abspath('archives'), make_archive_path)
+MIRACLE_PACKRAT_DIRECTORY = safe_make_paths('/miracle/packrat',
+                                            os.path.abspath('packrat'), make_project_paths)
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.8/howto/static-files/
 

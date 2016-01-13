@@ -9,14 +9,15 @@ from json import dumps
 from rest_framework import renderers, viewsets, generics, permissions, status
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
+from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
+from rest_framework.decorators import detail_route
 
 from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnalysisScript, AnalysisOutput)
 from .serializers import (ProjectSerializer, DataFileSerializer, UserSerializer, DataTableGroupSerializer, AnalysisSerializer,
                           AnalysisOutputSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task, run_metadata_pipeline
-
 
 import logging
 
@@ -82,7 +83,7 @@ class CheckAnalysisRunStatusView(APIView):
                 logger.debug("raised error")
                 data.update(error_message=unicode(result))
             else:
-# run succeeded, serialize the result
+                # run succeeded, serialize the result
                 logger.debug("async result output: type(%s) - %s", type(result), result)
                 serializer = AnalysisOutputSerializer(result)
                 data.update(output=serializer.data)
@@ -182,10 +183,13 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         response = super(ProjectViewSet, self).retrieve(request, *args, **kwargs)
         user_serializer = UserSerializer(User.objects.all(), many=True)
-        project = response.data
+        project_data = response.data
+        project = self.get_object()
+        dependencies = project.package_dependencies()
         response.data = {
-            'project_json': dumps(project),
+            'project_json': dumps(project_data),
             'users_json': dumps(user_serializer.data),
+            'dependencies': dependencies
         }
         if request.accepted_renderer.format == 'html':
             response.data['project'] = self.get_object()
@@ -203,10 +207,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.deactivate(self.request.user)
 
+
 class DataFileViewSet(viewsets.ModelViewSet):
     serializer_class = DataFileSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
     permission_classes = (CanViewReadOnlyOrEditProject,)
+
 
 class FileUploadView(APIView):
     parser_classes = (MultiPartParser, FormParser,)
@@ -224,9 +230,10 @@ class FileUploadView(APIView):
 
 class FileUploadStatusView(APIView):
     permission_classes = (CanViewReadOnlyOrEditProject,)
+    renderer_classes = (JSONRenderer,)
 
-    def get(self, request, task_id):
-        result = AsyncResult(task_id)
+    def get(self, request, task_uuid):
+        result = AsyncResult(task_uuid)
         if result.ready():
             if result.status == 'SUCCESS':
                 sc = status.HTTP_201_CREATED
@@ -236,9 +243,9 @@ class FileUploadStatusView(APIView):
             else:
                 sc = status.HTTP_202_ACCEPTED
 
-            return Response(data=result.status, status=sc)
+            return Response(result.status, status=sc)
         else:
-            return Response(data=result.status, status=status.HTTP_202_ACCEPTED)
+            return Response(result.status, status=status.HTTP_202_ACCEPTED)
 
 
 class FileUploadRetrieveDestroyView(generics.RetrieveDestroyAPIView):

@@ -4,14 +4,19 @@ import shutil
 import pyunpack
 from ...core import utils
 import tempfile
+import logging
 
 from django.conf import settings
 
 from . import ProjectFilePaths, PackratException
 from ..models import Project
 
+logger = logging.getLogger(__name__)
 
-def extract(project, archive, projects_folder=settings.MIRACLE_PROJECT_DIRECTORY):
+class ProjectDirectoryAlreadyExists(IOError):
+    pass
+
+def extract(project, archive):
     """
     Extract a project archive into the project folder
 
@@ -26,8 +31,14 @@ def extract(project, archive, projects_folder=settings.MIRACLE_PROJECT_DIRECTORY
     :rtype: FilePathExtractor
     """
 
+    projects_folder = settings.MIRACLE_PROJECT_DIRECTORY
+    packrat_folder =  settings.MIRACLE_PACKRAT_DIRECTORY
+
     tmpfolder = tempfile.mkdtemp()
-    token = project.name
+    token = project.slug
+    _check_already_exists(projects_folder, token)
+    _check_already_exists(packrat_folder, token)
+
     try:
         _unpack(archive, tmpfolder)
 
@@ -37,7 +48,7 @@ def extract(project, archive, projects_folder=settings.MIRACLE_PROJECT_DIRECTORY
 
         project_folder = path.join(tmpfolder, files[0])
         if not path.isdir(project_folder):
-            raise PackratException("root {} is nat a folder".format(projects_folder))
+            raise PackratException("root {} is not a folder".format(projects_folder))
 
         project_folder_contents = os.listdir(project_folder)
         if "packrat" not in project_folder_contents:
@@ -48,11 +59,20 @@ def extract(project, archive, projects_folder=settings.MIRACLE_PROJECT_DIRECTORY
         _validate_project_structure(project_folder, token)
         project_folder_src, paths = _get_and_add_paths(project, token, project_folder)
         _move_project_to_projects(project_folder_src, projects_folder)
+        _move_packrat_to_packrats(project_folder_src, settings.MIRACLE_PACKRAT_DIRECTORY)
 
         return ProjectFilePaths(project_token=token, paths=paths)
 
     finally:
         _cleanup(tmpfolder)
+
+
+def _check_already_exists(folder, slug):
+    full_path = os.path.join(folder, slug)
+    if os.path.exists(full_path):
+        error = ProjectDirectoryAlreadyExists("PATH ALREADY EXISTS: %s" % full_path)
+        logger.exception(error)
+        raise error
 
 
 def _validate_project_structure(project_folder, token):
@@ -110,11 +130,21 @@ def _unpack(archive, folder):
     if not archive_dir:
         archive_dir = "."
     with utils.Chdir(archive_dir):
-        pyunpack.Archive(archive_name).extractall(folder)
-
+        try:
+            pyunpack.Archive(archive_name).extractall(folder)
+        except ValueError as e:
+            logging.exception(e)
+            raise OSError(e)
 
 def _move_project_to_projects(folder, projects_folder):
     token = path.basename(folder)
     dest = path.join(path.expanduser(projects_folder), token)
     shutil.move(folder, dest)
+    return dest
+
+def _move_packrat_to_packrats(folder, packrats_folder):
+    parent_folder, token = path.split(folder)
+    src = path.join(parent_folder, 'packrat')
+    dest = path.join(path.expanduser(packrats_folder), token)
+    shutil.move(src, dest)
     return dest

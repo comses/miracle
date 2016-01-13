@@ -1,3 +1,9 @@
+# ignore development data folders
+django/projects
+django/packrat
+django/archives
+miracle/
+
 # backup files
 *~
 # ctags index

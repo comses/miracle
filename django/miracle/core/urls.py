@@ -23,8 +23,8 @@ urlpatterns = [
     url(r'^analysis/run/status/$', views.CheckAnalysisRunStatusView.as_view(), name='check-analysis-run-status'),
     url(r'^analysis/output/share/$', views.ShareOutputView.as_view(), name='share-output'),
     url(r'^account/profile/$', views.UserProfileView.as_view(), name='profile'),
-    url(r'^file-upload/$', views.FileUploadView.as_view(), name='upload'),
-    url(r'^file-upload-status/$', views.FileUploadStatusView.as_view(), name='upload-status')
+    url(r'^projects/upload/$', views.FileUploadView.as_view(), name='upload'),
+    url(r'^projects/upload/(?P<task_uuid>[0-9\-a-f]+)/$', views.FileUploadStatusView.as_view(), name='upload-status'),
 ]
 
 router = routers.DefaultRouter()
@@ -32,4 +32,5 @@ router.register(r'projects', views.ProjectViewSet, base_name='project')
 router.register(r'datasets', views.DataTableGroupViewSet, base_name='dataset')
 router.register(r'analyses', views.AnalysisViewSet, base_name='analysis')
 router.register(r'outputs', views.OutputViewSet, base_name='output')
+#router.register(r'uploads', views.FileUploadStatusViewSet, base_name='upload')
 urlpatterns += router.urls

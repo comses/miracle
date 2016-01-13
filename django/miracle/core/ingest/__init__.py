@@ -1,7 +1,7 @@
 from collections import namedtuple
 from enum import Enum
 
-ProjectFilePaths = namedtuple('ProjectFilePath', [
+ProjectFilePaths = namedtuple('ProjectFilePaths', [
     'project_token',    # unique project slug
     'paths'             # list of all paths contained in the archive
 ])
@@ -27,7 +27,8 @@ MetadataDataTableGroup = namedtuple('MetadataDataTableGroup', [
 
 MetadataAnalysis = namedtuple('MetadataAnalysis', [
     'name',
-    'path'
+    'path',
+    'parameters'
 ])
 
 MetadataProject = namedtuple('MetadataProject', [

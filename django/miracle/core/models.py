@@ -1,4 +1,3 @@
-from django.core.files import File
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse_lazy
 from django.contrib.auth.models import User, Group
@@ -15,6 +14,9 @@ import json
 import logging
 import os
 import re
+
+from pygments.lexers.special import TextLexer
+import utils
 
 logger = logging.getLogger(__name__)
 
@@ -181,6 +183,14 @@ class Project(MiracleMetadataMixin):
     def archive_path(self):
         return self.submitted_archive.path
 
+    def package_dependencies(self):
+        packrat_path = os.path.join(settings.MIRACLE_PACKRAT_DIRECTORY, str(self.slug))
+        lock_file_path = os.path.join(packrat_path, 'packrat.lock')
+        lock_file_contents = open(lock_file_path).read()
+        highlighted_lock_file_contents = utils.highlight(lock_file_contents,
+                                                         TextLexer())
+        return highlighted_lock_file_contents
+
     def write_archive(self, f):
         """
         :type f: UploadedFile
@@ -282,8 +292,6 @@ class DataAnalysisScript(MiracleMetadataMixin):
     archived_file = models.FileField(help_text=_("The archived file corresponding to this AnalysisScript"))
     provenance = JSONField(null=True, blank=True)
     file_type = models.CharField(max_length=128, choices=FileType, default=FileType.R)
-    parameters_json = JSONField(help_text=_("Supported input parameters in JSON format for this analysis script"),
-                                null=True, blank=True)
     authors = models.ManyToManyField(Author)
     enabled = models.BooleanField(default=False)
 
@@ -296,7 +304,8 @@ class DataAnalysisScript(MiracleMetadataMixin):
         # returns a list of dicts for easier JSON consumption
         return [dict(name=k, **v) for k, v in self.get_deployr_parameters_dict().items()]
 
-    def to_deployr_input_parameters(self, parameters_list):
+    @staticmethod
+    def to_deployr_input_parameters(parameters_list):
         """
         Converts list of parameters [{'name': 'fooparamname', 'value': 'bar', 'label': 'baz', ...}, ...] into a single dict
         object for consumption by the DeployR API of the form
@@ -314,7 +323,7 @@ class DataAnalysisScript(MiracleMetadataMixin):
         if values is None:
             values = {}
         return dict(
-            (p.name, {'label': p.label, 'description': p.description, 'type': 'primitive', 'rclass': p.data_type, 'value': values.get(p.name, p.default_value)})
+            (p.name, {'label': p.label, 'type': 'primitive', 'rclass': p.data_type, 'value': values.get(p.name, p.default_value)})
             for p in self.parameters.all()
         )
 
@@ -353,6 +362,8 @@ class AnalysisParameter(models.Model):
     data_type = models.CharField(max_length=128, choices=ParameterType, default=ParameterType.character)
     default_value = models.CharField(max_length=255, blank=True,
                                      help_text=_("default value for this analysis input parameter"))
+    # We need a JSONField instead of an Array field because different rows have potentially different element types
+    misc = JSONField(null=True, blank=True)
 
     def convert(self, value):
         return AnalysisParameter.TYPE_CONVERTERS[self.data_type](value)
@@ -368,8 +379,6 @@ class AnalysisOutput(models.Model):
     description = models.TextField(blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User)
-    parameter_values_json = JSONField(help_text=_("Input parameter values used in the given analysis run"),
-                                      null=True, blank=True)
     response = JSONField(help_text=_("Internal raw HTTP response from executing the script against DeployR/OpenCPU"),
                          null=True, blank=True)
 

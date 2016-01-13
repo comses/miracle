@@ -4,13 +4,16 @@ Load metadata extracted from a project archive into the database
 
 import json
 import logging
+import requests
 
 from os import path
 from django.conf import settings
 from django.db import transaction
 
 from . import MetadataAnalysis, MetadataDataTableGroup, MetadataProject
+from ..deployr import login, DeployrAPI, response200orError
 from ..models import DataAnalysisScript, DataTableGroup, Project, DataFile, DataColumn
+from .. import utils
 
 logger = logging.getLogger(__name__)
 
@@ -44,15 +47,13 @@ def load_datatablegroup(metadata_datatablegroup, project, datatablegroupfiles):
 
     datatablegroup = DataTableGroup.objects.create_data_group(name=metadata_datatablegroup.name, project=project)
     load_datatablegroup_columns(metadata_datatablegroup.properties, datatablegroup)
-    """ FIXME: Calvin, is there any essential work going on here?
+    """ FIXME: Calvin, is there any essential work going on here?"""
     datatables = []
     for metadata_datatable in metadata_datatablegroup.datatables:
         datatable = load_datatable(metadata_datatable, datatablegroupfiles, datatablegroup)
         datatables.append(datatable)
     datatablegroup.tables = datatables
-    logger.debug("added datatablegroup {}".format(metadata_datatable.name))
-    """
-
+    logger.debug("ADDED DATATABLE GROUP: {}".format(metadata_datatable.name))
 
 
 def load_datatablegroup_columns(metadata_columns, datatablegroup):
@@ -62,17 +63,41 @@ def load_datatablegroup_columns(metadata_columns, datatablegroup):
                                    )
 
 
-"""
 def load_datatable(metadata_datatable, datasetfiles, datatablegroup):
     related_datasetfiles = [datasetfiles[id] for id in metadata_datatable.path_ids]
-    datatable = DataTable.objects.create(name=metadata_datatable.name,
-                                         data_table_group=datatablegroup)
+    datatable = DataFile.objects.create(data_table_group=datatablegroup,
+                                        project=datatablegroup.project)
     datatable.files = related_datasetfiles
     return datatable
-"""
 
 
-def to_analysis(metadata_analysis, project):
+def load_analysisparameter(dataanalysis_script, parameter):
+    """
+    :type dataanalysis_script: DataAnalysisScript
+    :type parameter: dict
+    :return:
+    """
+    misc = {}
+    if parameter.has_key("valueList"):
+        misc["valueList"] = parameter["valueList"]
+    if parameter.has_key("valueRange"):
+        misc["valueRange"] = parameter["valueRange"]
+
+    dataanalysis_script.parameters.create(
+        name=parameter["name"],
+        label=parameter["label"],
+        data_type=parameter["render"],
+        default_value=str(parameter["default"]),
+        misc=misc
+    )
+
+
+def load_analysisparameters(dataanalysis_script, parameters):
+    for parameter in parameters:
+        load_analysisparameter(dataanalysis_script, parameter)
+
+
+def load_analysis(metadata_analysis, project):
     """
     Convert analysis metadata to an Analysis
 
@@ -98,17 +123,38 @@ def to_analysis(metadata_analysis, project):
     elif ext == ".pl":
         file_type = "Perl"
 
-    return DataAnalysisScript(name=metadata_analysis.name,
-                              creator=project.creator,
-                              project=project,
-                              archived_file=metadata_analysis.path,
-                              file_type=file_type)
+    dataanalysis_script = DataAnalysisScript(name=metadata_analysis.name,
+                                             creator=project.creator,
+                                             project=project,
+                                             archived_file=metadata_analysis.path,
+                                             file_type=file_type)
+    dataanalysis_script.save()
+    load_analysisparameters(dataanalysis_script, metadata_analysis.parameters)
 
 
 def load_analyses(metadata_analyses, project):
-    analyses = [to_analysis(metadata_analysis, project) for metadata_analysis in metadata_analyses]
-    for analysis in analyses:
-        analysis.save()
+    """Load analyses into database"""
+    for metadata_analysis in metadata_analyses:
+        load_analysis(metadata_analysis, project)
+
+
+def load_deployr(metadata_analyses, project):
+    """Load analyses into deployr and make deployr project"""
+    try:
+        with login() as session:
+            response = DeployrAPI.create_working_directory(project.name, session)
+            response200orError(response)
+        for metadata_analysis in metadata_analyses:
+            response = DeployrAPI.upload_script(metadata_analysis.path,
+                                                project.name,
+                                                session)
+            response200orError(response)
+    except requests.exceptions.ConnectionError as e:
+        logger.exception(e)
+        logger.debug(
+            "CONNECTION ERROR: the deployr server must be running and have a user " +
+            "matching the deployr username (DEFAULT_DEPLOYR_USER) and password (DEFAULT_DEPLOYR_PASSWORD)")
+        raise
 
 
 def load_project(metadata_project):
@@ -127,3 +173,5 @@ def load_project(metadata_project):
         datatablegroupfiles = load_datatablegroupfiles(metadata_project, project)
         load_analyses(metadata_analyses, project)
         load_datatablegroups(metadata_datatablegroups, project, datatablegroupfiles)
+        with utils.Chdir(path.join(settings.MIRACLE_PROJECT_DIRECTORY, project.slug)):
+            load_deployr(metadata_analyses, project)

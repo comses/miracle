@@ -24,6 +24,13 @@ job_status_url = deployr_url('job/query')
 job_results_url = deployr_url('project/directory/list')
 
 
+def response200orError(response):
+    if response.status_code != 200:
+        error = DeployrUnexpectedStatusCode(response)
+        logger.exception(error)
+        raise error
+
+
 def get_auth_tuple(user=None):
     # FIXME: currently using a single sandbox user - at some point we may want to switch to 1:1 deployr user <-> miracle
     # users
@@ -40,12 +47,65 @@ def login(user=None):
     auth_tuple = get_auth_tuple(user)
     s = requests.Session()
     r = s.post(login_url, data={'username': auth_tuple[0], 'password': auth_tuple[1], 'format': 'json'})
-    logger.debug(r.text)
+    response200orError(r)
+    logger.debug("LOGIN response: %s" % r.text)
     return s
 
 
-class Job(object):
+class DeployrUnexpectedStatusCode(Exception):
+    pass
 
+
+class DeployrAPI(object):
+    """
+    Add projects and scripts to deployr
+    """
+
+    @staticmethod
+    def create_working_directory(name, session):
+        response = session.post(create_working_directory_url,
+                                data={'format': 'json', 'directory': name})
+        logger.debug("CREATE WORKING DIRECTORY response: %s", response.text)
+        return response
+
+    @staticmethod
+    def upload_script(script_path, project_name, session):
+        base_script_path = os.path.basename(script_path)
+        response = session.post(upload_script_url,
+                                files={'file': open(script_path, 'rb')},
+                                data={'format': 'json',
+                                      'filename': base_script_path,
+                                      'directory': project_name
+                                      })
+        logger.debug("UPLOAD SCRIPT response: %s", response.text)
+        return response
+
+    @staticmethod
+    def run_job(script_path, project_name, parameters, session):
+        job_name = '{}.job'.format(project_name)
+        execute_script_data = {
+            'format': 'json',
+            'name': job_name,
+            'rscriptname': script_path,
+            'rscriptdirectory': project_name,
+            'rscriptauthor': settings.DEFAULT_DEPLOYR_USER,
+        }
+        if parameters:
+            # Convert parameters dict to be JSON-encoded
+            execute_script_data.update(inputs=json.dumps(parameters))
+        job = Job(session)
+        job.submit(execute_script_data)
+        logger.debug("JOB SUBMITTED: %s" % job_name)
+        return job
+
+    @staticmethod
+    def check_job_status(job):
+        (response, completed) = job.check_status()
+        logger.debug("RUN SCRIPT successful? [{}] response: {}".format(completed, response.text))
+        return (response, completed)
+
+
+class Job(object):
     def __init__(self, session=None, user=None):
         if session is None:
             if user is None:
