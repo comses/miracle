@@ -186,9 +186,12 @@ class Project(MiracleMetadataMixin):
     def package_dependencies(self):
         packrat_path = os.path.join(settings.MIRACLE_PACKRAT_DIRECTORY, str(self.slug))
         lock_file_path = os.path.join(packrat_path, 'packrat.lock')
-        lock_file_contents = open(lock_file_path).read()
-        highlighted_lock_file_contents = utils.highlight(lock_file_contents,
-                                                         TextLexer())
+        if os.path.exists(lock_file_path):
+            lock_file_contents = open(lock_file_path).read()
+            highlighted_lock_file_contents = utils.highlight(lock_file_contents,
+                                                             TextLexer())
+        else:
+            highlighted_lock_file_contents = "<p>No lock file</p>"
         return highlighted_lock_file_contents
 
     def write_archive(self, f):

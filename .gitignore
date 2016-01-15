@@ -1,3 +1,6 @@
+# Ignore docker-compose
+docker-compose.yml
+
 # ignore development data folders
 django/projects
 django/packrat

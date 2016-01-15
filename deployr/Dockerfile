@@ -20,25 +20,29 @@ RUN sed -i "4s/.*/R_HOME_DIR=\/usr\/lib64\/RRO-3.2.2\/R-3.2.2\/lib64\/R/g" /usr/
 RUN wget https://github.com/deployr/deployr-rserve/releases/download/v7.4.1/deployrRserve_7.4.1.tar.gz; \
     R CMD INSTALL deployrRserve_7.4.1.tar.gz; \
     rm -rf deployrRserve_7.4.1.tar.gz
-RUN adduser deployr
+RUN adduser --uid 1000 deployr
 USER deployr
 WORKDIR /home/deployr/
 RUN mkdir download; \
-    wget http://deployr.revolutionanalytics.com/download/bundles/release/DeployR-Open-Linux-7.4.1.tar.gz -P download; \
+    wget http://deployr.revolutionanalytics.com/7.4.1/download/bundles/release/DeployR-Open-Linux-7.4.1.tar.gz -P download; \
     cd download && tar xzf DeployR-Open-Linux-7.4.1.tar.gz
 ADD installDeployROpen.sh download/installFiles/
 USER root
-RUN chown deployr:deployr download/installFiles/installDeployROpen.sh
+RUN chown deployr:deployr download/installFiles/installDeployROpen.sh && \
+    mkdir -p /miracle/projects && \
+    chown -R deployr:deployr /miracle
 USER deployr
 RUN cd download/installFiles/ && export JAVA_HOME=/opt/jdk1.8.0_65/ && chmod +x installDeployROpen.sh && sync && ./installDeployROpen.sh --no-ask --nolicense
 ADD startAll.sh deployr/7.4.1/
-ADD init.sh deployr/7.4.1/
 USER root
-RUN chown deployr:deployr deployr/7.4.1/startAll.sh deployr/7.4.1/init.sh
+RUN chown deployr:deployr deployr/7.4.1/startAll.sh
 USER deployr
-RUN chmod +x deployr/7.4.1/startAll.sh deployr/7.4.1/init.sh && sync
+
+VOLUME /miracle/projects
+
+RUN chmod +x deployr/7.4.1/startAll.sh && sync && ln -s /miracle/projects /home/deployr/deployr/7.4.1/deployr/external/data/public
 RUN rm -rf download
 
 EXPOSE 7400 7406
 
-CMD cd deployr/7.4.1/ && ./startAll.sh
+CMD ["/home/deployr/deployr/7.4.1/startAll.sh"]

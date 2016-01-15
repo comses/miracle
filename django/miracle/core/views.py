@@ -13,6 +13,8 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from rest_framework.decorators import detail_route
 
+from django.conf import settings
+
 from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnalysisScript, AnalysisOutput)
 from .serializers import (ProjectSerializer, DataFileSerializer, UserSerializer, DataTableGroupSerializer, AnalysisSerializer,
                           AnalysisOutputSerializer)
@@ -189,7 +191,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         response.data = {
             'project_json': dumps(project_data),
             'users_json': dumps(user_serializer.data),
-            'dependencies': dependencies
+            'dependencies': dependencies,
+            'radiant_url': settings.RADIANT_URL
         }
         if request.accepted_renderer.format == 'html':
             response.data['project'] = self.get_object()

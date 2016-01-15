@@ -14,7 +14,7 @@ before_script:
     - cp django/miracle/settings/travis_local.py.example django/miracle/settings/local.py
     - cd django && fab setup
 install: 
-    - pip install -r django/requirements.txt
+    - pip install -r django/requirements/local.txt
 script: fab coverage
 after_success:
     - coveralls

@@ -47,8 +47,8 @@ def login(user=None):
     auth_tuple = get_auth_tuple(user)
     s = requests.Session()
     r = s.post(login_url, data={'username': auth_tuple[0], 'password': auth_tuple[1], 'format': 'json'})
-    response200orError(r)
     logger.debug("LOGIN response: %s" % r.text)
+    response200orError(r)
     return s
 
 

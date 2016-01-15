@@ -2,6 +2,7 @@ FROM centos:7
 
 ENV user_id 1000
 ENV user_name miracle
+ENV projects_path /miracle/projects
 
 RUN yum -y update && yum clean all && yum -y install \
     wget \
@@ -39,8 +40,8 @@ RUN git clone --depth 1 https://github.com/warmdev/radiant-mod.git radiant; \
 RUN sed -i -e 's/run_as shiny/run_as miracle/g' /etc/shiny-server/shiny-server.conf
 ADD shiny-server.sh /usr/bin/shiny-server.sh
 USER root
-RUN mkdir /miracle
-RUN ln -s /miracle /srv/shiny-server/apps
+RUN mkdir -p $projects_path && \
+    ln -s /miracle/projects /srv/shiny-server/apps
 RUN chmod +x /usr/bin/shiny-server.sh
 RUN chown $user_name:$user_name /usr/bin/shiny-server.sh
 RUN mkdir -p /var/log/shiny-server

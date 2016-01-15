@@ -24,6 +24,5 @@ Fabric==1.10.2
 python-coveralls==2.6.0
 ipython
 django-debug-toolbar
-pytest
 nodeenv
-mock
+mock==1.0.1
