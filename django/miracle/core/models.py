@@ -15,6 +15,7 @@ import logging
 import os
 import re
 
+from pygments.lexers import guess_lexer_for_filename
 from pygments.lexers.special import TextLexer
 import utils
 
@@ -329,6 +330,25 @@ class DataAnalysisScript(MiracleMetadataMixin):
             (p.name, {'label': p.label, 'type': 'primitive', 'rclass': p.data_type, 'value': values.get(p.name, p.default_value)})
             for p in self.parameters.all()
         )
+
+    @property
+    def basename(self):
+        return os.path.basename(str(self.archived_file))
+
+    @property
+    def path(self):
+        return os.path.join(self.project.path, str(self.archived_file))
+
+    def archived_file_contents(self):
+        code_path = self.path
+        code_file_contents = open(code_path).read()
+        return code_file_contents
+
+    def archived_file_contents_highlighted(self):
+        contents = self.archived_file_contents()
+        lexer = guess_lexer_for_filename(self.path, contents)
+        contents_highlighted = utils.highlight(contents, lexer)
+        return contents_highlighted
 
     def __unicode__(self):
         return u'{} {}'.format(self.name, self.archived_file)

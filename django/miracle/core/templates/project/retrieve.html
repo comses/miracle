@@ -98,10 +98,10 @@
                                 <div class='btn-group' role='group'>
                                     <button class='btn btn-sm btn-default' data-bind='click: $root.enterAnalysisParameters.bind($data)'><i class='fa fa-play'></i> Run script</button>
                                     <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
-                                        <i class='fa fa-eye'></i> View details</span>
+                                        <i class='fa fa-eye'></i> View details
                                     </a>
-                                    <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
-                                        <i class='fa fa-download'></i> Download</span>
+                                    <a class='btn btn-sm btn-default' data-bind='attr: {href: "/analyses/" + id() + "/download/"}'>
+                                        <i class='fa fa-download'></i> Download
                                     </a>
                                 </div>
                                 <hr>
@@ -316,21 +316,21 @@ $(function() {
         $.post('{% comment_form_target %}', formData, function(response) {
             console.debug(response);
         });
-    }
+    };
     model.setCurrentInterval = function(intervalId) {
         model.clearCurrentInterval();
         model.currentInterval(intervalId);
-    }
+    };
     model.clearCurrentInterval = function() {
         if (model.currentInterval()) {
             clearInterval(model.currentInterval());
             model.currentInterval(null);
         }
-    }
+    };
     model.showShareOutputForm = function(output) {
         model.selectedOutput(output);
         model.displayShareOutputForm(true);
-    }
+    };
     model.shareOutput = function() {
         var formData = $('#share-output-form').serialize();
         $.post("{% url 'core:share-output' %}", formData, function(response) {
@@ -341,7 +341,7 @@ $(function() {
         .always(function() {
             model.selectedOutput(null);
         });
-    }
+    };
     model.deleteOutput = function(output) {
         bootbox.confirm("Delete this analysis output? This cannot be undone.", function(result) {
             if (result) {
@@ -364,7 +364,7 @@ $(function() {
             }
         });
 
-    }
+    };
     model.checkAnalysisRunStatus = function(task_id) {
         // FIXME: replace with websockets / sockjs if/when more realtime notifications are needed
         return function() {
@@ -386,7 +386,7 @@ $(function() {
                 model.clearCurrentInterval();
             });
         }
-    }
+    };
     model.enterAnalysisParameters = function(analysis) {
         var analysis_detail_url = analysis.url();
         model.selectedAnalysis(analysis);
@@ -400,7 +400,7 @@ $(function() {
     };
     model.prettyprint = function(json_string) {
         return JSON.stringify(JSON.parse(json_string), null, 4);
-    }
+    };
     model.runAnalysis = function(model) {
         if (! model.selectedAnalysis()) {
             alert("No analysis selected.");
@@ -427,7 +427,7 @@ $(function() {
         }).always(function() {
             $('#analysis-input-modal').modal('hide');
         });
-    }
+    };
     ko.applyBindings(model);
     $('#project-tab a').click(function(e) {
         e.preventDefault();
@@ -440,15 +440,6 @@ $(function() {
     });
     var hash = window.location.hash;
     $('#project-tab a[href="' + hash + '"]').tab('show');
-
-    /*$.get("{#  {% url 'core:dependencies' %} #}", {pk: model.data.id})
-            .done(function(data) {
-                $('#dependencies')
-                        .append(data.dependencies);
-            })
-            .fail(function() {
-                console.log("dependency fetch failed");
-            });*/
 });
 </script>
 {% endblock %}

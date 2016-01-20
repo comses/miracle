@@ -5,7 +5,7 @@ docker-compose.yml
 django/projects
 django/packrat
 django/archives
-miracle/
+/miracle/
 
 # backup files
 *~
@@ -24,6 +24,9 @@ django/miracle/core/migrations/*
 
 # Google Drive
 *.DS_Store
+
+# Ignore test generated files
+django/miracle/core/tests/projects/skeleton.zip
 
 #
 ### Auto generated ignores from https://www.gitignore.io ###
