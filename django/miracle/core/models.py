@@ -15,6 +15,7 @@ import logging
 import os
 import re
 
+from pygments.lexers import guess_lexer_for_filename
 from pygments.lexers.special import TextLexer
 import utils
 
@@ -186,9 +187,12 @@ class Project(MiracleMetadataMixin):
     def package_dependencies(self):
         packrat_path = os.path.join(settings.MIRACLE_PACKRAT_DIRECTORY, str(self.slug))
         lock_file_path = os.path.join(packrat_path, 'packrat.lock')
-        lock_file_contents = open(lock_file_path).read()
-        highlighted_lock_file_contents = utils.highlight(lock_file_contents,
-                                                         TextLexer())
+        if os.path.exists(lock_file_path):
+            lock_file_contents = open(lock_file_path).read()
+            highlighted_lock_file_contents = utils.highlight(lock_file_contents,
+                                                             TextLexer())
+        else:
+            highlighted_lock_file_contents = "<p>No lock file</p>"
         return highlighted_lock_file_contents
 
     def write_archive(self, f):
@@ -326,6 +330,25 @@ class DataAnalysisScript(MiracleMetadataMixin):
             (p.name, {'label': p.label, 'type': 'primitive', 'rclass': p.data_type, 'value': values.get(p.name, p.default_value)})
             for p in self.parameters.all()
         )
+
+    @property
+    def basename(self):
+        return os.path.basename(str(self.archived_file))
+
+    @property
+    def path(self):
+        return os.path.join(self.project.path, str(self.archived_file))
+
+    def archived_file_contents(self):
+        code_path = self.path
+        code_file_contents = open(code_path).read()
+        return code_file_contents
+
+    def archived_file_contents_highlighted(self):
+        contents = self.archived_file_contents()
+        lexer = guess_lexer_for_filename(self.path, contents)
+        contents_highlighted = utils.highlight(contents, lexer)
+        return contents_highlighted
 
     def __unicode__(self):
         return u'{} {}'.format(self.name, self.archived_file)

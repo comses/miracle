@@ -1,7 +1,14 @@
+# Radiant and Shiny Dockerfile
+
+# Mount Points
+# /var/log/shiny-server.log     log file
+# /miracle/projects             project files
+
 FROM centos:7
 
 ENV user_id 1000
 ENV user_name miracle
+ENV projects_path /miracle/projects
 
 RUN yum -y update && yum clean all && yum -y install \
     wget \
@@ -30,23 +37,29 @@ RUN wget https://download3.rstudio.org/centos5.9/x86_64/shiny-server-1.4.0.756-r
 
 # Install Radiant
 RUN R -e "install.packages('radiant', repos='http://vnijs.github.io/radiant_miniCRAN/')"
-RUN git clone --depth 1 https://github.com/warmdev/radiant-mod.git radiant; \
+RUN git clone --depth 1 https://github.com/vnijs/radiant.git radiant; \
 	cp -r radiant /srv/shiny-server; \
 	cd /opt; rm -rf radiant; \
 	cd /srv/shiny-server/radiant; rm -rf .Rbuildignore .git .gitingore .travis.yml build tests
 
-# Add starting script
+# Hardwired Libraries for luxedemo -- can remove later
+RUN R -e "install.packages(c('data.table','raster','rasterVis', 'sqldf', 'lattice', 'latticeExtra'), repos='https://cran.rstudio.com/')"
+
+# Configure Shiny and Radiant
+# ---------------------------
 RUN sed -i -e 's/run_as shiny/run_as miracle/g' /etc/shiny-server/shiny-server.conf
 ADD shiny-server.sh /usr/bin/shiny-server.sh
 USER root
-RUN mkdir /miracle
-RUN ln -s /miracle /srv/shiny-server/apps
-RUN chmod +x /usr/bin/shiny-server.sh
-RUN chown $user_name:$user_name /usr/bin/shiny-server.sh
-RUN mkdir -p /var/log/shiny-server
-RUN touch /var/log/shiny-server.log
-RUN chown $user_name:$user_name /var/log/shiny-server.log
-RUN chown $user_name:$user_name /var/log/shiny-server
+RUN mkdir -p $projects_path \
+    && ln -s $projects_path /srv/shiny-server/apps \
+    && chown -R $user_name:$user_name $projects_path
+RUN chmod +x /usr/bin/shiny-server.sh \
+    && chown $user_name:$user_name /usr/bin/shiny-server.sh
+# Create a log file
+RUN mkdir -p /var/log/shiny-server \
+    && touch /var/log/shiny-server.log \
+    && chown $user_name:$user_name /var/log/shiny-server.log \
+    && chown -R $user_name:$user_name /var/log/shiny-server
 
 USER $user_name
 EXPOSE 3838

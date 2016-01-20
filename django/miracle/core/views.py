@@ -2,6 +2,7 @@ from celery.result import AsyncResult
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse_lazy
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from extra_views import InlineFormSet, UpdateWithInlinesView
@@ -13,9 +14,11 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from rest_framework.decorators import detail_route
 
+from django.conf import settings
+
 from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnalysisScript, AnalysisOutput)
-from .serializers import (ProjectSerializer, DataFileSerializer, UserSerializer, DataTableGroupSerializer, AnalysisSerializer,
-                          AnalysisOutputSerializer)
+from .serializers import (ProjectSerializer, DataFileSerializer, UserSerializer, DataTableGroupSerializer,
+                          AnalysisSerializer, AnalysisOutputSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task, run_metadata_pipeline
 
@@ -150,6 +153,24 @@ class AnalysisViewSet(viewsets.ModelViewSet):
     def template_name(self):
         return 'analysis/{}.html'.format(self.action)
 
+    @detail_route(methods=['GET'])
+    def download(self, request, pk):
+        analysis = DataAnalysisScript.objects.get(id=pk)
+        content = analysis.archived_file_contents()
+        response = HttpResponse(content, content_type='application/octet-stream')
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(analysis.basename)
+        return response
+
+    def retrieve(self, request, *args, **kwargs):
+        response = super(AnalysisViewSet, self).retrieve(request, *args, **kwargs)
+        analysis = self.get_object()
+        code = analysis.archived_file_contents_highlighted()
+        response.data = {
+            'code': code,
+            'analysis': analysis
+        }
+        return response
+
 
 class DataTableGroupViewSet(viewsets.ModelViewSet):
     serializer_class = DataTableGroupSerializer
@@ -189,7 +210,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
         response.data = {
             'project_json': dumps(project_data),
             'users_json': dumps(user_serializer.data),
-            'dependencies': dependencies
+            'dependencies': dependencies,
+            'radiant_url': settings.RADIANT_URL
         }
         if request.accepted_renderer.format == 'html':
             response.data['project'] = self.get_object()

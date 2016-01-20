@@ -16,6 +16,7 @@ from __future__ import print_function
 import os
 import sys
 
+from django.core.exceptions import ImproperlyConfigured
 
 # tweaking standard BASE_DIR because we're in the settings subdirectory.
 BASE_DIR = os.path.dirname(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
@@ -110,6 +111,16 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'miracle.wsgi.application'
+
+# Safe get environment variable function
+# from: Two Scoops of Django
+def get_env_variable(var_name):
+    """Get the environment variable or return exception"""
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        error_msg = "Set the {} environment variable".format(var_name)
+        raise ImproperlyConfigured(error_msg)
 
 
 # Database configuration for metadata and ingested data

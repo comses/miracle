@@ -1,0 +1,60 @@
+---
+# Be sure to change all password fields before production (the lines that start with ##)
+
+deployr_data:
+  build: deployr
+  volumes:
+    - /home/miracle/deployr/7.4.1/deployr/database
+  command: ["echo", "starting deployr_data"]
+
+deployr:
+  build: deployr
+  volumes_from:
+    - deployr_data
+    - projects
+  ports: 
+    - "7400:7400"
+
+radiant:
+  build: radiant
+  volumes_from:
+    - projects
+  ports: 
+    - "3838:3838"
+
+db:
+  image: sameersbn/postgresql:9.4-3
+  ports: 
+    - "5432:15432"
+  environment:
+    DB_USER: miracle
+##    DB_PASS: CHANGEME
+    DB_NAME: 'miracle_data,miracle_metadata'
+    PSQL_TRUST_LOCALNET: 'true'
+
+projects:
+  build: django
+  volumes:
+    - /miracle/projects
+
+django:
+  build: django
+  volumes_from:
+    - projects
+  volumes:
+    - /miracle/packrat
+    - /miracle/archives
+    - /home/cpritcha/socket:/miracle/socket
+#    - ./django:/code # turn this on you're debugging to avoid rebuilding the docker image
+  command: ./entrypoint.sh prod
+  ports:
+    - "8000:8000"
+  environment:
+    MIRACLE_USER:  test
+##    MIRACLE_PASS:  CHANGEME
+    MIRACLE_EMAIL: "a@b.com"
+##    DB_PASS: CHANGEME
+  links:
+    - db
+    - deployr
+    - radiant

@@ -34,7 +34,13 @@ USE_I18N = False
 # DeployR settings
 DEFAULT_DEPLOYR_USER = 'miracle'
 DEFAULT_DEPLOYR_PASSWORD = 'customize this password'
-DEPLOYR_URL = 'http://localhost:7400/deployr'
+DEPLOYR_URL = 'http://deployr:7400/deployr'
+
+# Radiant settings
+# The url to link to the radiant frame with
+# In production this is the link that you need to connect Radiant going through Nginx
+# The https:// in the url should not be included
+RADIANT_URL = "miracle.comses.net/radiant/"
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'customize this local secret key'

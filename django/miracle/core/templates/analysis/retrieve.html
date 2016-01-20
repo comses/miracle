@@ -1,17 +1,20 @@
 {% extends "base.html" %}
-
 {% block content %}
 <div class='panel panel-primary'>
     <div class='panel-heading'>
-        <h3 class='panel-title'><i class='fa fa-code'></i> {{name}} {{id}}</h3>
+        <h3 class='panel-title'><i class='fa fa-code'></i> {{analysis.name}} {{analysis.id}}</h3>
     </div>
     <div class='panel-body'>
         <div class='well'>
             Include metadata + provenance here. Could use D3.js to render the JSON <br>
-            Uploaded file: {{path.filepath}}
+            Uploaded file: {{analysis.archived_file}}
         </div>
-        <a class='btn btn-sm btn-warning' href='{{ path.filepath }}'><i class='fa fa-download'></i> Download</a>
+        <a class='btn btn-sm btn-warning' href="{% url 'core:analysis-download' analysis.id %}"><i class='fa fa-download'></i> Download</a>
         <a class='btn btn-sm btn-info' data-bind='click: runAnalysis'><i class='fa fa-play'></i> Run this analysis</a>
+        <div class='bs-callout bs-callout-default'>
+            <h4>Code</h4>
+            {{ code|safe }}
+        </div>
     </div>
 </div>
 {% endblock content %}

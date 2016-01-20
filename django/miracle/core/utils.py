@@ -21,4 +21,4 @@ def highlight(code, lexer=None):
         lexer = guess_lexer(code)
     return pygments.highlight(code,
                               lexer,
-                              HtmlFormatter(linenos=True, cssclass="source"))
+                              HtmlFormatter(linenos="inline", cssclass="source"))

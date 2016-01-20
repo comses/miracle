@@ -3,7 +3,9 @@
 # Mount Points
 # /home/deployr/deployr/7.4.1/deployr/database  MongoDB 
 
-FROM centos:7
+# Haven't tried this yet but it might work
+
+FROM centos:7.1
 
 RUN yum -y update; yum clean all; yum -y install wget libicu-devel psmisc gcc-c++ which
 WORKDIR /opt/
