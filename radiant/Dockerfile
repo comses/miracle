@@ -22,8 +22,8 @@ RUN useradd -u $user_id $user_name
 
 WORKDIR /opt/
 # Install R
-RUN wget https://mran.revolutionanalytics.com/install/RRO-3.2.2.el7.x86_64.rpm; \
-    yum install -y RRO-3.2.2.el7.x86_64.rpm; rm -rf RRO-3.2.2.el7.x86_64.rpm
+RUN wget https://mran.revolutionanalytics.com/install/RRO-3.2.2.el7.x86_64.rpm \
+    && yum install -y RRO-3.2.2.el7.x86_64.rpm; rm -rf RRO-3.2.2.el7.x86_64.rpm
 
 RUN sed -i "4s/.*/R_HOME_DIR=\/usr\/lib64\/RRO-3.2.2\/R-3.2.2\/lib64\/R/g" /usr/lib64/RRO-3.2.2/R-3.2.2/lib64/R/bin/R
 
@@ -37,10 +37,12 @@ RUN wget https://download3.rstudio.org/centos5.9/x86_64/shiny-server-1.4.0.756-r
 
 # Install Radiant
 RUN R -e "install.packages('radiant', repos='http://vnijs.github.io/radiant_miniCRAN/')"
-RUN git clone --depth 1 https://github.com/vnijs/radiant.git radiant; \
-	cp -r radiant /srv/shiny-server; \
-	cd /opt; rm -rf radiant; \
-	cd /srv/shiny-server/radiant; rm -rf .Rbuildignore .git .gitingore .travis.yml build tests
+RUN git clone --depth 1 https://github.com/warmdev/radiant-mod.git radiant \
+	&& cp -r radiant /srv/shiny-server \
+	&& cd /opt; rm -rf radiant \
+    && cp -r /srv/shiny-server/radiant/inst/* /srv/shiny-server \
+    && cp -r /srv/shiny-server/radiant/R /srv \
+    && rm -rf /srv/shiny-server/radiant
 
 # Hardwired Libraries for luxedemo -- can remove later
 RUN R -e "install.packages(c('data.table','raster','rasterVis', 'sqldf', 'lattice', 'latticeExtra'), repos='https://cran.rstudio.com/')"
