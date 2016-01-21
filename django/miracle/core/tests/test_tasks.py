@@ -55,8 +55,9 @@ class TaskTests(BaseMiracleTest):
         archive = self.make_archive(src)
         file_archive = File(open(archive, 'r'))
         project.write_archive(file_archive)
+
         try:
-            run_metadata_pipeline(project, project.archive_path).apply_async().get()
+            run_metadata_pipeline.delay(project, project.archive_path)
             self.assertEqual(len(DataTableGroup.objects.filter(name="data")), 1)
             self.assertEqual(len(DataColumn.objects.all()), 2)
         finally:
