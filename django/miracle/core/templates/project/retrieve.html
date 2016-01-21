@@ -51,9 +51,9 @@
                         </form>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='explorer'>
-                        <a class='btn btn-xs btn-default' target='_blank' href='https://{{ radiant_url }}'><i class='fa fa-external-link'></i> Open in new window</a>
+                        <a class='btn btn-xs btn-default' target='_blank' href='https://{{ radiant_url }}?project={{ project.slug }}'><i class='fa fa-external-link'></i> Open in new window</a>
                         <div class='embed-responsive embed-responsive-4by3'>
-                            <iframe id='radiant-iframe' src='//{{ radiant_url }}'></iframe>
+                            <iframe id='radiant-iframe' src='//{{ radiant_url }}?project={{ project.slug }}'></iframe>
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='dependencies'>
@@ -222,7 +222,7 @@
                             <label data-toggle='tooltip' data-placement='bottom' data-bind='attr: { for: name, title: description }' class='control-label col-sm-5'>
                                 <span data-bind='text: label'></span>
                                 <i>(<small data-bind='text: name'></small>)</i>
-                                <span class='label label-badge label-primary' data-bind='text: rclass'></span>
+                                <span class='label label-badge label-primary' data-bind='text: data_type'></span>
                             </label>
                             <div class='col-sm-7'>
                                 <input type='number' step="0.1" data-bind='attr: {id: name}, value: value' class='form-control' required placeholder='Value'>
