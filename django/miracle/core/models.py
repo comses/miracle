@@ -177,17 +177,18 @@ class Project(MiracleMetadataMixin):
     submitted_archive = models.FileField(help_text=_("The uploaded zipfile containing all data and scripts for this Project"), null=True, blank=True)
     objects = ProjectQuerySet.as_manager()
 
+
     @property
-    def path(self):
-        return os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, str(self.slug))
+    def archive_path(self):
+        return self.submitted_archive.path
 
     @property
     def packrat_path(self):
         return os.path.join(settings.MIRACLE_PACKRAT_DIRECTORY, str(self.slug))
 
     @property
-    def archive_path(self):
-        return self.submitted_archive.path
+    def project_path(self):
+        return os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, str(self.slug))
 
     def package_dependencies(self):
         lock_file_path = os.path.join(self.packrat_path, 'packrat.lock')
@@ -359,7 +360,7 @@ class DataAnalysisScript(MiracleMetadataMixin):
 
     @property
     def path(self):
-        return os.path.join(self.project.path, str(self.archived_file))
+        return os.path.join(self.project.project_path, str(self.archived_file))
 
     def archived_file_contents(self):
         code_path = self.path
@@ -467,7 +468,7 @@ class AnalysisOutputFile(models.Model):
 
     @property
     def project_path(self):
-        return self.output.analysis.project.path
+        return self.output.analysis.project.project_path
 
     def __unicode__(self):
         return u"output file {}".format(self.output_file)

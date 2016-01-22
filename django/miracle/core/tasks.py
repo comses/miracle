@@ -6,14 +6,12 @@ from celery import chain
 
 from miracle.celery import app
 from . import deployr
-from .models import DataAnalysisScript, AnalysisOutput
+from .models import DataAnalysisScript, AnalysisOutput, AnalysisParameter
 
+import os
 
 # Metadata Pipeline Imports
-from .ingest import unarchiver
-from .ingest import analyzer
-from .ingest import grouper
-from .ingest import loader
+from .ingest import pipeline
 
 import json
 import logging
@@ -29,8 +27,9 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
                  type(parameters), parameters)
     analysis = DataAnalysisScript.objects.get(pk=analysis_id)
 
-    output = AnalysisOutput.objects.create(analysis=analysis, name=analysis.default_output_name, creator=user,
-                                           parameter_values_json=parameters)
+    output = AnalysisOutput.objects.create(analysis=analysis, name=analysis.default_output_name, creator=user)
+    for parameter in parameters:
+        AnalysisParameter.objects.create(analysis=analysis, output=output, value=parameter.value)
     deployr_input_parameters_dict = analysis.to_deployr_input_parameters(json.loads(parameters))
     self.update_state(state='PROCESSING')
     job = deployr.run_script(script_file=analysis.path.filepath, parameters=deployr_input_parameters_dict,
@@ -55,28 +54,6 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
 
 
 @app.task()
-def extract_archive(project, archive):
-    return unarchiver.extract(project, archive)
-
-
-@app.task()
-def group_files(project_file_paths):
-    return analyzer.group_files(project_file_paths)
-
-
-@app.task()
-def group_metadata(metadata_collection):
-    return grouper.group_metadata(metadata_collection)
-
-
-@app.task()
-def load_project(grouped_metadata):
-    return loader.load_project(grouped_metadata)
-
-
 def run_metadata_pipeline(project, archive):
     logger.debug("running metadata pipeline for project %s on archive %s", project, archive)
-    return chain(extract_archive.s(project, archive),
-                 group_files.s(),
-                 group_metadata.s(),
-                 load_project.s())
+    pipeline.run(project, archive)
