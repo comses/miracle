@@ -39,7 +39,7 @@ def get_auth_tuple(user=None):
     if user is None:
         return (settings.DEFAULT_DEPLOYR_USER, settings.DEFAULT_DEPLOYR_PASSWORD)
     else:
-            return (user.username, 'changeme')
+        return (user.username, 'changeme')
     """
 
 
@@ -47,7 +47,7 @@ def login(user=None):
     auth_tuple = get_auth_tuple(user)
     s = requests.Session()
     r = s.post(login_url, data={'username': auth_tuple[0], 'password': auth_tuple[1], 'format': 'json'})
-    logger.debug("LOGIN response: %s" % r.text)
+    logger.debug("LOGIN response using auth tuple %s: %s", auth_tuple, r.text)
     response200orError(r)
     return s
 

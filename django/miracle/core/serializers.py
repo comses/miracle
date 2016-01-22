@@ -166,6 +166,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         name = data['name']
         pk = -1 if self.instance is None else self.instance.pk
         if not slug:
+            logger.debug("slugifying name %s", name)
             slug = text.slugify(name)
         # check if slug exists in project table already
         if not slug_re.match(slug):

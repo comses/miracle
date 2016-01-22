@@ -170,6 +170,7 @@ class ProjectQuerySet(ActivePublishedQuerySet):
 
 class Project(MiracleMetadataMixin):
 
+    # FIXME: may need to replace this with a simple SlugField, see https://github.com/comses/miracle/issues/41
     slug = AutoSlugField(populate_from='name', unique=True)
     group = models.OneToOneField(Group, editable=False,
                                  help_text=_("Members of this group can edit this project's datasets and metadata"),
@@ -213,8 +214,8 @@ class Project(MiracleMetadataMixin):
         self.data_table_groups.all().delete()
         self.submitted_archive.delete()
         # FIXME: add error handlers
-        logger.debug("Deleting extracted project tree %s", self.path)
-        shutil.rmtree(self.path, True)
+        logger.debug("Deleting extracted project tree %s", self.project_path)
+        shutil.rmtree(self.project_path, True)
         logger.debug("Deleting extracted packrat path %s", self.packrat_path)
         shutil.rmtree(self.packrat_path, True)
 

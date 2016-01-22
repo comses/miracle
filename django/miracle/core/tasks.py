@@ -53,7 +53,7 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
     return output
 
 
-@app.task()
-def run_metadata_pipeline(project, archive):
+@app.task(bind=True)
+def run_metadata_pipeline(self, project, archive):
     logger.debug("running metadata pipeline for project %s on archive %s", project, archive)
-    pipeline.run(project, archive)
+    return pipeline.run(project, archive)

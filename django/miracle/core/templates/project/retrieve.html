@@ -67,8 +67,10 @@
                         <div class='bs-callout bs-callout-default'>
                             <h4><i class='fa fa-code'></i> Analyses</h4>
                         </div>
-                        <div data-bind='ifnot: activeAnalysisScripts'>
-                            No analysis scripts have been uploaded yet.
+                        <div data-bind='if: activeAnalysisScripts().length === 0'>
+                            <div class='alert alert-info alert-block' role='alert'>
+                                <i class='fa fa-info-circle'></i> No analysis scripts have been uploaded yet.
+                            </div>
                         </div>
                         <div data-bind='foreach: activeAnalysisScripts'>
                             <div class='well' data-bind='if: enabled'>
@@ -155,8 +157,10 @@
                         <div class='bs-callout bs-callout-default'>
                             <h4><i class='fa fa-database'></i> Data</h4>
                         </div>
-                        <div data-bind='ifnot: data_table_groups'>
-                            No data found.
+                        <div data-bind='if: data_table_groups().length === 0'>
+                            <div class='alert alert-info alert-block' role='alert'>
+                                <i class='fa fa-info-circle'></i> No data has been uploaded yet.
+                            </div>
                         </div>
                         <ul class='list-group' data-bind='foreach: data_table_groups'>
                             <li class='list-group-item'>
