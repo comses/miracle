@@ -35,12 +35,6 @@ def get_auth_tuple(user=None):
     # FIXME: currently using a single sandbox user - at some point we may want to switch to 1:1 deployr user <-> miracle
     # users
     return (settings.DEFAULT_DEPLOYR_USER, settings.DEFAULT_DEPLOYR_PASSWORD)
-    """
-    if user is None:
-        return (settings.DEFAULT_DEPLOYR_USER, settings.DEFAULT_DEPLOYR_PASSWORD)
-    else:
-        return (user.username, 'changeme')
-    """
 
 
 def login(user=None):
@@ -190,7 +184,7 @@ class Job(object):
         return files
 
     def is_job_completed(self, response_json):
-        return self.get_job_data(response_json)['status'] == 'Completed'
+        return self.get_job_data(response_json)['status'] in ['Completed', 'Failed']
 
     def get_job_data(self, response_json):
         try:
@@ -205,35 +199,28 @@ class Job(object):
         return self.get_job_data(response_json)['project']
 
 
-def run_script(script_file=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=None, user=None, job_name=None):
-    if script_file is None or not os.path.isfile(script_file.path):
-        raise ValueError("No script file to execute {}".format(script_file))
+def run_script(script_name=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=None, user=None, job_name=None):
+    """
+    :param script_name: Script name (such as "Figure1.R")
+    :param workdir: Working directory (corresponds to project slug)
+    :param parameters: Parameters to run the R script with (such as [{"value": 30, "id": 1, "label": "x", "rclass": "integer", "description": "helllo"}])
+    :param user: User to run the R script as (currently this does nothing)
+    :param job_name: Name of job to run for later retrieval
+    :return: DeployR Job
+    """
+
     if user is None:
-        raise ValueError("No user found to execute file {}".format(script_file))
+        raise ValueError("No user found to execute file {}".format(script_name))
     if job_name is None:
         job_name = '{}.job'.format(workdir)
 
-    logger.debug("user %s running script %s in working directory %s with parameters %s", user, script_file, workdir,
+    logger.debug("user %s running script %s in working directory %s with parameters %s", user, script_name, workdir,
                  parameters)
     with login(user) as session:
-        # FIXME: encapsulate this logic into Job or another class.
-        response = session.post(create_working_directory_url,
-                                data={'format': 'json', 'directory': workdir})
-        # FIXME: parse and validate response
-        logger.debug("CREATE WORKING DIRECTORY response: %s", response.text)
-        filename = os.path.basename(script_file.name)
-        response = session.post(upload_script_url,
-                                files={'file': script_file},
-                                data={'format': 'json',
-                                      'filename': filename,
-                                      'directory': workdir
-                                      })
-        # FIXME: parse and validate response
-        logger.debug("UPLOAD SCRIPT response: %s", response.text)
         execute_script_data = {
             'format': 'json',
             'name': job_name,
-            'rscriptname': filename,
+            'rscriptname': script_name,
             'rscriptdirectory': workdir,
             'rscriptauthor': 'miracle',  # FIXME: hardcoded
         }

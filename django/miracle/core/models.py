@@ -1,4 +1,5 @@
 from django.core.exceptions import ValidationError
+from django.core.files.storage import FileSystemStorage
 from django.core.urlresolvers import reverse_lazy
 from django.contrib.auth.models import User, Group
 from django.contrib.postgres.fields import JSONField
@@ -194,7 +195,8 @@ class Project(MiracleMetadataMixin):
     def package_dependencies(self):
         lock_file_path = os.path.join(self.packrat_path, 'packrat.lock')
         if os.path.exists(lock_file_path):
-            lock_file_contents = open(lock_file_path).read()
+            with open(lock_file_path) as f:
+                lock_file_contents = f.read()
             highlighted_lock_file_contents = utils.highlight(lock_file_contents,
                                                              TextLexer())
         else:
@@ -343,6 +345,9 @@ class DataAnalysisScript(MiracleMetadataMixin):
         deployr_input_parameters = {}
         for parameter_dict in parameters_list:
             name = parameter_dict.pop('name')
+            parameter_dict.pop('id')
+            rclass = parameter_dict.pop('data_type')
+            parameter_dict['rclass'] = rclass
             # assign the rest of the parameter attributes dict to the param name as is
             deployr_input_parameters[name] = parameter_dict
         return deployr_input_parameters
@@ -361,11 +366,12 @@ class DataAnalysisScript(MiracleMetadataMixin):
 
     @property
     def path(self):
-        return os.path.join(self.project.project_path, str(self.archived_file))
+        return os.path.join(self.project.slug, str(self.archived_file))
 
     def archived_file_contents(self):
         code_path = self.path
-        code_file_contents = open(code_path).read()
+        with open(code_path) as f:
+            code_file_contents = f.read()
         return code_file_contents
 
     def archived_file_contents_highlighted(self):
@@ -460,11 +466,12 @@ class ParameterValue(models.Model):
 def _analysis_output_path(instance, filename):
     return os.path.join(instance.project_path, 'outputs', filename)
 
+MIRACLE_PROJECT_STORAGE = FileSystemStorage(location=settings.MIRACLE_PROJECT_DIRECTORY)
 
 class AnalysisOutputFile(models.Model):
 
     output = models.ForeignKey(AnalysisOutput, related_name='files')
-    output_file = models.FileField(upload_to=_analysis_output_path)
+    output_file = models.FileField(upload_to=_analysis_output_path, storage=MIRACLE_PROJECT_STORAGE)
     metadata = JSONField(help_text=_("Additional metadata provided by analysis execution engine"), null=True, blank=True)
 
     @property

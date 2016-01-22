@@ -305,7 +305,7 @@
 var gm;
 $(function() {
     Dropzone.options.myDropzone = {
-        paramName: "file",
+        paramName: "file"
     };
     var model = new ProjectModel({data: {{ project_json|safe}}} );
     gm = model;
@@ -384,7 +384,7 @@ $(function() {
                 console.debug(response);
                 var status = response.status;
                 model.selectedAnalysis().job_status(status);
-                if (status === "SUCCESS") {
+                if (status === "COMPLETED") {
                     humane.log("Analysis run has completed, results are ready");
                     // FIXME: refresh model results.
                     model.refresh();

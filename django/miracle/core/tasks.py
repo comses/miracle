@@ -6,7 +6,7 @@ from celery import chain
 
 from miracle.celery import app
 from . import deployr
-from .models import DataAnalysisScript, AnalysisOutput, AnalysisParameter
+from .models import DataAnalysisScript, AnalysisOutput, ParameterValue, AnalysisParameter
 
 import os
 
@@ -18,7 +18,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 @app.task(bind=True)
 def run_analysis_task(self, analysis_id, parameters, user=None):
     if user is None:
@@ -29,10 +28,11 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
 
     output = AnalysisOutput.objects.create(analysis=analysis, name=analysis.default_output_name, creator=user)
     for parameter in parameters:
-        AnalysisParameter.objects.create(analysis=analysis, output=output, value=parameter.value)
-    deployr_input_parameters_dict = analysis.to_deployr_input_parameters(json.loads(parameters))
+        analysis_parameter = AnalysisParameter.objects.get(id=parameter['id'])
+        ParameterValue.objects.create(parameter=analysis_parameter, output=output, value=parameter['value'])
+    deployr_input_parameters_dict = analysis.to_deployr_input_parameters(parameters)
     self.update_state(state='PROCESSING')
-    job = deployr.run_script(script_file=analysis.path.filepath, parameters=deployr_input_parameters_dict,
+    job = deployr.run_script(script_name=analysis.basename, parameters=deployr_input_parameters_dict,
                              user=user, job_name='{}-{}'.format(analysis.name, output.pk))
     output.response = job.response.text
     output.save()
