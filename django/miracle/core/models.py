@@ -576,6 +576,13 @@ class DataColumn(models.Model, DatasetConnectionMixin):
         self.cursor.execute(statement)
         return self.cursor.fetchall()
 
+    @property
+    def project(self):
+        return self.data_table_group.project
+
+    def get_absolute_url(self):
+        return reverse_lazy('core:data-column-detail', args=[self.pk])
+
     def __unicode__(self):
         return u'{} (internal: {})'.format(self.full_name, self.name)
 

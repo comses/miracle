@@ -73,6 +73,7 @@ class DataAnalysisScriptSerializer(serializers.HyperlinkedModelSerializer):
 class DataColumnSerializer(serializers.ModelSerializer):
 
     data_table_group = serializers.ReadOnlyField(source='data_table_group.name')
+    detail_url = serializers.CharField(source='get_absolute_url', read_only=True)
 
     class Meta:
         model = DataColumn
@@ -184,8 +185,8 @@ class ProjectSerializer(serializers.ModelSerializer):
         def _convert(v):
             return 'None' if not v else v
         md = self.modified_data
-        md_list = ['{}: {} -> {}'.format(key, _convert(pair[0]), _convert(pair[1])) for key, pair in md.items()]
-        return ' | '.join(md_list)
+        md_list = ['{}:{}->{}'.format(key, _convert(pair[0]), _convert(pair[1])) for key, pair in md.items()]
+        return 'Metadata update - {0}'.format(' | '.join(md_list))
 
     class Meta:
         model = Project

@@ -22,6 +22,6 @@ class CanViewReadOnlyOrEditProjectResource(permissions.IsAuthenticatedOrReadOnly
         user = request.user
         return (
             user.is_superuser or
-            (resource.published and request.method in permissions.SAFE_METHODS) or
+            (getattr(resource, 'published', None) and request.method in permissions.SAFE_METHODS) or
             (user.is_authenticated() and resource.project.has_group_member(user))
         )

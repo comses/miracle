@@ -3,14 +3,29 @@
 {% block content %}
 <div class='panel panel-primary'>
     <div class='panel-heading'>
-        <h3 class='panel-title'><i class='fa fa-database'></i> {{name}} {{id}}</h3>
+        <h3 class='panel-title'><i class='fa fa-database'></i> {{name}} (pk: {{id}})</h3>
     </div>
-    <div class='panel-body'>
+    <div class='panel-body' data-bind='foreach: columns'>
         <div class='well'>
-            Include metadata + provenance here. Could use D3.js to render the JSON <br>
-            Uploaded file: {{uploaded_file}}
+            <form class='form form-inline' data-bind='submit: function() { $root.updateColumn($data) }'>
+                <input type='hidden' name='id' data-bind='value: id'>
+                <div class='form-group'>
+                    <label for='name'>Name</label>
+                    <input name='name' type='text' class='form-control' data-bind='value: name'>
+                </div>
+                <div class='form-group'>
+                    <label for='description'>Description</label>
+                    <textarea class='form-control' name='description' data-bind='value: description' rows='3'></textarea>
+                </div>
+                <div class='form-group'>
+                    <label for='dataType'>Data type</label>
+                    <input name='data_type' type='text' class='form-control' data-bind='value: data_type'>
+                </div>
+                <div class='form-group'>
+                    <button type='submit' class='btn btn-default'>Update</button>
+                </div>
+            </form>
         </div>
-        <a class='btn btn-sm btn-warning' href='{{ uploaded_file }}'><i class='fa fa-download'></i> Download</a>
     </div>
 </div>
 {% endblock content %}
@@ -20,14 +35,25 @@
 {% include "includes/csrf.js" %}
 <script>
 $(function() {
-    var DatasetViewModel = function() {
-        var self = this;
-        self.analyze = function() {
-            alert("run analysis on this dataset");
-        }
+    var DataGroupViewModel = function(data) {
+        var self = ko.mapping.fromJS(data);
+        self.updateColumn = function(column) {
+            console.debug(column);
+            var columnJson = ko.toJSON(column);
+            console.debug(columnJson);
+            $.ajax({
+                url: column.detail_url(),
+                type: 'PUT',
+                data: columnJson,
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                crossDomain: false,
+            });
+        };
+        return self;
     }
-    var viewModel = new DatasetViewModel();
-    ko.applyBindings(viewModel);
+    var model = new DataGroupViewModel({{ data_group_json|safe}});
+    ko.applyBindings(model);
 });
 </script>
 {% endblock javascript %}

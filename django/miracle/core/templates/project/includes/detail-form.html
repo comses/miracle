@@ -64,7 +64,6 @@ function ProjectModel(params) {
     if (params.model) {
         return params.model;
     }
-    data = params.data;
     model = ko.mapping.fromJS(params.data);
     model.users = ko.observableArray({{users_json|safe}})
     model.detailUrl = ko.pureComputed(function() {

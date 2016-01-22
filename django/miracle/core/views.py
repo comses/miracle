@@ -17,9 +17,9 @@ from rest_framework.views import APIView
 from rest_framework.decorators import detail_route
 
 
-from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnalysisScript, AnalysisOutput)
+from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnalysisScript, AnalysisOutput, DataColumn)
 from .serializers import (ProjectSerializer, DataFileSerializer, UserSerializer, DataTableGroupSerializer,
-                          DataAnalysisScriptSerializer, AnalysisOutputSerializer)
+                          DataAnalysisScriptSerializer, AnalysisOutputSerializer, DataColumnSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task, run_metadata_pipeline
 
@@ -173,6 +173,13 @@ class AnalysisViewSet(viewsets.ModelViewSet):
         return response
 
 
+class DataColumnViewSet(viewsets.ModelViewSet):
+    serializer_class = DataColumnSerializer
+    renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
+    permission_classes = (CanViewReadOnlyOrEditProjectResource,)
+    queryset = DataColumn.objects.all()
+
+
 class DataTableGroupViewSet(viewsets.ModelViewSet):
     serializer_class = DataTableGroupSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
@@ -184,6 +191,8 @@ class DataTableGroupViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         response = super(DataTableGroupViewSet, self).retrieve(request, *args, **kwargs)
+        data_group = response.data
+        response.data['data_group_json'] = dumps(data_group)
         return response
 
     def get_queryset(self):
@@ -235,7 +244,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         instance.deactivate(self.request.user)
-
 
     @detail_route(methods=['post'])
     def clear_archive(self, request, pk=None):
