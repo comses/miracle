@@ -29,7 +29,7 @@ urlpatterns = [
 
 router = routers.DefaultRouter()
 router.register(r'projects', views.ProjectViewSet, base_name='project')
-router.register(r'datasets', views.DataTableGroupViewSet, base_name='dataset')
+router.register(r'data-group', views.DataTableGroupViewSet, base_name='data-group')
 router.register(r'analyses', views.AnalysisViewSet, base_name='analysis')
 router.register(r'outputs', views.OutputViewSet, base_name='output')
 #router.register(r'uploads', views.FileUploadStatusViewSet, base_name='upload')

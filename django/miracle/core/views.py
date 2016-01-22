@@ -181,12 +181,16 @@ class DataTableGroupViewSet(viewsets.ModelViewSet):
     def template_name(self):
         return 'data/{}.html'.format(self.action)
 
+    def retrieve(self, request, *args, **kwargs):
+        response = super(DataTableGroupViewSet, self).retrieve(request, *args, **kwargs)
+        return response
+
     def get_queryset(self):
         return DataTableGroup.objects.viewable(self.request.user)
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
-    """ Project controller """
+    """ Provides viewset functionality for Projects """
     serializer_class = ProjectSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
     permission_classes = (CanViewReadOnlyOrEditProject,)
@@ -228,6 +232,22 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         instance.deactivate(self.request.user)
+
+
+    @detail_route(methods=['post'])
+    def clear_archive(self, request, pk=None):
+        """ Deletes project archive directory and related entities"""
+        project = self.get_object()
+        # FIXME: replace this with DRF permissions
+        if project.has_admin_privileges(request.user):
+            logger.debug("Resetting project archive for %s", project)
+            project.clear_archive()
+            return Response({'success': True})
+        else:
+            return Response({
+                'success': False,
+                'message': _('You must be a project admin in order to reset this project')
+            })
 
 
 class DataFileViewSet(viewsets.ModelViewSet):

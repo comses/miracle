@@ -77,18 +77,14 @@ def load_analysisparameter(dataanalysis_script, parameter):
     :type parameter: dict
     :return:
     """
-    misc = {}
-    if parameter.has_key("valueList"):
-        misc["valueList"] = parameter["valueList"]
-    if parameter.has_key("valueRange"):
-        misc["valueRange"] = parameter["valueRange"]
 
     dataanalysis_script.parameters.create(
         name=parameter["name"],
         label=parameter["label"],
         data_type=parameter["render"],
         default_value=str(parameter["default"]),
-        misc=misc
+        value_list=parameter.get('valueList'),
+        value_range=parameter.get('valueRange'),
     )
 
 
@@ -166,8 +162,7 @@ def load_project(metadata_project):
 
     metadata_analyses = metadata_project.analyses
     metadata_datatablegroups = metadata_project.datatablegroups
-
-    project = Project.objects.filter(name=metadata_project.project_token).first()
+    project = Project.objects.filter(slug=metadata_project.project_token).first()
 
     with transaction.atomic():
         datatablegroupfiles = load_datatablegroupfiles(metadata_project, project)

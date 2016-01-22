@@ -75,6 +75,7 @@ def load_project(grouped_metadata):
 
 
 def run_metadata_pipeline(project, archive):
+    logger.debug("running metadata pipeline for project %s on archive %s", project, archive)
     return chain(extract_archive.s(project, archive),
                  group_files.s(),
                  group_metadata.s(),

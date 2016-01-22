@@ -4,7 +4,8 @@ from django.db import transaction
 from django.utils import timezone, text
 from collections import defaultdict
 from rest_framework import serializers
-from .models import (Project, DataFile, DataTableGroup, DataAnalysisScript, AnalysisOutput, AnalysisOutputFile, Author)
+from .models import (Project, DataFile, DataColumn, DataTableGroup, DataAnalysisScript, AnalysisOutput,
+                     AnalysisOutputFile, Author)
 
 import logging
 
@@ -69,13 +70,22 @@ class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
                   'file_type', 'parameters', 'url', 'authors', 'outputs', 'job_status')
 
 
+class DataColumnSerializer(serializers.ModelSerializer):
+
+    data_table_group = serializers.ReadOnlyField(source='data_table_group.name')
+
+    class Meta:
+        model = DataColumn
+
+
 class DataTableGroupSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
+    columns = DataColumnSerializer(many=True, read_only=True)
 
     class Meta:
         model = DataTableGroup
         extra_kwargs = {
-            'url': {'view_name': 'core:dataset-detail'}
+            'url': {'view_name': 'core:data-group-detail'}
         }
         fields = ('id', 'name', 'project', 'url')
 

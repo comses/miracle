@@ -14,10 +14,11 @@ import json
 import logging
 import os
 import re
+import shutil
+import utils
 
 from pygments.lexers import guess_lexer_for_filename
 from pygments.lexers.special import TextLexer
-import utils
 
 logger = logging.getLogger(__name__)
 
@@ -181,12 +182,15 @@ class Project(MiracleMetadataMixin):
         return os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, str(self.slug))
 
     @property
+    def packrat_path(self):
+        return os.path.join(settings.MIRACLE_PACKRAT_DIRECTORY, str(self.slug))
+
+    @property
     def archive_path(self):
         return self.submitted_archive.path
 
     def package_dependencies(self):
-        packrat_path = os.path.join(settings.MIRACLE_PACKRAT_DIRECTORY, str(self.slug))
-        lock_file_path = os.path.join(packrat_path, 'packrat.lock')
+        lock_file_path = os.path.join(self.packrat_path, 'packrat.lock')
         if os.path.exists(lock_file_path):
             lock_file_contents = open(lock_file_path).read()
             highlighted_lock_file_contents = utils.highlight(lock_file_contents,
@@ -200,8 +204,18 @@ class Project(MiracleMetadataMixin):
         :type f: UploadedFile
         """
         _, ext = self.splitext(f.name)
-        filename = os.path.join(settings.MIRACLE_ARCHIVE_DIRECTORY, str(self.name) + ext)
+        filename = os.path.join(settings.MIRACLE_ARCHIVE_DIRECTORY, str(self.slug) + ext)
         self.submitted_archive.save(name=filename, content=f)
+
+    def clear_archive(self, user):
+        self.log("Clearing project archive", user)
+        self.data_table_groups.all().delete()
+        self.submitted_archive.delete()
+        # FIXME: add error handlers
+        logger.debug("Deleting extracted project tree %s", self.path)
+        shutil.rmtree(self.path, True)
+        logger.debug("Deleting extracted packrat path %s", self.packrat_path)
+        shutil.rmtree(self.packrat_path, True)
 
     @staticmethod
     def splitext(path):
@@ -210,17 +224,25 @@ class Project(MiracleMetadataMixin):
         """
         ext = ".tar.gz"
         if path.endswith(ext):
-                return path[:-len(ext)], path[-len(ext):]
+            return path[:-len(ext)], path[-len(ext):]
         return os.path.splitext(path)
 
     @property
     def group_name(self):
-        ''' unique name to manage permissions for this project '''
+        # unique name to manage permissions for this project
+        # FIXME: should probably use slug instead
         return u'{} Group #{}'.format(self.name, self.pk)
 
     @property
     def group_members(self):
         return self.group.user_set.values_list('username', flat=True)
+
+    def log(self, message, user=None):
+        logger.debug("(user %s, project %s) %s", user, self, message)
+        return ActivityLog.objects.log_project_update(user, self, message)
+
+    def has_admin_privileges(self, user):
+        return user.is_superuser and self.has_group_member(user)
 
     def has_group_member(self, user):
         return self.creator == user or user.groups.filter(name=self.group_name).exists()
@@ -383,10 +405,14 @@ class AnalysisParameter(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     last_modified = models.DateTimeField(auto_now=True)
     data_type = models.CharField(max_length=128, choices=ParameterType, default=ParameterType.character)
+    allow_multiple_values = models.BooleanField(help_text=_("True if this parameter allows multiple values"),
+                                                default=False)
     default_value = models.CharField(max_length=255, blank=True,
                                      help_text=_("default value for this analysis input parameter"))
-    # We need a JSONField instead of an Array field because different rows have potentially different element types
-    misc = JSONField(null=True, blank=True)
+    # use JSONField instead of django.contrib.postgres.fields.ArrayField because different rows have potentially
+    # different element types
+    value_list = JSONField(help_text=_("List of possible values for this parameter"), null=True, blank=True)
+    value_range = JSONField(help_text=_("Range of values in the form of start, end, step."), null=True, blank=True)
 
     def convert(self, value):
         return AnalysisParameter.TYPE_CONVERTERS[self.data_type](value)
@@ -486,12 +512,12 @@ def _local_datatable_path(datatable, filename):
 
 class DataTableGroup(MiracleMetadataMixin):
     """
-    A DataTableGroup wraps schema + metadata for associated DataColumns. For example, an Excel file with N sheets
-    where each sheet has a different schema would be represented as N DataTableGroups with single DataTables. Likewise,
-    a directory with 600 data files that all share the same schema would be represented as a single DataTableGroup with 600
-    DataTableGroupFiles and share the same DataColumn relationships + metadata.
+    A DataTableGroup wraps schema + metadata for associated DataColumns. For example, an Excel file with N sheets where
+    each sheet has a different schema would be represented as N DataTableGroups, and be archived with a single CSV
+    DataFile per sheet. A directory with 600 data files that all share the same schema would be represented as a single
+    DataTableGroup with 600 DataFiles and all share the same DataColumn relationships + metadata.
 
-    We aren't building a true digital preservation repository, but we may get mileage out of the OAIS reference model
+    We aren't building a true digital preservation repository, we may get mileage out of the OAIS reference model
     notions of Submission Information Packages, Archival Information Packages, and Dissemination Information Packages
     (http://www2.archivists.org/_groups/standards-committee/open-archival-information-system-oais)
     """
@@ -581,7 +607,7 @@ class ActivityLogManager(models.Manager):
     def log(self, message):
         return self.create(message=message)
 
-    def log_project_update(self, user, project, message):
+    def log_project_update(self, user=None, project=None, message=None):
         self.log_user(user, 'Metadata Update {}: {}'.format(project, message))
 
     def log_user(self, user, message):
