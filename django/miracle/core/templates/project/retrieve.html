@@ -67,9 +67,12 @@
                         <div class='bs-callout bs-callout-default'>
                             <h4><i class='fa fa-code'></i> Analyses</h4>
                         </div>
-                        <div data-bind='foreach: analyses'>
-                            <div class='well'>
-                                <h5><span data-bind='text: full_name'></span>
+                        <div data-bind='ifnot: activeAnalysisScripts'>
+                            No analysis scripts have been uploaded yet.
+                        </div>
+                        <div data-bind='foreach: activeAnalysisScripts'>
+                            <div class='well' data-bind='if: enabled'>
+                                <h5><span data-bind='text: name'></span>
                                     <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
                                 </h5>
                                 <div>
@@ -79,7 +82,7 @@
                                 </div>
                                 <div>
                                     <strong>Description</strong>:
-                                    <span data-bind='text: description() || "No description entered yet."'></span>
+                                    <span data-bind='text: description() || "No description entered."'></span>
                                 </div>
                                 <div>
                                     <strong>Authors</strong>:
@@ -152,16 +155,17 @@
                         <div class='bs-callout bs-callout-default'>
                             <h4><i class='fa fa-database'></i> Data</h4>
                         </div>
-                        <div class='panel-body'>
-                            <ul class='list-group' data-bind='foreach: data_table_groups'>
-                                <li class='list-group-item'>
-                                    <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
-                                        <i class='fa fa-download'></i> Download
-                                    </a>
-                                    <a data-bind='attr: {href: url}, text: name'></a>
-                                </li>
-                            </ul>
+                        <div data-bind='ifnot: data_table_groups'>
+                            No data found.
                         </div>
+                        <ul class='list-group' data-bind='foreach: data_table_groups'>
+                            <li class='list-group-item'>
+                                <a data-bind='attr: {href: url}, text: name'></a>
+                                <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
+                                    <i class='fa fa-download'></i> Download
+                                </a>
+                            </li>
+                        </ul>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
                         Upload project archive<br>
@@ -301,6 +305,9 @@ $(function() {
     };
     var model = new ProjectModel({data: {{ project_json|safe}}} );
     gm = model;
+    model.activeAnalysisScripts = ko.pureComputed(function() {
+        return ko.utils.arrayFilter(model.analyses(), function(analysis) { return analysis.enabled() });
+    });
     model.toggleFullScreen = function(id) {
         $(id).toggleClass("maximized-iframe");
     };

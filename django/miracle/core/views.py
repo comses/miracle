@@ -1,9 +1,11 @@
 from celery.result import AsyncResult
+from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse_lazy
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django.utils.translation import ugettext_lazy as _
 from django.views.generic import TemplateView
 from extra_views import InlineFormSet, UpdateWithInlinesView
 from json import dumps
@@ -14,11 +16,10 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from rest_framework.decorators import detail_route
 
-from django.conf import settings
 
 from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnalysisScript, AnalysisOutput)
 from .serializers import (ProjectSerializer, DataFileSerializer, UserSerializer, DataTableGroupSerializer,
-                          AnalysisSerializer, AnalysisOutputSerializer)
+                          DataAnalysisScriptSerializer, AnalysisOutputSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task, run_metadata_pipeline
 
@@ -141,7 +142,7 @@ class OutputViewSet(viewsets.ModelViewSet):
 
 
 class AnalysisViewSet(viewsets.ModelViewSet):
-    serializer_class = AnalysisSerializer
+    serializer_class = DataAnalysisScriptSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
     permission_classes = (CanViewReadOnlyOrEditProjectResource,)
 
@@ -179,7 +180,7 @@ class DataTableGroupViewSet(viewsets.ModelViewSet):
 
     @property
     def template_name(self):
-        return 'data/{}.html'.format(self.action)
+        return 'data-group/{}.html'.format(self.action)
 
     def retrieve(self, request, *args, **kwargs):
         response = super(DataTableGroupViewSet, self).retrieve(request, *args, **kwargs)
@@ -203,7 +204,9 @@ class ProjectViewSet(viewsets.ModelViewSet):
         return Project.objects.viewable(self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(creator=self.request.user)
+        user = self.request.user
+        project = serializer.save(creator=user)
+        ActivityLog.objects.log_project_update(user, project, "was created")
 
     def retrieve(self, request, *args, **kwargs):
         response = super(ProjectViewSet, self).retrieve(request, *args, **kwargs)

@@ -51,7 +51,7 @@ class AuthorSerializer(serializers.ModelSerializer):
         model = Author
 
 
-class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
+class DataAnalysisScriptSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
     parameters = serializers.ReadOnlyField(source='input_parameters')
     authors = AuthorSerializer(many=True)
@@ -67,7 +67,7 @@ class AnalysisSerializer(serializers.HyperlinkedModelSerializer):
             'url': {'view_name': 'core:analysis-detail'}
         }
         fields = ('id', 'name', 'full_name', 'date_created', 'last_modified', 'description', 'project',
-                  'file_type', 'parameters', 'url', 'authors', 'outputs', 'job_status')
+                  'file_type', 'parameters', 'url', 'authors', 'outputs', 'job_status', 'enabled')
 
 
 class DataColumnSerializer(serializers.ModelSerializer):
@@ -87,7 +87,7 @@ class DataTableGroupSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             'url': {'view_name': 'core:data-group-detail'}
         }
-        fields = ('id', 'name', 'project', 'url')
+        fields = ('id', 'name', 'project', 'url', 'columns')
 
 
 class DataFileSerializer(serializers.HyperlinkedModelSerializer):
@@ -108,7 +108,7 @@ class ProjectSerializer(serializers.ModelSerializer):
     status = serializers.ReadOnlyField()
     number_of_datasets = serializers.IntegerField(read_only=True)
     data_table_groups = DataTableGroupSerializer(many=True, read_only=True)
-    analyses = AnalysisSerializer(many=True, read_only=True)
+    analyses = DataAnalysisScriptSerializer(many=True, read_only=True)
     slug = serializers.CharField(allow_blank=True)
 
     def validate_group_members(self, value):

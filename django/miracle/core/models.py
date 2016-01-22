@@ -580,8 +580,6 @@ class DataColumn(models.Model, DatasetConnectionMixin):
         return u'{} (internal: {})'.format(self.full_name, self.name)
 
 
-
-
 class MiracleUser(models.Model):
     user = models.OneToOneField(User, related_name='miracle_user')
     institution = models.CharField(max_length=512)
@@ -608,7 +606,7 @@ class ActivityLogManager(models.Manager):
         return self.create(message=message)
 
     def log_project_update(self, user=None, project=None, message=None):
-        self.log_user(user, 'Metadata Update {}: {}'.format(project, message))
+        self.log_user(user, '<Project> {}: {}'.format(project.name, message))
 
     def log_user(self, user, message):
         return self.create(creator=user, message=message, action=ActivityLog.ActionType.USER)

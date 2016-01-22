@@ -36,13 +36,18 @@
             </div>
         </div>
     </div>
+</div>
+<div class='row'>
     <div class='panel panel-primary'>
         <div class='panel-heading'>
             <h4 class='panel-title'><i class='fa fa-history'></i> Recent Activity</h4>
         </div>
         <div class='panel-body'>
+            {% comment %}
+            FIXME: this needs to be put into JS so it can get updated without a manual refresh
+            {% endcomment %}
             {% for activity in activity_log %}
-            <mark>{{activity.creator}}</mark>: {{ activity.message }} <span class='pull-right label label-primary'>{{ activity.date_created }}</span>
+            <mark>{{activity.creator}}</mark> <span class='text-info'>{{ activity.message }}</span> <span class='pull-right label label-primary'>{{ activity.date_created }}</span>
             <br>
             {% empty %}
             <div class='well'>
