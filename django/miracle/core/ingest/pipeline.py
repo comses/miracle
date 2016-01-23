@@ -14,12 +14,11 @@ def run(project, archive):
         metadata_project = group_metadata(project_grouped_file_paths)
         load_project(metadata_project)
     except Exception:
-        cleanup_on_error(project)
+        cleanup_on_error(project, archive)
         raise
 
 
-def cleanup_on_error(project):
-    archive_path = project.archive_path
+def cleanup_on_error(project, archive_path):
     project_path = project.project_path
     packrat_path = project.packrat_path
 

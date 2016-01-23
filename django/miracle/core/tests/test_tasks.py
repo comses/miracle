@@ -11,10 +11,9 @@ from django.test.utils import override_settings
 from .common import BaseMiracleTest
 from ..models import DataTableGroup, DataColumn, DataFile, Project
 from miracle.core.tasks import run_metadata_pipeline
-from ..ingest import PackratException
 
 
-class TaskTests(BaseMiracleTest):
+class PipelineTaskTests(BaseMiracleTest):
     TEST_PROJECT_DIRECTORY = "miracle/core/tests/projects"
 
     @staticmethod
@@ -59,6 +58,7 @@ class TaskTests(BaseMiracleTest):
         try:
             run_metadata_pipeline.delay(project, project.archive_path)
             self.assertEqual(len(DataTableGroup.objects.filter(name="data")), 1)
+            self.assertEqual(len(DataFile.objects.all()), 1)
             self.assertEqual(len(DataColumn.objects.all()), 2)
         finally:
             self.cleanup(project)

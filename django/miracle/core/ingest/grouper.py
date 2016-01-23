@@ -1,9 +1,9 @@
 """
 Explode metadata and group by column metadata
 """
+import os
 from os import path
-from . import (ProjectGroupedFilePaths,
-            MetadataDataTableGroup, MetadataDataTable, MetadataAnalysis, MetadataProject)
+from . import (ProjectGroupedFilePaths, MetadataDataTableGroup, MetadataDataFile, MetadataAnalysis, MetadataProject)
 
 
 class MetadataLayersInvalid(Exception):
@@ -30,8 +30,7 @@ def group_metadata(project_grouped_file_paths):
     datatablegroups += column_metadata.values()
     return MetadataProject(project_token=project_grouped_file_paths.project_token,
                            datatablegroups=datatablegroups,
-                           analyses=analyses,
-                           paths=project_grouped_file_paths.paths)
+                           analyses=analyses)
 
 
 def to_analysis(metadata_file_group, analyses):
@@ -60,11 +59,10 @@ def to_datatablegroups(file_group, grouped_datatablegroups, datatablegroups):
     :return:
     """
 
-    file_inds = file_group.inds
     layers = file_group.metadata.layers
 
-    datatable = MetadataDataTable(path_ids=file_inds,
-                                  name=file_group.title)
+    datafile = MetadataDataFile(name=file_group.title,
+                                path=file_group.group_name)
     if len(layers) >= 1:
         column_info = layers[0][1]
 
@@ -72,21 +70,21 @@ def to_datatablegroups(file_group, grouped_datatablegroups, datatablegroups):
             has_layer = column_info in grouped_datatablegroups
             if has_layer:
                 datatablegroup = grouped_datatablegroups[column_info]
-                datatablegroup.datatables.append(datatable)
+                datatablegroup.datafiles.append(datafile)
             else:
                 datatablegroup = MetadataDataTableGroup(properties=column_info,
-                                                        datatables=[datatable],
-                                                        name=datatable.name)
+                                                        datafiles=[datafile],
+                                                        name=datafile.name)
                 grouped_datatablegroups[column_info] = datatablegroup
         else:
             datatablegroup = MetadataDataTableGroup(properties=column_info,
-                                                    datatables=[datatable],
-                                                    name=datatable.name)
+                                                    datafiles=[datafile],
+                                                    name=datafile.name)
             datatablegroups.append(datatablegroup)
     else:
         datatablegroup = MetadataDataTableGroup(properties=tuple(),
-                                                datatables=[datatable],
-                                                name=datatable.name)
+                                                datafiles=[datafile],
+                                                name=datafile.name)
         datatablegroups.append(datatablegroup)
 
 
@@ -98,7 +96,7 @@ def _has_all_valid_column_names(columns):
     return True
 
 
-def _in_project_folder(file_group, metadata_type):
+def _is_file_in_folder(file_group, candidate_folder_name):
     """
     Determine whether the `file_group` is a data or code
     based on its base folder
@@ -108,14 +106,17 @@ def _in_project_folder(file_group, metadata_type):
     """
 
     name = file_group.group_name
-    if path.commonprefix([metadata_type, name]):
-        return True
+    split_name = path.normpath(name).split(os.sep)
+    if len(split_name) > 1: # Test for if the path has a parent directory
+        folder_name = split_name[0]
+        if folder_name == candidate_folder_name:
+            return True
     return False
 
 
 def _in_data_folder(metadata_file_group):
-    return _in_project_folder(metadata_file_group, "data")
+    return _is_file_in_folder(metadata_file_group, "data")
 
 
 def _in_src_folder(metadata_file_group):
-    return _in_project_folder(metadata_file_group, "src")
+    return _is_file_in_folder(metadata_file_group, "src")

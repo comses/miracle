@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import ugettext_lazy as _
 from django.views.generic import TemplateView
 from extra_views import InlineFormSet, UpdateWithInlinesView
-from json import dumps
+from json import dumps, loads
 from rest_framework import renderers, viewsets, generics, permissions, status
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
@@ -119,8 +119,8 @@ class RunAnalysisView(APIView):
         Issues a celery request to run this analysis and return a 202 status URL to poll for the status of this request.
         """
         query_params = request.query_params
-        pk = query_params.get('pk')
-        parameters = query_params.get('parameters')
+        pk = int(query_params.get('pk'))
+        parameters = loads(query_params.get('parameters'))
         logger.debug("running analysis id %s with parameters %s", pk, parameters)
         async_result = run_analysis_task.delay(pk, parameters, user=request.user)
         logger.debug("running analysis task with id %s", async_result.id)
@@ -165,11 +165,15 @@ class AnalysisViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         response = super(AnalysisViewSet, self).retrieve(request, *args, **kwargs)
         analysis = self.get_object()
-        code = analysis.archived_file_contents_highlighted()
-        response.data = {
-            'code': code,
-            'analysis': analysis
-        }
+        if request.accepted_renderer.format == 'html':
+            code = analysis.archived_file_contents_highlighted()
+            response.data = {
+                'code': code,
+                'analysis': analysis
+            }
+        else:
+            analysis_json = DataAnalysisScriptSerializer(analysis, context={'request': request})
+            response.data = analysis_json.data
         return response
 
 

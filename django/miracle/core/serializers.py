@@ -4,8 +4,9 @@ from django.db import transaction
 from django.utils import timezone, text
 from collections import defaultdict
 from rest_framework import serializers
-from .models import (Project, DataFile, DataColumn, DataTableGroup, DataAnalysisScript, AnalysisOutput,
-                     AnalysisOutputFile, Author)
+
+from .models import (Project, DataFile, DataColumn, DataTableGroup, DataAnalysisScript, AnalysisOutput, AnalysisOutputFile,
+                     AnalysisParameter, Author)
 
 import logging
 
@@ -51,9 +52,17 @@ class AuthorSerializer(serializers.ModelSerializer):
         model = Author
 
 
+class AnalysisParameterSerializer(serializers.ModelSerializer):
+    value = serializers.ReadOnlyField(source='default_value')
+
+    class Meta:
+        model = AnalysisParameter
+        fields = ('id', 'name', 'label', 'data_type', 'description', 'value')
+
+
 class DataAnalysisScriptSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
-    parameters = serializers.ReadOnlyField(source='input_parameters')
+    parameters = AnalysisParameterSerializer(many=True)
     authors = AuthorSerializer(many=True)
     outputs = AnalysisOutputSerializer(many=True, read_only=True)
     job_status = serializers.SerializerMethodField()
