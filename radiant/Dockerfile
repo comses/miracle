@@ -16,7 +16,8 @@ RUN yum -y update && yum clean all && yum -y install \
     ed \
     libcurl-devel \
     gcc-c++ \
-    pango-devel
+    pango-devel \
+    postgresql-devel
 
 RUN useradd -u $user_id $user_name
 
@@ -45,7 +46,7 @@ RUN git clone --depth 1 https://github.com/warmdev/radiant-mod.git radiant \
     && rm -rf /srv/shiny-server/radiant
 
 # Hardwired Libraries for luxedemo -- can remove later
-RUN R -e "install.packages(c('data.table','raster','rasterVis', 'sqldf', 'lattice', 'latticeExtra'), repos='https://cran.rstudio.com/')"
+RUN R -e "install.packages(c('data.table','raster','rasterVis', 'sqldf', 'lattice', 'latticeExtra', 'RPostgreSQL'), repos='https://cran.rstudio.com/')"
 
 # Configure Shiny and Radiant
 # ---------------------------
@@ -53,7 +54,7 @@ RUN sed -i -e 's/run_as shiny/run_as miracle/g' /etc/shiny-server/shiny-server.c
 ADD shiny-server.sh /usr/bin/shiny-server.sh
 USER root
 RUN mkdir -p $projects_path \
-    && ln -s $projects_path /srv/shiny-server/apps \
+    && ln -s $projects_path /srv/shiny-server/miracle \
     && chown -R $user_name:$user_name $projects_path
 RUN chmod +x /usr/bin/shiny-server.sh \
     && chown $user_name:$user_name /usr/bin/shiny-server.sh
