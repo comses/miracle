@@ -222,7 +222,7 @@ def run_script(script_name=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
             'name': job_name,
             'rscriptname': script_name,
             'rscriptdirectory': workdir,
-            'rscriptauthor': 'miracle',  # FIXME: hardcoded
+            'rscriptauthor': settings.DEFAULT_DEPLOYR_USER,
         }
         if parameters:
             # Convert parameters dict to be JSON-encoded
