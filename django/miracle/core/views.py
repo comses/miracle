@@ -17,9 +17,11 @@ from rest_framework.views import APIView
 from rest_framework.decorators import detail_route
 
 
-from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnalysisScript, AnalysisOutput, DataColumn)
+from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnalysisScript, AnalysisOutput, DataColumn,
+                     AnalysisOutputFile)
 from .serializers import (ProjectSerializer, DataFileSerializer, UserSerializer, DataTableGroupSerializer,
-                          DataAnalysisScriptSerializer, AnalysisOutputSerializer, DataColumnSerializer)
+                          DataAnalysisScriptSerializer, AnalysisOutputSerializer, DataColumnSerializer,
+                          OutputFileSerializer)
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task, run_metadata_pipeline
 
@@ -140,6 +142,13 @@ class OutputViewSet(viewsets.ModelViewSet):
     def template_name(self):
         return 'output/{}.html'.format(self.action)
 
+    @detail_route(methods=['GET'])
+    def download(self, request, pk):
+        output = AnalysisOutputFile.objects.get(id=pk)
+        content = output.output_file_contents()
+        response = HttpResponse(content, content_type='application/octet-stream')
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(output.basename)
+        return response
 
 class AnalysisViewSet(viewsets.ModelViewSet):
     serializer_class = DataAnalysisScriptSerializer

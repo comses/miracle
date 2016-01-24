@@ -9,7 +9,6 @@
             Uploaded file: {{analysis.archived_file}}
         </div>
         <a class='btn btn-sm btn-warning' href="{% url 'core:analysis-download' analysis.id %}"><i class='fa fa-download'></i> Download</a>
-        <a class='btn btn-sm btn-info' data-bind='click: runAnalysis'><i class='fa fa-play'></i> Run this analysis</a>
         <div class='bs-callout bs-callout-default'>
             <h4>Code</h4>
             {{ code|safe }}
@@ -21,17 +20,4 @@
 {% block javascript %}
 {% include "includes/ko.js" %}
 {% include "includes/csrf.js" %}
-<script>
-$(function() {
-    var AnalysisViewModel = function() {
-        var self = this;
-        self.runAnalysis = function() {
-            alert("run analysis");
-        }
-    }
-    var viewModel = new AnalysisViewModel();
-    ko.applyBindings(viewModel);
-});
-</script>
-
 {% endblock javascript %}

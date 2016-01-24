@@ -123,17 +123,15 @@
                                         <div class='collapse' data-bind='attr: {id: "collapseOutput" + id() }'>
                                             <div class='well'>
                                                 <code>Parameters:</code>
-                                                <ul data-bind='foreach: parameter_values'>
-                                                    <li>
-                                                        <p data-bind='text: label() + " (" + name() + "): " + value()'></p>
+                                                <ul class='list-group' data-bind='foreach: parameter_values'>
+                                                    <li class='list-group-item'>
+                                                        <p class='list-group-item-text' data-bind='text: label() + " (" + name() + "): " + value()'></p>
                                                     </li>
                                                 </ul>
                                                 <code>Output files:</code>
-                                                <ul class='list-inline' data-bind='foreach: files'>
-                                                    <li><a data-bind='attr: {href: url}, text: name'></a>
-                                                        <div data-bind='if: name().endsWith("png")'>
-                                                            <img class='img-responsive img-thumbnail' data-bind='attr: {src: url}'>
-                                                        </div>
+                                                <ul class='list-group' data-bind='foreach: files'>
+                                                    <li class='list-group-item'>
+                                                        <a class='list-group-item-text' data-bind='attr: {href: url}, text: name'></a>
                                                     </li>
                                                 </ul>
                                             </div>
@@ -260,17 +258,15 @@
                 <div class='bs-callout bs-callout-info'>
                     <h5 data-bind='text: name'></h5>
                     <code>Parameters:</code>
-                    <ul data-bind='foreach: parameter_values'>
-                        <li>
-                            <p data-bind='text: label() + " (" + name() + "): " + value()'></p>
+                    <ul class='list-group' data-bind='foreach: parameter_values'>
+                        <li class='list-group-item'>
+                            <p class='list-group-item-text' data-bind='text: label() + " (" + name() + "): " + value()'></p>
                         </li>
                     </ul>
                     <code>Output files:</code>
                     <ul class='list-group' data-bind='foreach: files'>
-                        <li class='list-group-item'><a data-bind='attr: {href: url}, text: name'></a>
-                            <div data-bind='if: name().endsWith("png")'>
-                                <img class='img-responsive img-thumbnail' data-bind='attr: {src: url}'>
-                            </div>
+                        <li class='list-group-item'>
+                            <a class='list-group-item-text' data-bind='attr: {href: url}, text: name'></a>
                         </li>
                     </ul>
                 </div>

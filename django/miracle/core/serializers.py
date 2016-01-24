@@ -37,8 +37,8 @@ class ParameterValueSerializer(serializers.ModelSerializer):
 
 
 class OutputFileSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(read_only=True, source='output_file.name')
-    url = serializers.URLField(read_only=True, source='output_file.url')
+    name = serializers.CharField(read_only=True, source='basename')
+    url = serializers.URLField(read_only=True, source='get_absolute_url')
 
     class Meta:
         model = AnalysisOutputFile

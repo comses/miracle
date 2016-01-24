@@ -366,7 +366,7 @@ class DataAnalysisScript(MiracleMetadataMixin):
 
     @property
     def path(self):
-        return os.path.join(self.project.slug, str(self.archived_file))
+        return os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, self.project.slug, str(self.archived_file))
 
     def archived_file_contents(self):
         code_path = self.path
@@ -444,7 +444,7 @@ class AnalysisOutput(models.Model):
         return self.analysis.project
 
     def __unicode__(self):
-        return u'[{}] output from running {} on {} by {} with parameters {}'.format(
+        return u'[{}] output from running {} on {} by {}'.format(
             self.name, self.analysis, self.date_created, self.creator
         )
 
@@ -460,7 +460,7 @@ class ParameterValue(models.Model):
 
 
 def _analysis_output_path(instance, filename):
-    return os.path.join(instance.project_path, 'outputs', filename)
+    return os.path.join(instance.path, 'outputs', filename)
 
 MIRACLE_PROJECT_STORAGE = FileSystemStorage(location=settings.MIRACLE_PROJECT_DIRECTORY)
 
@@ -471,8 +471,21 @@ class AnalysisOutputFile(models.Model):
     metadata = JSONField(help_text=_("Additional metadata provided by analysis execution engine"), null=True, blank=True)
 
     @property
-    def project_path(self):
-        return self.output.analysis.project.project_path
+    def path(self):
+        return os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, str(self.output_file))
+
+    @property
+    def basename(self):
+        return os.path.basename(self.output_file.path)
+
+    def output_file_contents(self):
+        with open(self.path) as f:
+            contents = f.read()
+        return contents
+
+    @property
+    def get_absolute_url(self):
+        return reverse_lazy('core:output-download', args=[self.pk])
 
     def __unicode__(self):
         return u"output file {}".format(self.output_file)
