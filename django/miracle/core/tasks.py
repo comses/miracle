@@ -54,6 +54,6 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
 
 
 @app.task(bind=True)
-def run_metadata_pipeline(self, project, archive):
+def run_metadata_pipeline(self, project, archive, delete_archive_on_failure=True):
     logger.debug("running metadata pipeline for project %s on archive %s", project, archive)
-    return pipeline.run(project, archive)
+    return pipeline.run(project, archive, delete_archive_on_failure=delete_archive_on_failure)

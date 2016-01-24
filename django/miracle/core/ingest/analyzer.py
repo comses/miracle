@@ -23,7 +23,6 @@ Partitions files into groups for the metadata extractor
 Only current grouped filetype are shapefiles
 """
 
-
 class FileGroup(object):
     """
     Interface for FileGroups
@@ -256,8 +255,8 @@ class OGRLoader(object):
 
     OGR_DATATYPE_CONVERSIONS = {
         "OFTString": "text",
-        "OFTReal": "Real",
-        "OFTDate": "Date"
+        "OFTReal": "decimal",
+        "OFTDate": "date"
     }
 
     @staticmethod
@@ -283,8 +282,10 @@ class TabularLoader(object):
                 f.seek(0)
                 return TabularLoader._read_normal_csv(path, f)
 
-    @staticmethod
-    def _read_netlogo_csv(path, f):
+    ROW_SAMPLE_SIZE = 3
+
+    @classmethod
+    def _read_netlogo_csv(cls, path, f):
         data = csv.reader(f)
 
         # extract the metadata
@@ -296,7 +297,7 @@ class TabularLoader(object):
         next(data)  # ignore slider ranges
 
         colnames = next(data)
-        datasample = next(data)
+        datasample = cls._take_up_to_n_rows(data, cls.ROW_SAMPLE_SIZE)
         datatypes = [TabularLoader._guess_type(el) for el in datasample]
 
         properties = {"file_name": file_name, "model_name": model_name}
@@ -304,8 +305,8 @@ class TabularLoader(object):
 
         return Metadata(path, DataTypes.data, properties, layers)
 
-    @staticmethod
-    def _read_normal_csv(path, f):
+    @classmethod
+    def _read_normal_csv(cls, path, f):
         properties = {}
         try:
             has_header = csv.Sniffer().has_header(f.read(4096))
@@ -315,33 +316,62 @@ class TabularLoader(object):
         f.seek(0)
         layer = []
         reader = csv.reader(f)
-        row = reader.next()
         if has_header:
-            row_types = reader.next()
+            row = reader.next()
+            row = [re.sub(r'^ *"?|"? *$', '', el) for el in row]
+            row_types = cls._take_up_to_n_rows(reader, cls.ROW_SAMPLE_SIZE)
             for k, v in zip(row, row_types):
                 layer.append((k, TabularLoader._guess_type(v)))
         else:
-            n = len(row)
+            row_types = cls._take_up_to_n_rows(reader, cls.ROW_SAMPLE_SIZE)
+            n = len(row_types)
             for col in xrange(n):
-                layer.append((None, TabularLoader._guess_type(row[col])))
+                layer.append((None, TabularLoader._guess_type(row_types[col])))
 
         layers = [(None, tuple(layer))]
 
         return Metadata(path, DataTypes.data, properties, layers)
 
+    PATTERN_BIGINT = re.compile(r'^\d+$')
+    PATTERN_DECIMAL = re.compile(r'^\d+(\.\d*)*$')
+    PATTERN_BOOLEAN = re.compile(r'^(true|false|t|f|yes|no)$',re.IGNORECASE)
+
+    @classmethod
+    def _guess_type(cls, elements):
+        # strip leading and trailing spaces and double quotes
+        elements = [re.sub(r'^ *"?|"? *$', '', el) for el in elements]
+        datatype = cls._try_type(cls.PATTERN_BIGINT, elements, "bigint") or\
+                   cls._try_type(cls.PATTERN_DECIMAL, elements, "decimal") or\
+                   cls._try_type(cls.PATTERN_BOOLEAN, elements, "boolean")
+        if datatype:
+            return datatype
+
+        try:
+            for el in elements:
+                date.parse(el)
+            return "date"
+        except ValueError:
+            pass
+        return "text"
+
     @staticmethod
-    def _guess_type(element):
-        try:
-            float(element)
-            return "Real"
-        except ValueError:
-            pass
-        try:
-            date.parse(element)
-            return "Date"
-        except ValueError:
-            pass
-        return "String"
+    def _try_type(pattern, values, datatype):
+        for value in values:
+            if not re.match(pattern, value):
+                return ""
+        return datatype
+
+    @staticmethod
+    def _take_up_to_n_rows(reader, n):
+        rows = []
+        i = 0
+        for row in reader:
+            rows.append(row)
+            i += 1
+            if i >= n:
+                break
+        cols = zip(*rows)
+        return cols
 
     @staticmethod
     def _is_netlogo(f):
