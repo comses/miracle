@@ -70,7 +70,7 @@ class Command(BaseCommand):
 
         logger.debug(archive_path)
         try:
-            res = run_metadata_pipeline(project, archive_path)
+            res = run_metadata_pipeline(project, archive_path, delete_archive_on_failure=False)
             logger.debug("Extraction succeeded for archive `{}`".format(abs_archive_path))
         except Exception as e:
             logger.debug("Extraction failed for archive `{}`".format(abs_archive_path))

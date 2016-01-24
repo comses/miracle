@@ -460,7 +460,7 @@ class ParameterValue(models.Model):
 
 
 def _analysis_output_path(instance, filename):
-    return os.path.join(instance.path, 'outputs', filename)
+    return os.path.join(instance.folder, 'outputs', filename)
 
 MIRACLE_PROJECT_STORAGE = FileSystemStorage(location=settings.MIRACLE_PROJECT_DIRECTORY)
 
@@ -471,8 +471,12 @@ class AnalysisOutputFile(models.Model):
     metadata = JSONField(help_text=_("Additional metadata provided by analysis execution engine"), null=True, blank=True)
 
     @property
+    def folder(self):
+        return self.output.project.project_path
+
+    @property
     def path(self):
-        return os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, str(self.output_file))
+        return self.output_file.path
 
     @property
     def basename(self):
@@ -580,6 +584,7 @@ class DataColumn(models.Model, DatasetConnectionMixin):
         ('boolean', _('boolean')),
         ('decimal', _('floating point number')),  # worse performance than float but avoids rounding errors
         ('text', _('text')),
+        ('date', _('date'))
     )
 
     data_table_group = models.ForeignKey(DataTableGroup, related_name='columns')

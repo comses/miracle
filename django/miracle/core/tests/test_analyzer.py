@@ -2,7 +2,7 @@ import os
 from django.test.utils import override_settings
 
 from ..ingest.analyzer import (group_files, ShapefileFileGroup, ProjectGroupedFilePaths,
-                               OtherFile, extract_metadata, sanitize_ext)
+                               OtherFile, extract_metadata, sanitize_ext, TabularLoader)
 from ..ingest.unarchiver import ProjectFilePaths
 from .common import BaseMiracleTest
 
@@ -23,8 +23,8 @@ class AnalyzerTest(BaseMiracleTest):
         data = extract_metadata(test_data)
         columns = data.layers[0][1]
         self.assertItemsEqual(columns,
-                              ((u'Density', 'Real'), (u'Name', 'String'),
-                               (u'Created', 'Date'), (u'Population', 'Real')))
+                              ((u'Density', 'decimal'), (u'Name', 'text'),
+                               (u'Created', 'date'), (u'Population', 'decimal')))
 
     def test_asc(self):
         test_data = self.get_test_data("sample.asc")
@@ -43,11 +43,11 @@ class AnalyzerTest(BaseMiracleTest):
 
     def test_headeredcsv(self):
         data = extract_metadata(self.get_test_data("head.csv"))
-        self.assertEqual(data.layers[0], (None, (('ID', 'Real'), ('Town', 'String'))))
+        self.assertEqual(data.layers[0], (None, (('ID', 'bigint'), ('Town', 'text'))))
 
     def test_headlesscsv(self):
         data = extract_metadata(self.get_test_data("headless.csv"))
-        self.assertEqual(data.layers[0], (None, ((None, 'Real'), (None, 'String'), (None, 'Date'))))
+        self.assertEqual(data.layers[0], (None, ((None, 'bigint'), (None, 'text'), (None, 'date'))))
 
     def test_netlogocsv(self):
         data = extract_metadata(self.get_test_data("netlogo.csv"))
@@ -55,7 +55,7 @@ class AnalyzerTest(BaseMiracleTest):
 
     def test_luxecsv(self):
         data = extract_metadata(self.get_test_data("luxe.csv"))
-        self.assertEqual(data.layers[0][1][0], ("agent_id", "Real"))
+        self.assertEqual(data.layers[0][1][0], ("agent_id", "bigint"))
 
     @override_settings(MIRACLE_PROJECT_DIRECTORY=TEST_PROJECT_DIRECTORY)
     def test_groups_shp(self):
@@ -65,5 +65,14 @@ class AnalyzerTest(BaseMiracleTest):
                                                              paths=files)
         columns = project_grouped_file_paths.grouped_paths[0].metadata.layers[0][1]
         self.assertItemsEqual(columns,
-                              ((u'Density', 'Real'), (u'Name', 'String'),
-                               (u'Created', 'Date'), (u'Population', 'Real')))
+                              ((u'Density', 'decimal'), (u'Name', 'text'),
+                               (u'Created', 'date'), (u'Population', 'decimal')))
+
+    def test_guess_type(self):
+        self.assertEqual(TabularLoader._guess_type(("1.0","2.0")), "decimal")
+        self.assertEqual(TabularLoader._guess_type(("1","2.0")), "decimal")
+        self.assertEqual(TabularLoader._guess_type(("1","a")), "text")
+        self.assertEqual(TabularLoader._guess_type(("1 ", "2")), "bigint")
+
+        self.assertEqual(TabularLoader._guess_type((' "t"', ' false')), "boolean")
+        self.assertEqual(TabularLoader._guess_type((' "t"', 'false')), "boolean")
