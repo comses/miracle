@@ -255,7 +255,7 @@ class OGRLoader(object):
         return Metadata(path, DataTypes.data, properties, layers)
 
     OGR_DATATYPE_CONVERSIONS = {
-        "OFTString": "String",
+        "OFTString": "text",
         "OFTReal": "Real",
         "OFTDate": "Date"
     }

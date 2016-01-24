@@ -5,7 +5,7 @@
 
 {% block head %}
 {{ block.super }}
-<link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/dropzone/4.0.1/min/dropzone.min.css'>
+<link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/dropzone/4.2.0/min/dropzone.min.css'>
 {% endblock %}
 
 {% block content %}
@@ -23,13 +23,16 @@
                 <a href='#explorer' aria-controls='explorer' role='tab' data-toggle='tab'><i class='fa fa-binoculars'></i> Data explorer</a>
             </li>
             <li role='presentation'>
+                <a href='#data-groups' aria-controls='metadata' role='tab' data-toggle='tab'><i class='fa fa-database'></i> Data groups</a>
+            </li>
+            <li role='presentation'>
                 <a href='#analysis' aria-controls='analysis' role='tab' data-toggle='tab'><i class='fa fa-terminal'></i> Analysis and scripts</a>
             </li>
             <li role='presentation'>
-                <a href='#upload' aria-controls='upload' role='tab' data-toggle='tab'><i class='fa fa-cloud-upload'></i> Upload archive</a>
+                <a href='#comments' aria-controls='comments' role='tab' data-toggle='tab'><i class='fa fa-comment'></i> Comments</a>
             </li>
             <li role='presentation'>
-                <a href='#comments' aria-controls='comments' role='tab' data-toggle='tab'><i class='fa fa-comment'></i> Comments</a>
+                <a href='#upload' aria-controls='upload' role='tab' data-toggle='tab'><i class='fa fa-cloud-upload'></i> Upload archive</a>
             </li>
         </ul>
     </div>
@@ -60,6 +63,70 @@
                         <div class='bs-callout bs-callout-default'>
                             <h4><i class='fa fa-archive'></i> Dependencies</h4>
                             {{ dependencies|safe }}
+                        </div>
+                    </div>
+                    <div role='tabpanel' class='tab-pane' id='data-groups'>
+                        <div class='bs-callout bs-callout-default'>
+                            <h4><i class='fa fa-database'></i> Data Groups</h4>
+                        </div>
+                        <div data-bind='if: data_table_groups().length === 0'>
+                            <div class='alert alert-info alert-block' role='alert'>
+                                <i class='fa fa-info-circle'></i> No data has been uploaded yet.
+                            </div>
+                        </div>
+                        <div data-bind='if: data_table_groups().length > 0'>
+                            <p>A data group is a set of data files that conforms to the same schema or table structure.
+                            We detected the following groups in your archive upload.</p>
+                            <div class='panel-group' id='data-table-group-accordion' role='tablist' aria-multiselectable='true'>
+                                <div class='panel panel-default' data-bind='foreach: data_table_groups'>
+                                    <div class='panel-heading' role='tab' data-bind='attr: {id: "heading" + id()}'>
+                                        <h4 class='panel-title'>
+                                            <a role='button'
+                                                data-toggle='collapse'
+                                                data-parent='#data-table-group-accordion'
+                                                data-bind='attr: {href: "#collapse" + id(), "aria-controls": "collapse" + id()}'
+                                                aria-expanded='true'>
+                                                <span data-bind='text: name'></span>
+                                            </a>
+                                        </h4>
+                                    </div>
+                                    <div data-bind='attr: {id: "collapse" + id(), "aria-labelledby": "heading" + id()}'
+                                        class='panel-collapse collapse in' role='tabpanel'>
+                                        <div class='panel-body' data-bind='foreach: columns'>
+                                            <form class='form form-horizontal' data-bind='submit: function() { $root.updateColumn($data) }'>
+                                                <input type='hidden' name='id' data-bind='value: id'>
+                                                <div class='form-group'>
+                                                    <label for='name' class='col-sm-2 control-label'>Name</label>
+                                                    <div class='col-sm-9'>
+                                                        <input name='name' type='text' class='form-control' data-bind='value: name'>
+                                                    </div>
+                                                </div>
+                                                <div class='form-group'>
+                                                    <label class='col-sm-2 control-label' for='description'>Description</label>
+                                                    <div class='col-sm-9'>
+                                                        <textarea class='form-control' name='description' data-bind='value: description' rows='3'></textarea>
+                                                    </div>
+                                                </div>
+                                                <div class='form-group'>
+                                                    <label class='col-sm-2 control-label' for='dataType'>Data type</label>
+                                                    <div class='col-sm-9'>
+                                                        <input name='data_type' type='text' class='form-control' data-bind='value: data_type'>
+                                                    </div>
+                                                </div>
+                                                <div class='form-group'>
+                                                    <div class='col-sm-offset-2 col-sm-9'>
+                                                        <button type='submit' class='btn btn-default'>Update</button>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <hr>
+                                        </div>
+                                        <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
+                                            <i class='fa fa-eye'></i> View details
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='analysis'>
@@ -113,7 +180,7 @@
                                 <h5><i class='fa fa-area-chart'></i> Outputs <span class='pull-right label label-badge label-primary' data-bind='text: outputs().length'></span></h5>
                                 <hr>
                                 <div data-bind='ifnot: outputs().length'>
-                                    No outputs recorded yet.
+                                    No recorded outputs.
                                 </div>
                                 <ul class='list-group' data-bind='foreach: outputs'>
                                     <li class='list-group-item'>
@@ -125,7 +192,7 @@
                                                 <code>Parameters:</code>
                                                 <ul class='list-group' data-bind='foreach: parameter_values'>
                                                     <li class='list-group-item'>
-                                                        <p class='list-group-item-text' data-bind='text: label() + " (" + name() + "): " + value()'></p>
+                                                        <span data-bind='text: label'></span> (<i data-bind='text: name'></i>): <mark data-bind='text: value'></mark>
                                                     </li>
                                                 </ul>
                                                 <code>Output files:</code>
@@ -155,22 +222,6 @@
                                 </ul>
                             </div>
                         </div>
-                        <div class='bs-callout bs-callout-default'>
-                            <h4><i class='fa fa-database'></i> Data</h4>
-                        </div>
-                        <div data-bind='if: data_table_groups().length === 0'>
-                            <div class='alert alert-info alert-block' role='alert'>
-                                <i class='fa fa-info-circle'></i> No data has been uploaded yet.
-                            </div>
-                        </div>
-                        <ul class='list-group' data-bind='foreach: data_table_groups'>
-                            <li class='list-group-item'>
-                                <a data-bind='attr: {href: url}, text: name'></a>
-                                <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
-                                    <i class='fa fa-download'></i> Download
-                                </a>
-                            </li>
-                        </ul>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
                         Upload project archive<br>
@@ -260,7 +311,7 @@
                     <code>Parameters:</code>
                     <ul class='list-group' data-bind='foreach: parameter_values'>
                         <li class='list-group-item'>
-                            <p class='list-group-item-text' data-bind='text: label() + " (" + name() + "): " + value()'></p>
+                            <span data-bind='text: label'></span> (<i data-bind='text: name'></i>): <mark data-bind='text: value'></mark>
                         </li>
                     </ul>
                     <code>Output files:</code>
@@ -315,6 +366,26 @@ $(function() {
     model.activeAnalysisScripts = ko.pureComputed(function() {
         return ko.utils.arrayFilter(model.analyses(), function(analysis) { return analysis.enabled() });
     });
+    model.updateColumn = function(column) {
+        console.debug(column);
+        var columnJson = ko.toJSON(column);
+        console.debug(columnJson);
+        $.ajax({
+            url: column.detail_url(),
+            type: 'PUT',
+            data: columnJson,
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            crossDomain: false,
+        }).done(function(data) {
+            humane.log("Metadata updated successfully.");
+            console.debug(data);
+        }).fail(function(response) {
+            humane.log("Failed to update column metadata.");
+            console.debug(response);
+            
+        });
+    };
     model.toggleFullScreen = function(id) {
         $(id).toggleClass("maximized-iframe");
     };
@@ -411,9 +482,6 @@ $(function() {
         }).fail(function() {
             alert("Failed to retrieve analysis parameters");
         });
-    };
-    model.prettyprint = function(json_string) {
-        return JSON.stringify(JSON.parse(json_string), null, 4);
     };
     model.runAnalysis = function(model) {
         if (! model.selectedAnalysis()) {

@@ -150,6 +150,7 @@ class OutputViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(output.basename)
         return response
 
+
 class AnalysisViewSet(viewsets.ModelViewSet):
     serializer_class = DataAnalysisScriptSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
@@ -191,6 +192,9 @@ class DataColumnViewSet(viewsets.ModelViewSet):
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
     permission_classes = (CanViewReadOnlyOrEditProjectResource,)
     queryset = DataColumn.objects.all()
+
+    def perform_update(self, serializer):
+        logger.debug("updating column %s", serializer)
 
 
 class DataTableGroupViewSet(viewsets.ModelViewSet):
