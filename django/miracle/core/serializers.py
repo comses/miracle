@@ -6,7 +6,7 @@ from collections import defaultdict
 from rest_framework import serializers
 
 from .models import (Project, DataFile, DataColumn, DataTableGroup, DataAnalysisScript, AnalysisOutput, AnalysisOutputFile,
-                     AnalysisParameter, Author)
+                     AnalysisParameter, ParameterValue, Author)
 
 import logging
 
@@ -24,6 +24,16 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
+        fields = ('username', 'email', 'full_name')
+
+
+class ParameterValueSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(read_only=True, source='parameter.name')
+    label = serializers.CharField(read_only=True, source='parameter.label')
+
+    class Meta:
+        model = ParameterValue
+        fields = ('id', 'name', 'label', 'value')
 
 
 class OutputFileSerializer(serializers.ModelSerializer):
@@ -38,10 +48,11 @@ class OutputFileSerializer(serializers.ModelSerializer):
 class AnalysisOutputSerializer(serializers.ModelSerializer):
     analysis = serializers.StringRelatedField()
     files = OutputFileSerializer(many=True)
+    parameter_values = ParameterValueSerializer(many=True, read_only=True)
 
     class Meta:
         model = AnalysisOutput
-        fields = ('id', 'name', 'date_created', 'creator', 'analysis', 'parameter_values_text', 'files')
+        fields = ('id', 'name', 'date_created', 'creator', 'analysis', 'parameter_values', 'files')
 
 
 class AuthorSerializer(serializers.ModelSerializer):

@@ -443,13 +443,9 @@ class AnalysisOutput(models.Model):
     def project(self):
         return self.analysis.project
 
-    @property
-    def parameter_values_text(self):
-        return json.dumps(self.parameter_values_json)
-
     def __unicode__(self):
         return u'[{}] output from running {} on {} by {} with parameters {}'.format(
-            self.name, self.analysis, self.date_created, self.creator, self.parameter_values_json
+            self.name, self.analysis, self.date_created, self.creator
         )
 
     class Meta:
