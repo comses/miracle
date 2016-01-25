@@ -611,7 +611,7 @@ class DataColumn(models.Model):
         return u'{0} (type: {1})'.format(self.name, self.data_type)
 
     class Meta:
-        ordering = ['table_order', 'date_created']
+        ordering = ['table_order']
 
 
 class MiracleUser(models.Model):
