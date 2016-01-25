@@ -247,18 +247,20 @@
 └──<i class='fa fa-folder-o'></i> <mark>packrat</mark>
     └── <mark>init.R</mark>
 </pre>
-Highlighted names like <mark>packrat</mark> and your project's current short name, <mark data-bind='text: slug'></mark>,
+Highlighted names like <mark>data</mark>, <mark>src</mark> and your project's current short name, <mark data-bind='text: slug'></mark>,
 must be used verbatim. The <code>{Root Directory}</code> can be any arbitrary name, we just expect it as a way to
 lump all your files together.
                                     </li>
                                     <li>
                                         <a href='https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines#prepare-your-r-code'>
-                                            Prepare your R scripts so they can be run in the cloud using our DeployR
-                                            integration
+                                            Declare your R package dependencies, input parameters, and input data using
+                                            <code>deployrUtils</code> so we can set up your scripts for execution
+                                            against our DeployR server.
                                         </a>
                                     </li>
                                     <li><a href='https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines#prepare-your-archive'>
-                                            Use Packrat to declare your R dependencies
+                                            Prepare your archive with all required dependencies using
+                                            <code>packrat</code>, which is part of RStudio.
                                         </a>
                                     </li>
                                 </ol>
