@@ -2,7 +2,6 @@
 Load metadata extracted from a project archive into the database
 """
 
-import json
 import logging
 import requests
 
@@ -44,10 +43,16 @@ def load_datatablegroup(metadata_datatablegroup, project):
 
 
 def load_datatablegroup_columns(metadata_columns, datatablegroup):
-    DataColumn.objects.bulk_create(DataColumn(name=name or "",
-                                              data_table_group=datatablegroup,
-                                              data_type=data_type) for (name, data_type) in metadata_columns
-                                   )
+    columns = []
+    for (table_order, metadata) in enumerate(metadata_columns, start=1):
+        name, data_type = metadata
+        columns.append(
+            DataColumn(name=name or "",
+                       data_table_group=datatablegroup,
+                       table_order=table_order,
+                       data_type=data_type)
+        )
+    DataColumn.objects.bulk_create(columns)
 
 
 def load_datafile(metadata_datafile, datatablegroup):

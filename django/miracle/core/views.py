@@ -194,7 +194,10 @@ class DataColumnViewSet(viewsets.ModelViewSet):
     queryset = DataColumn.objects.all()
 
     def perform_update(self, serializer):
-        logger.debug("updating column %s", serializer)
+        data_column = serializer.save()
+# FIXME: add modified data text to DataColumnSerializer?
+        ActivityLog.objects.log_project_update(self.request.user, data_column.project,
+                                               "Modified column {0}".format(data_column))
 
 
 class DataTableGroupViewSet(viewsets.ModelViewSet):

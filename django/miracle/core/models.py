@@ -11,7 +11,6 @@ from django.conf import settings
 
 from model_utils import Choices
 
-import json
 import logging
 import os
 import re
@@ -573,7 +572,7 @@ class DataFile(models.Model):
     archived_file = models.FileField(help_text=_("Archival data information package file"))
 
 
-class DataColumn(models.Model, DatasetConnectionMixin):
+class DataColumn(models.Model):
 
     """
     Metadata for a Column in a given DataTableGroup to capture basic type and description info.
@@ -590,8 +589,10 @@ class DataColumn(models.Model, DatasetConnectionMixin):
     data_table_group = models.ForeignKey(DataTableGroup, related_name='columns')
     name = models.CharField(max_length=64, blank=True, help_text=_("Actual column name"))
     full_name = models.CharField(max_length=255, blank=True)
-    description = models.TextField()
+    description = models.TextField(blank=True)
     data_type = models.CharField(max_length=128, choices=DataType, default=DataType.text)
+    table_order = models.PositiveIntegerField(default=1, help_text=_("This column's one-based index into the table"))
+
 
     def all_values(self, distinct=False):
         ''' returns a list resulting from select name from data table using miracle_data database '''
@@ -607,7 +608,10 @@ class DataColumn(models.Model, DatasetConnectionMixin):
         return reverse_lazy('core:data-column-detail', args=[self.pk])
 
     def __unicode__(self):
-        return u'{} (internal: {})'.format(self.full_name, self.name)
+        return u'{0} (type: {1})'.format(self.name, self.data_type)
+
+    class Meta:
+        ordering = ['table_order', 'date_created']
 
 
 class MiracleUser(models.Model):

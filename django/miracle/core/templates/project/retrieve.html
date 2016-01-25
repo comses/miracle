@@ -76,8 +76,10 @@
                             </div>
                         </div>
                         <div data-bind='if: data_table_groups().length > 0'>
-                            <p>A data group is a set of data files that conforms to the same schema or table structure.
-                            We detected the following groups in your archive upload.</p>
+                            <p>
+                            A <b>data group</b> is a set of data files that conforms to the same schema or table structure.
+                            We detected the following groups in your archive upload:
+                            </p>
                             <div class='panel-group' id='data-table-group-accordion' role='tablist' aria-multiselectable='true'>
                                 <div class='panel panel-default' data-bind='foreach: data_table_groups'>
                                     <div class='panel-heading' role='tab' data-bind='attr: {id: "heading" + id()}'>
@@ -87,7 +89,10 @@
                                                 data-parent='#data-table-group-accordion'
                                                 data-bind='attr: {href: "#collapse" + id(), "aria-controls": "collapse" + id()}'
                                                 aria-expanded='true'>
-                                                <span data-bind='text: name'></span>
+                                                <mark data-bind='text: name'></mark>
+                                            </a>
+                                            <a class='pull-right' data-bind='attr: {href: url}'>
+                                                <i class='fa fa-eye'></i> View details
                                             </a>
                                         </h4>
                                     </div>
@@ -97,7 +102,7 @@
                                             <form class='form form-horizontal' data-bind='submit: function() { $root.updateColumn($data) }'>
                                                 <input type='hidden' name='id' data-bind='value: id'>
                                                 <div class='form-group'>
-                                                    <label for='name' class='col-sm-2 control-label'>Name</label>
+                                                    <label for='name' class='col-sm-2 control-label'>Column Name</label>
                                                     <div class='col-sm-9'>
                                                         <input name='name' type='text' class='form-control' data-bind='value: name'>
                                                     </div>
@@ -111,7 +116,10 @@
                                                 <div class='form-group'>
                                                     <label class='col-sm-2 control-label' for='dataType'>Data type</label>
                                                     <div class='col-sm-9'>
-                                                        <input name='data_type' type='text' class='form-control' data-bind='value: data_type'>
+                                                        <select class='form-control'
+                                                            data-bind='options: $root.columnDataTypes, optionsText: "label",
+                                                            optionsValue: "name",
+                                                            value: data_type'></select>
                                                     </div>
                                                 </div>
                                                 <div class='form-group'>
@@ -122,9 +130,6 @@
                                             </form>
                                             <hr>
                                         </div>
-                                        <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
-                                            <i class='fa fa-eye'></i> View details
-                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -405,10 +410,20 @@ $(function() {
         paramName: "file"
     };
     var model = new ProjectModel({data: {{ project_json|safe}}} );
-    gm = model;
+    var ColumnDataType = function(label, name) {
+        this.label = label;
+        this.name = name;
+    };
     model.activeAnalysisScripts = ko.pureComputed(function() {
         return ko.utils.arrayFilter(model.analyses(), function(analysis) { return analysis.enabled() });
     });
+    model.columnDataTypes = ko.observableArray([
+            new ColumnDataType("floating point number", 'decimal'),
+            new ColumnDataType("boolean", 'boolean'),
+            new ColumnDataType("integer", 'bigint'),
+            new ColumnDataType("text", 'text'),
+            new ColumnDataType("date", 'date')
+    ]);
     model.updateColumn = function(column) {
         console.debug(column);
         var columnJson = ko.toJSON(column);
