@@ -71,7 +71,8 @@
                         </div>
                         <div data-bind='if: data_table_groups().length === 0'>
                             <div class='alert alert-info alert-block' role='alert'>
-                                <i class='fa fa-info-circle'></i> No data has been uploaded yet.
+                                <i class='fa fa-info-circle'></i> No data has been uploaded yet. 
+                                <br> Select "Upload archive" on the left navbar to upload your data and script package.
                             </div>
                         </div>
                         <div data-bind='if: data_table_groups().length > 0'>
@@ -224,7 +225,46 @@
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
-                        Upload project archive<br>
+                        <div class='bs-callout bs-callout-default'>
+                            <h4><i class='fa fa-comment'></i> Upload project archive</h4>
+                        </div>
+                        <section>
+                            <div class='well'>
+                                Please follow the guidelines at
+                                <a href='https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines'>
+                                    https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines
+                                </a> when preparing your project archive for submission. In short,
+                                <ol>
+                                    <li>
+                                        <a href='https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines#required-file-structure'>
+                                            Make sure your archive conforms to the following structure: 
+                                        </a>
+<pre class='tree'>
+<i class='fa fa-folder-o'></i> {Root Directory} (any name will work here, just provides an organizing root folder)
+├──<i class='fa fa-folder-o'></i> <mark data-bind='text: slug'></mark> - <b>this must match the short name specified in your project metadata</b>
+│   ├── <mark>data</mark> - folder for your data files, can be nested
+│   └── <mark>src</mark> - folder for your analysis scripts
+└──<i class='fa fa-folder-o'></i> <mark>packrat</mark>
+    └── <mark>init.R</mark>
+</pre>
+Highlighted names like <mark>packrat</mark> and your project's current short name, <mark data-bind='text: slug'></mark>,
+must be used verbatim. The <code>{Root Directory}</code> can be any arbitrary name, we just expect it as a way to
+lump all your files together.
+                                    </li>
+                                    <li>
+                                        <a href='https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines#prepare-your-r-code'>
+                                            Prepare your R scripts so they can be run in the cloud using our DeployR
+                                            integration
+                                        </a>
+                                    </li>
+                                    <li><a href='https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines#prepare-your-archive'>
+                                            Use Packrat to declare your R dependencies
+                                        </a>
+                                    </li>
+                                </ol>
+                                We accept zipfiles or tarballs with <code>.zip</code> or <code>.tar.gz</code> extensions.
+                            </div>
+                        </section>
                         <form action="{% url 'core:upload' %}" class="dropzone" enctype="multipart/form-data" method="post" id="my-dropzone">
                             {% csrf_token %}
                             <input type="hidden" name="id" data-bind='value: id'>
@@ -234,11 +274,12 @@
                         </form>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='comments'>
-                        <h4><i class='fa fa-comment'></i> Comments</h4>
+                        <div class='bs-callout bs-callout-default'>
+                            <h4><i class='fa fa-comment'></i> Comments</h4>
+                        </div>
                         <hr>
                         {# FIXME: add to Project serializer and manage via JS #}
                         {% render_comment_list for project %}
-                        <hr>
                         {% get_comment_form for project as comment_form %}
                         <form data-bind='submit: $root.postComment' class='form' id='project-comment-form'>
                             {% csrf_token %}
@@ -400,6 +441,7 @@ $(function() {
         console.debug(formData);
         $.post('{% comment_form_target %}', formData, function(response) {
             console.debug(response);
+            window.location.reload(true);
         });
     };
     model.setCurrentInterval = function(intervalId) {

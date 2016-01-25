@@ -219,7 +219,7 @@ def deploy(branch, user):
                 user=env.deploy_user, pty=True)
             env.static_root = miracle_settings.STATIC_ROOT
             if console.confirm("Update pip dependencies?"):
-                _virtualenv(sudo, 'pip install -Ur requirements.txt', user=env.deploy_user)
+                _virtualenv(sudo, 'pip install -Ur requirements/production.txt', user=env.deploy_user)
             if console.confirm("Run database migrations?"):
                 _virtualenv(sudo, '%(python)s manage.py migrate' % env, user=env.deploy_user)
             _virtualenv(sudo, '%(python)s manage.py collectstatic' % env, user=env.deploy_user)

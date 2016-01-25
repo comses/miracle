@@ -105,3 +105,6 @@ input#id_contact_number {
 .bs-callout-info h4 {
     color: #5bc0de;
 }
+pre.tree {
+    line-height: 1.2;
+}
