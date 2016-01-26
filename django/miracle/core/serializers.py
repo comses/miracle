@@ -102,13 +102,21 @@ class DataColumnSerializer(serializers.ModelSerializer):
 class DataTableGroupSerializer(serializers.HyperlinkedModelSerializer):
     project = serializers.ReadOnlyField(source='project.name')
     columns = DataColumnSerializer(many=True, read_only=True)
+    number_of_files = serializers.SerializerMethodField(read_only=True)
+    number_of_columns = serializers.SerializerMethodField(read_only=True)
+
+    def get_number_of_columns(self, data_table_group):
+        return data_table_group.columns.count()
+
+    def get_number_of_files(self, data_table_group):
+        return data_table_group.files.count()
 
     class Meta:
         model = DataTableGroup
         extra_kwargs = {
             'url': {'view_name': 'core:data-group-detail'}
         }
-        fields = ('id', 'name', 'project', 'url', 'columns')
+        fields = ('id', 'name', 'full_name', 'project', 'url', 'columns', 'number_of_files', 'number_of_columns')
 
 
 class DataFileSerializer(serializers.HyperlinkedModelSerializer):
