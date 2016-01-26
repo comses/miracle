@@ -5,7 +5,9 @@
 
 FROM centos:7
 
-RUN yum -y update; yum clean all; yum -y install wget libicu-devel psmisc gcc-c++ which
+RUN yum -y update; yum clean all; yum -y install wget libicu-devel psmisc gcc-c++ which epel-release
+RUN yum -y install R-core R-core-devel
+
 WORKDIR /opt/
 RUN wget --no-cookies --no-check-certificate --header \
         "Cookie: gpw_e24=http%3A%2F%2Fwww.oracle.com%2F; oraclelicense=accept-securebackup-cookie" \
@@ -17,10 +19,6 @@ RUN wget --no-cookies --no-check-certificate --header \
     alternatives --set jar /opt/jdk1.8.0_65/bin/jar; \
     alternatives --set javac /opt/jdk1.8.0_65/bin/javac; \
     rm -rf jdk-8u65-linux-x64.tar.gz
-
-RUN wget https://mran.revolutionanalytics.com/install/RRO-3.2.2.el7.x86_64.rpm; \
-    yum install -y RRO-3.2.2.el7.x86_64.rpm; rm -rf RRO-3.2.2.el7.x86_64.rpm
-RUN sed -i "4s/.*/R_HOME_DIR=\/usr\/lib64\/RRO-3.2.2\/R-3.2.2\/lib64\/R/g" /usr/lib64/RRO-3.2.2/R-3.2.2/lib64/R/bin/R
 
 RUN wget https://github.com/deployr/deployr-rserve/releases/download/v7.4.1/deployrRserve_7.4.1.tar.gz; \
     R CMD INSTALL deployrRserve_7.4.1.tar.gz; \
