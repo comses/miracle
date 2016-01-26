@@ -39,3 +39,6 @@ MetadataProject = namedtuple('MetadataProject', [
 
 class PackratException(Exception):
     pass
+
+class ProjectDirectoryAlreadyExists(IOError):
+    pass
