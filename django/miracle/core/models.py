@@ -326,7 +326,8 @@ class DataAnalysisScript(MiracleMetadataMixin):
 
     @property
     def default_output_name(self):
-        return u"{} output".format(self.full_name)
+        output_name = self.full_name if self.full_name else self.name
+        return u"{} output".format(output_name)
 
     @property
     def input_parameters(self):
