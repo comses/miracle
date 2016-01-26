@@ -522,7 +522,7 @@ $(function() {
                 console.debug(response);
                 var status = response.status;
                 model.selectedAnalysis().job_status(status);
-                if (status === "COMPLETED") {
+                if (status === "SUCCESS") {
                     humane.log("Analysis run has completed, results are ready");
                     // FIXME: refresh model results.
                     model.refresh();
