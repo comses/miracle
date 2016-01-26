@@ -129,11 +129,11 @@ def load_deployr(metadata_analyses, project):
     """Load analyses into deployr and make deployr project"""
     try:
         with login() as session:
-            response = DeployrAPI.create_working_directory(project.name, session)
+            response = DeployrAPI.create_working_directory(project.slug, session)
             response200orError(response)
         for metadata_analysis in metadata_analyses:
             response = DeployrAPI.upload_script(metadata_analysis.path,
-                                                project.name,
+                                                project.slug,
                                                 session)
             response200orError(response)
     except requests.exceptions.ConnectionError as e:
