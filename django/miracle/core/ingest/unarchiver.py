@@ -8,13 +8,10 @@ import logging
 
 from django.conf import settings
 
-from . import ProjectFilePaths, PackratException
+from . import ProjectFilePaths, PackratException, ProjectDirectoryAlreadyExists
 from ..models import Project
 
 logger = logging.getLogger(__name__)
-
-class ProjectDirectoryAlreadyExists(IOError):
-    pass
 
 def extract(project, archive):
     """

@@ -70,9 +70,18 @@ class AnalyzerTest(BaseMiracleTest):
 
     def test_guess_type(self):
         self.assertEqual(TabularLoader._guess_type(("1.0","2.0")), "decimal")
-        self.assertEqual(TabularLoader._guess_type(("1","2.0")), "decimal")
+        self.assertEqual(TabularLoader._guess_type(("1","-2.0")), "decimal")
+        # scientific notation is parsed as a decimal
+        self.assertEqual(TabularLoader._guess_type(("1.0e10", "1.2e+10")), "decimal")
+        self.assertEqual(TabularLoader._guess_type(
+            ("0.8233835390990336", "0.8548997656615668", "0.839332627951762")), "decimal")
+
+
         self.assertEqual(TabularLoader._guess_type(("1","a")), "text")
-        self.assertEqual(TabularLoader._guess_type(("1 ", "2")), "bigint")
+        # Zero padded strings are not considered numbers
+        self.assertEqual(TabularLoader._guess_type(("00", "1.0")), "text")
+
+        self.assertEqual(TabularLoader._guess_type(("1 ", "-2")), "bigint")
 
         self.assertEqual(TabularLoader._guess_type((' "t"', ' false')), "boolean")
-        self.assertEqual(TabularLoader._guess_type((' "t"', 'false')), "boolean")
+        self.assertEqual(TabularLoader._guess_type((' "t"', 'faLse')), "boolean")

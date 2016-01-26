@@ -332,14 +332,15 @@ class TabularLoader(object):
 
         return Metadata(path, DataTypes.data, properties, layers)
 
-    PATTERN_BIGINT = re.compile(r'^\d+$')
-    PATTERN_DECIMAL = re.compile(r'^\d+(\.\d*)*$')
-    PATTERN_BOOLEAN = re.compile(r'^(true|false|t|f|yes|no)$',re.IGNORECASE)
+    PATTERN_BIGINT = re.compile(r'^[+\-]?(?:0|[1-9]\d*)$')
+    # following the specification at www.json.org
+    PATTERN_DECIMAL = re.compile(r'^[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?$')
+    PATTERN_BOOLEAN = re.compile(r'^[\'"]?(true|false|t|f|yes|no)[\'"]?$',re.IGNORECASE)
 
     @classmethod
     def _guess_type(cls, elements):
-        # strip leading and trailing spaces and double quotes
-        elements = [re.sub(r'^ *"?|"? *$', '', el) for el in elements]
+        # strip leading and trailing spaces
+        elements = [re.sub(r'^ *| *$', '', el) for el in elements]
         datatype = cls._try_type(cls.PATTERN_BIGINT, elements, "bigint") or\
                    cls._try_type(cls.PATTERN_DECIMAL, elements, "decimal") or\
                    cls._try_type(cls.PATTERN_BOOLEAN, elements, "boolean")
