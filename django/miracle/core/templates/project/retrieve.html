@@ -89,7 +89,12 @@
                                                 data-parent='#data-table-group-accordion'
                                                 data-bind='attr: {href: "#collapse" + id(), "aria-controls": "collapse" + id()}'
                                                 aria-expanded='true'>
-                                                <mark data-bind='text: name'></mark>
+                                                <span data-bind='if: full_name'>
+                                                    <mark data-bind='text: full_name'></mark>
+                                                </span>
+                                                <span data-bind='ifnot: full_name'>
+                                                    <mark data-bind='text: name'></mark>
+                                                </span>
                                             </a>
                                             <a class='pull-right' data-bind='attr: {href: url}'>
                                                 <i class='fa fa-eye'></i> View details
@@ -231,7 +236,7 @@
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
                         <div class='bs-callout bs-callout-default'>
-                            <h4><i class='fa fa-comment'></i> Upload project archive</h4>
+                            <h4><i class='fa fa-cloud-upload'></i> Upload project archive</h4>
                         </div>
                         <section>
                             <div class='well'>

@@ -321,7 +321,7 @@ class DataAnalysisScript(MiracleMetadataMixin):
     archived_file = models.FileField(help_text=_("The archived file corresponding to this AnalysisScript"))
     provenance = JSONField(null=True, blank=True)
     file_type = models.CharField(max_length=128, choices=FileType, default=FileType.R)
-    authors = models.ManyToManyField(Author)
+    authors = models.ManyToManyField(Author, blank=True)
     enabled = models.BooleanField(default=False)
 
     @property
