@@ -6,6 +6,7 @@ import os
 import requests
 import tempfile
 import time
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +172,8 @@ class Job(object):
         temp_directory = tempfile.mkdtemp(prefix=self.project_id)
         for result in results:
             url = result['url']
+            if settings.DEPLOYR_HOST is not 'localhost':
+                url = re.sub('localhost', settings.DEPLOYR_HOST, url)
             filename = result['filename']
             response = self.get(url, stream=True)
             if not response.ok:

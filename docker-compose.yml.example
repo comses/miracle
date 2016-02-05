@@ -1,60 +1,78 @@
----
-# Be sure to change all password fields before production (the lines that start with ##)
-
-deployr_data:
-  build: deployr
-  volumes:
-    - /home/miracle/deployr/7.4.1/deployr/database
-  command: ["echo", "starting deployr_data"]
-
 deployr:
   build: deployr
   volumes_from:
-    - deployr_data
-    - projects
-  ports: 
-    - "7400:7400"
+    - data
+#  ports: 
+#    - "7400:7400"
+  environment:
+#### Variables below are used in deployr/addUser.py line 21/22
+    DEPLOYR_HOST: deployr
+    DEPLOYR_USER: miracle
+    DEPLOYR_URL: 'http://deployr:7400/deployr'
+#    DEPLOYR_PASS: changeme
 
 radiant:
   build: radiant
   volumes_from:
-    - projects
+    - data
   ports: 
     - "3838:3838"
+  environment:
+#### Change radiant-mod:/srv/shiny-server/base/tools/data/manage_ui.R line 457
+#### Only need a read_only user for the `miracle_metadata` database
+    RADIANT_URL: 'localhost:3838/base/'
+  links:
+    - db
 
 db:
   image: sameersbn/postgresql:9.4-3
-  ports: 
-    - "5432:15432"
+#  ports: 
+#    - "5432:5432"
   environment:
     DB_USER: miracle
-##    DB_PASS: CHANGEME
+    DB_PASS: changeme_db
+    DB_HOST: db
+    DB_PORT: 5432
     DB_NAME: 'miracle_data,miracle_metadata'
-    PSQL_TRUST_LOCALNET: 'true'
-
-projects:
-  build: django
-  volumes:
-    - /miracle/projects
+#    PSQL_TRUST_LOCALNET: 'true'
 
 django:
   build: django
   volumes_from:
-    - projects
+    - data
   volumes:
-    - /miracle/packrat
-    - /miracle/archives
-    - /home/cpritcha/socket:/miracle/socket
-#    - ./django:/code # turn this on you're debugging to avoid rebuilding the docker image
-  command: ./entrypoint.sh prod
-  ports:
-    - "8000:8000"
+    - /miracle/socket
+    - /code
+#  ports:
+#    - "8000:8000"
   environment:
-    MIRACLE_USER:  test
-##    MIRACLE_PASS:  CHANGEME
-    MIRACLE_EMAIL: "a@b.com"
-##    DB_PASS: CHANGEME
+#### Change local.py file for DEPLOYR_PASS, change entrypoint.sh file for MIRACLE_PASS
+#### Default MIRACLE_USER is a Django admin user
+    MIRACLE_USER:  admin
+    MIRACLE_EMAIL: "miracle-admin@comses.net"
   links:
     - db
     - deployr
     - radiant
+
+data:
+  build: django
+  volumes:
+    - /miracle/projects
+    - /miracle/packrat
+    - /miracle/static
+    - /miracle/archives
+
+nginx:
+  build: nginx
+  volumes_from: 
+    - data
+    - django
+  ports:
+    - "9999:9999"
+  links:
+    - db
+    - deployr
+    - radiant
+    - django
+  
