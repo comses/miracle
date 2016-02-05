@@ -7,10 +7,10 @@
 import re
 
 # Open the configuration file
-file = '/home/miracle/deployr/7.4.1/deployr/deployr.groovy'
+file_name = '/home/miracle/deployr/7.4.1/deployr/deployr.groovy'
 info = {}
 # Read database credentials
-with open(file, 'r') as f:
+with open(file_name, 'r') as f:
     for line in f.readlines():
         result = re.search('(\w+) = \"?([a-z\d\-]+)\"?', line)
         if result:
@@ -22,7 +22,7 @@ deployr_user = os.environ['DEPLOYR_USER']
 deployr_pass = 'changeme_deployr'
 deployr_pass_admin = 'changeme_deployr_admin'
 
-import pymongo, uuid, bcrypt
+import uuid, bcrypt
 from pymongo import MongoClient
 from datetime import datetime
 
