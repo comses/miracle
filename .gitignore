@@ -21,6 +21,7 @@ node_modules/
 django/miracle/static/js/react.min.js
 # ignore migrations for now
 django/miracle/core/migrations/*
+!django/miracle/core/migrations/__init__.py
 
 # Google Drive
 *.DS_Store

@@ -289,7 +289,7 @@ MIRACLE_PACKRAT_DIRECTORY = safe_make_paths('/miracle/packrat',
 
 STATIC_URL = '/static/'
 
-STATIC_ROOT = "/var/www/miracle/static/"
+STATIC_ROOT = "/miracle/static/"
 
 SITE_ID = 1
 

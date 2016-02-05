@@ -7,18 +7,18 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'miracle_metadata',
-        'USER': 'miracle',
-        'HOST': 'db',
-        'PASSWORD': 'CHANGEME',
-        'PORT': 5432,
+        'USER': get_env_variable('DB_ENV_DB_USER'),
+        'HOST': get_env_variable('DB_ENV_DB_HOST'),
+        'PASSWORD': 'changeme_db',
+        'PORT': get_env_variable('DB_ENV_DB_PORT'),
     },
     'datasets': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'miracle_data',
-        'USER': 'miracle',
-	'HOST': 'db',
-        'PASSWORD': 'CHANGEME',
-	'PORT': 5432,
+        'USER': get_env_variable('DB_ENV_DB_USER'),
+        'HOST': get_env_variable('DB_ENV_DB_HOST'),
+        'PASSWORD': 'changeme_db',
+        'PORT': get_env_variable('DB_ENV_DB_PORT'),
     }
 }
 
@@ -32,30 +32,31 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 USE_I18N = False
 
 # DeployR settings
-DEFAULT_DEPLOYR_USER = 'miracle'
-DEFAULT_DEPLOYR_PASSWORD = 'customize this password'
-DEPLOYR_URL = 'http://deployr:7400/deployr'
+DEFAULT_DEPLOYR_USER = get_env_variable('DEPLOYR_ENV_DEPLOYR_USER')
+DEFAULT_DEPLOYR_PASSWORD = 'changeme_deployr'
+DEPLOYR_URL = get_env_variable('DEPLOYR_ENV_DEPLOYR_URL')
+DEPLOYR_HOST = get_env_variable('DEPLOYR_ENV_DEPLOYR_HOST')
 
 # Radiant settings
 # The url to link to the radiant frame with
 # In production this is the link that you need to connect Radiant going through Nginx
 # The https:// in the url should not be included
-RADIANT_URL = "miracle.comses.net/radiant/"
+RADIANT_URL = get_env_variable('RADIANT_ENV_RADIANT_URL')
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'customize this local secret key'
+SECRET_KEY = 'django_secret_key'
 
-SOCIAL_AUTH_FACEBOOK_KEY = 'customize this local secret key'
-SOCIAL_AUTH_FACEBOOK_SECRET = 'customize this local secret key'
+SOCIAL_AUTH_FACEBOOK_KEY = 'facebook_key'
+SOCIAL_AUTH_FACEBOOK_SECRET = 'facebook_secret'
 
-SOCIAL_AUTH_TWITTER_KEY = 'customize this local secret key'
-SOCIAL_AUTH_TWITTER_SECRET = 'customize this local secret key'
+SOCIAL_AUTH_TWITTER_KEY = 'twitter_key'
+SOCIAL_AUTH_TWITTER_SECRET = 'twitter_secret'
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'customize this local secret key'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'customize this local secret key'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'google_key'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'google_secret'
 
-SOCIAL_AUTH_GITHUB_KEY = 'customize this local secret key'
-SOCIAL_AUTH_GITHUB_SECRET = 'customize this local secret key'
+SOCIAL_AUTH_GITHUB_KEY = 'github_key'
+SOCIAL_AUTH_GITHUB_SECRET = 'github_secret'
 
 if not os.path.exists(MEDIA_ROOT):
     print("MEDIA_ROOT path '{}' does not exist, trying to create it now.".format(MEDIA_ROOT))
