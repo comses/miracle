@@ -22,4 +22,5 @@
 * Create `static` and `socket` folders, owned by the Nginx user, and modify `docker-compose.yml`
     - Change `- /miracle/socket` to `- host_path/socket:/miracle/socket`
     - Change `- /miracle/static` to `- host_path/static:/miracle/static`
+    - Remove the nginx section
 * Turn off debug mode and debug toolbar
