@@ -17,16 +17,16 @@
                 <a href='#overview' aria-controls='overview' role='tab' data-toggle='tab'><i class='fa fa-table'></i> Overview</a>
             </li>
             <li role='presentation'>
-                <a href='#dependencies' aria-controls='dependencies' role='tab' data-toggle='tab'><i class='fa fa-archive'></i> Dependencies</a>
+                <a href='#data-groups' aria-controls='metadata' role='tab' data-toggle='tab'><i class='fa fa-database'></i> Data groups</a>
             </li>
             <li role='presentation'>
                 <a href='#explorer' aria-controls='explorer' role='tab' data-toggle='tab'><i class='fa fa-binoculars'></i> Data explorer</a>
             </li>
             <li role='presentation'>
-                <a href='#data-groups' aria-controls='metadata' role='tab' data-toggle='tab'><i class='fa fa-database'></i> Data groups</a>
+                <a href='#analysis' aria-controls='analysis' role='tab' data-toggle='tab'><i class='fa fa-terminal'></i> Analysis and scripts</a>
             </li>
             <li role='presentation'>
-                <a href='#analysis' aria-controls='analysis' role='tab' data-toggle='tab'><i class='fa fa-terminal'></i> Analysis and scripts</a>
+                <a href='#dependencies' aria-controls='dependencies' role='tab' data-toggle='tab'><i class='fa fa-archive'></i> Dependencies</a>
             </li>
             <li role='presentation'>
                 <a href='#comments' aria-controls='comments' role='tab' data-toggle='tab'><i class='fa fa-comment'></i> Comments</a>
@@ -95,6 +95,8 @@
                                                 <span data-bind='ifnot: full_name'>
                                                     <mark data-bind='text: name'></mark>
                                                 </span>
+                                                Files: <span class='label label-badge label-success' data-bind='text: number_of_files'></span>,
+                                                Columns: <span class='label label-badge label-warning' data-bind='text: number_of_columns'></span>
                                             </a>
                                             <a class='pull-right' data-bind='attr: {href: url}'>
                                                 <i class='fa fa-eye'></i> View details

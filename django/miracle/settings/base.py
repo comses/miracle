@@ -180,7 +180,7 @@ def safe_make_paths(directory, fallback_directory, makedirs_callback):
     return directory
 
 
-LOG_DIRECTORY = safe_make_paths('/opt/miracle/logs', os.path.abspath('logs'), os.makedirs)
+LOG_DIRECTORY = safe_make_paths('/miracle/logs', os.path.abspath('logs'), os.makedirs)
 
 LOGGING = {
     'version': 1,
@@ -260,9 +260,7 @@ REST_FRAMEWORK = {
 
 # Media files, see https://docs.djangoproject.com/en/1.8/ref/settings/#std:setting-MEDIA_ROOT for more details
 # This absolute path specifies where all uploaded datasets will be sent. Can be overridden in local.py
-# MIRACLE_DATA_DIRECTORY = MEDIA_ROOT = '/opt/miracle/internal/'
 # data directory to be exposed to DeployR / Radiant containers
-# MIRACLE_EXTERNAL_DATA_DIRECTORY = '/opt/miracle/external/data'
 
 MEDIA_URL = '/data/'
 

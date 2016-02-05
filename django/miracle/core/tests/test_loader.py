@@ -35,7 +35,7 @@ class MetadataGroupLoadersTest(BaseMiracleTest):
 
     def grouped_metadata(self):
         project = self.create_project(name="test")
-        return (project, MetadataProject(project_token=project.name,
+        return (project, MetadataProject(project_token=project.slug,
                                          datatablegroups=self.default_datatablegroups,
                                          analyses=self.default_analyses))
 
