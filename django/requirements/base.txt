@@ -1,23 +1,23 @@
 # Web
 requests>=2.5.1
-Django==1.9.1
+Django==1.9.2
 djangorestframework==3.3.2
 django-contrib-comments==1.6.2
 celery-with-redis>=3.0
 django-bootstrap3==6.2.2
 django-model-utils==2.4
 psycopg2==2.6.1
-python-social-auth==0.2.13
+python-social-auth==0.2.14
 django-extensions==1.6.1
 django-extra-views==0.7.1
-raven==5.9.2
+raven==5.10.2
 dealer==2.0.5
 enum34==1.1.2
 # Highlighting
-Pygments==2.0.2
+Pygments==2.1.1
 # Metadata Extraction
-pyunpack==0.0.3
-patool==1.10
+pyunpack==0.1
+patool==1.12
 python-dateutil==2.4.2
 # dev tooling
 Fabric==1.10.2
