@@ -2,7 +2,7 @@ FROM miracle/base
 
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir /code
+RUN mkdir -p /code/logs
 WORKDIR /code
 
 ADD . /code/
