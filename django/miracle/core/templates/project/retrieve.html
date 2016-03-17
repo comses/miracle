@@ -54,9 +54,9 @@
                         </form>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='explorer'>
-                        <a class='btn btn-xs btn-default' target='_blank' href='https://{{ radiant_url }}?project={{ project.slug }}'><i class='fa fa-external-link'></i> Open in new window</a>
+                        <a class='btn btn-xs btn-default' target='_blank' href='{{ radiant_url }}?project={{ project.slug }}'><i class='fa fa-external-link'></i> Open in new window</a>
                         <div class='embed-responsive embed-responsive-4by3'>
-                            <iframe id='radiant-iframe' src='//{{ radiant_url }}?project={{ project.slug }}'></iframe>
+                            <iframe id='radiant-iframe' src='{{ radiant_url }}?project={{ project.slug }}'></iframe>
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='dependencies'>
@@ -212,6 +212,9 @@
                                                 <ul class='list-group' data-bind='foreach: files'>
                                                     <li class='list-group-item'>
                                                         <a class='list-group-item-text' data-bind='attr: {href: url}, text: name'></a>
+														<div data-bind='if: name().endsWith("png")'>
+															<img class='img-responsive img-thumbnail' data-bind='attr: {src: url}'>
+														</div>
                                                     </li>
                                                 </ul>
                                             </div>
