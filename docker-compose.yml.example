@@ -20,7 +20,7 @@ radiant:
   environment:
 #### Change radiant-mod:/srv/shiny-server/base/tools/data/manage_ui.R line 457
 #### Only need a read_only user for the `miracle_metadata` database
-    RADIANT_URL: 'localhost:3838/base/'
+    RADIANT_URL: '/radiant/'
   links:
     - db
 
