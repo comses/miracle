@@ -1,5 +1,5 @@
 #!/bin/bash
-INSTALL_FOLDER=/home/miracle/deployr/7.4.1
+INSTALL_FOLDER=/home/miracle/deployr/8.0.0
 $INSTALL_FOLDER/mongo/mongod.sh start
 $INSTALL_FOLDER/rserve/rserve.sh start
 python /home/miracle/addUser.py

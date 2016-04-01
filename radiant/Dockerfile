@@ -11,9 +11,9 @@ ENV projects_path /miracle/projects
 WORKDIR /opt/
 
 # Install Shiny Server
-RUN wget https://download3.rstudio.org/centos5.9/x86_64/shiny-server-1.4.0.756-rh5-x86_64.rpm; \
-	yum install -y --nogpgcheck shiny-server-1.4.0.756-rh5-x86_64.rpm; \
-	rm -rf shiny-server-1.4.0.756-rh5-x86_64.rpm
+RUN wget https://download3.rstudio.org/centos5.9/x86_64/shiny-server-1.4.2.786-rh5-x86_64.rpm; \
+	yum install -y --nogpgcheck shiny-server-1.4.2.786-rh5-x86_64.rpm; \
+	rm -rf shiny-server-1.4.2.786-rh5-x86_64.rpm
 
 # Install Radiant
 RUN git clone --depth 1 https://github.com/warmdev/radiant-mod.git radiant \
