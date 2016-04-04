@@ -7,18 +7,18 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'miracle_metadata',
-        'USER': get_env_variable('DB_ENV_DB_USER'),
-        'HOST': get_env_variable('DB_ENV_DB_HOST'),
+        'USER': get_env_variable('DB_USER'),
+        'HOST': get_env_variable('DB_HOST'),
         'PASSWORD': 'changeme_db',
-        'PORT': get_env_variable('DB_ENV_DB_PORT'),
+        'PORT': get_env_variable('DB_PORT'),
     },
     'datasets': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'miracle_data',
-        'USER': get_env_variable('DB_ENV_DB_USER'),
-        'HOST': get_env_variable('DB_ENV_DB_HOST'),
+        'USER': get_env_variable('DB_USER'),
+        'HOST': get_env_variable('DB_HOST'),
         'PASSWORD': 'changeme_db',
-        'PORT': get_env_variable('DB_ENV_DB_PORT'),
+        'PORT': get_env_variable('DB_PORT'),
     }
 }
 
@@ -32,16 +32,16 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 USE_I18N = False
 
 # DeployR settings
-DEFAULT_DEPLOYR_USER = get_env_variable('DEPLOYR_ENV_DEPLOYR_USER')
+DEFAULT_DEPLOYR_USER = get_env_variable('DEPLOYR_USER')
 DEFAULT_DEPLOYR_PASSWORD = 'changeme_deployr'
-DEPLOYR_URL = get_env_variable('DEPLOYR_ENV_DEPLOYR_URL')
-DEPLOYR_HOST = get_env_variable('DEPLOYR_ENV_DEPLOYR_HOST')
+DEPLOYR_URL = get_env_variable('DEPLOYR_URL')
+DEPLOYR_HOST = get_env_variable('DEPLOYR_HOST')
 
 # Radiant settings
 # The url to link to the radiant frame with
 # In production this is the link that you need to connect Radiant going through Nginx
 # The https:// in the url should not be included
-RADIANT_URL = get_env_variable('RADIANT_ENV_RADIANT_URL')
+RADIANT_URL = get_env_variable('RADIANT_URL')
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'django_secret_key'
