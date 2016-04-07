@@ -3,6 +3,14 @@ from .base import *
 
 DEBUG = True
 
+os.environ.setdefault('DB_ENV_DB_USER', 'miracle')
+os.environ.setdefault('DB_ENV_DB_HOST', 'localhost')
+os.environ.setdefault('DB_ENV_DB_PORT', '5432')
+os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_USER', 'miracle')
+os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_URL', 'https://deployr.comses.net')
+os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_HOST', 'deployr.comses.net')
+os.environ.setdefault('RADIANT_ENV_RADIANT_URL', 'https://miracle.comses.net/radiant/')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -24,7 +32,7 @@ DATABASES = {
 
 INSTALLED_APPS += (
     'debug_toolbar',
-    )
+)
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

@@ -1,1 +1,8 @@
 -r base.txt
+# dev tooling and tests
+Fabric
+python-coveralls
+mock
+ipython
+django-debug-toolbar
+nodeenv

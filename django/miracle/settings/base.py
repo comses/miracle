@@ -110,15 +110,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'miracle.wsgi.application'
 
-# Safe get environment variable function
-# from: Two Scoops of Django
+# Safely get environment variable function
 def get_env_variable(var_name):
     """Get the environment variable or return exception"""
-    try:
-        return os.environ[var_name]
-    except KeyError:
-        error_msg = "Set the {} environment variable".format(var_name)
-        raise ImproperlyConfigured(error_msg)
+    val = os.environ.get(var_name)
+    if val is None:
+        raise ImproperlyConfigured("Set the {0} environment variable".format(var_name))
+    return val
 
 
 # Database configuration for metadata and ingested data
@@ -277,7 +275,7 @@ def make_archive_path(archive_directory):
 MIRACLE_PROJECT_DIRECTORY = safe_make_paths('/miracle/projects',
                                             os.path.abspath('projects'), make_project_paths)
 MIRACLE_ARCHIVE_DIRECTORY = MEDIA_ROOT = safe_make_paths('/miracle/archives',
-                                            os.path.abspath('archives'), make_archive_path)
+                                                         os.path.abspath('archives'), make_archive_path)
 MIRACLE_PACKRAT_DIRECTORY = safe_make_paths('/miracle/packrat',
                                             os.path.abspath('packrat'), make_project_paths)
 # Static files (CSS, JavaScript, Images)
