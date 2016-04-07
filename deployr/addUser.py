@@ -7,7 +7,7 @@
 import re
 
 # Open the configuration file
-file_name = '/home/miracle/deployr/7.4.1/deployr/deployr.groovy'
+file_name = '/home/miracle/deployr/8.0.0/deployr/deployr.groovy'
 info = {}
 # Read database credentials
 with open(file_name, 'r') as f:

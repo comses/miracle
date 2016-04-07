@@ -30,7 +30,7 @@ USE_I18N = False
 # DeployR settings
 DEFAULT_DEPLOYR_USER = 'miracle'
 DEFAULT_DEPLOYR_PASSWORD = 'customize this password'
-DEPLOYR_URL = 'http://localhost:7400/deployr'
+DEPLOYR_URL = 'http://localhost:8000/deployr'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'customize this local secret key'

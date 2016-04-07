@@ -6,25 +6,26 @@ DEBUG_LOGS="false"
 NOLICENSE="false"
 NODE=0
 DATABASE_SERVER_NAME="localhost"
-DATABASE_PORT="7403"
+DATABASE_PORT="8003"
 REMOTE_DATA_BASE=local
 INSTALL_FOLDER=""
 ERROR_OK=0
 SILENT_MODE=0
 IP=""
 REDHAT_VERSION=64
-VERSION=7.4
-MINOR_VERSION=1
-REVO_VERSION=7.4.1
+RSERVE_VERSION=7.4.2
+VERSION=8.0
+MINOR_VERSION=0
+REVO_VERSION=8.0.0
 REVO_BIN_STRING=Revo-$VERSION
 R_VERSION=R-3.1.2
 LINUX_VERSION=5
-TOMCAT_VERSION=7.0.34
-TOMCAT_SSL_PORT=7401
-TOMCAT_PORT=7400
-TOMCAT_SHUTDOWN_PORT=7402
-RSERVE_PORT=7404
-RSERVE_CANCEL_PORT=7405
+TOMCAT_VERSION=7.0.64
+TOMCAT_SSL_PORT=8001
+TOMCAT_PORT=8000
+TOMCAT_SHUTDOWN_PORT=8002
+RSERVE_PORT=8004
+RSERVE_CANCEL_PORT=8005
 USER=`whoami`
 GROUP=`id -g -n $USER`
 IS_ROOT=0
@@ -44,12 +45,12 @@ checkRoot() {
             USER=apache
             GROUP=apache
             grepout=`grep -i "^apache" /etc/passwd`
-	    if [ 0 -eq ${#grepout} ] ; then
+        if [ 0 -eq ${#grepout} ] ; then
                useradd apache >>/dev/null 2>&1
                usermod -s /sbin/nologin apache  >> $PWDD/install_log.txt 2>&1
             fi
             grepout=`grep -i "^apache" /etc/group`
-	    if [ 0 -eq ${#grepout} ] ; then
+        if [ 0 -eq ${#grepout} ] ; then
                groupadd apache >>/dev/null 2>&1
             fi
             INSTALL_FOLDER=/opt/deployr/$VERSION.$MINOR_VERSION
@@ -92,12 +93,12 @@ start() {
 
 installServer() {
         configureRserve
-        installMongo	        
-	installTomcat
-	configureDeployrServer
+        installMongo            
+    installTomcat
+    configureDeployrServer
         installShellScripts       
-	exitCode=$?
-	exitProgram $exitCode
+    exitCode=$?
+    exitProgram $exitCode
 }
 
 installDatabase() {       
@@ -108,39 +109,39 @@ installDatabase() {
 
 checkRelease() {
         if [ -e /etc/redhat-release ]; then
-	    rel=`cat /etc/redhat-release`
-	    x=${rel#*release}
-	    major=${x:1:1}
+        rel=`cat /etc/redhat-release`
+        x=${rel#*release}
+        major=${x:1:1}
             LINUX_VERSION=RHEL$major
             
-	    minor=${x:3:2}
+        minor=${x:3:2}
             REDHAT_VERSION=$major$minor
-	    if [ $major -eq 5 ]; then
-		if [ $minor -lt 4 ]; then
-			releaseError
-		fi
-	    else
-		if [ $major -lt 5 ]; then
-			releaseError
-		fi
-	    fi
+        if [ $major -eq 5 ]; then
+        if [ $minor -lt 4 ]; then
+            releaseError
+        fi
+        else
+        if [ $major -lt 5 ]; then
+            releaseError
+        fi
+        fi
         elif [ -e /etc/SuSE-release ]; then
             rel=`cat /etc/SuSE-release`
             grepout=`echo $rel | grep -c openSUSE`
             if [ 1 -eq ${#grepout} ] ; then
                 LINUX=sles
             else
-	    x=${rel#*VERSION}
-	    major=${x:3:2}
+        x=${rel#*VERSION}
+        major=${x:3:2}
             LINUX_VERSION=SLES$major
-	    minor=${x:19:1}
-	    if [ $major -eq 11 ]; then
-		if [ $minor -lt 2 ]; then
-			SLESreleaseError
-		fi
-	    else
-		SLESreleaseError
-	    fi
+        minor=${x:19:1}
+        if [ $major -eq 11 ]; then
+        if [ $minor -lt 2 ]; then
+            SLESreleaseError
+        fi
+        else
+        SLESreleaseError
+        fi
             LINUX=sles
             fi
         else
@@ -181,15 +182,15 @@ fi
 }
 
 releaseError() {
-	printAttentionMsg "version 5.4 or greater is required to install this software "
+    printAttentionMsg "version 5.4 or greater is required to install this software "
         echo "version 5.4 or greater is required to install this software " >> $PWDD/install_log.txt 2>&1
-	exitWithError -1
+    exitWithError -1
 }
 
 SLESreleaseError() {
-	printAttentionMsg "version 11.2 or greater is required to install this software "
+    printAttentionMsg "version 11.2 or greater is required to install this software "
         echo "version 11.2 or greater is required to install this software " >> $PWDD/install_log.txt 2>&1
-	exitWithError -1
+    exitWithError -1
 }
 
 exitProgram() {
@@ -224,12 +225,12 @@ if [ $RETVAL -ne 0 ] ; then
     echo "Error in installMongo" | tee -a $PWDD/install_log.txt 2>&1
     exitWithError $RETVAL
 fi
-echo "Mongo installed" >> $PWDD/install_log.txt 2>&1	
+echo "Mongo installed" >> $PWDD/install_log.txt 2>&1    
 }
 
 configureRserve() {
 cd $PWDD/installFiles
-rserve/configure.sh $LINUX $PWDD $INSTALL_FOLDER $USER $GROUP $RRE_PATH $RSERVE_PATH $IS_ROOT $VERSION
+rserve/configure.sh $LINUX $PWDD $INSTALL_FOLDER $USER $GROUP $RRE_PATH $RSERVE_PATH $IS_ROOT $RSERVE_VERSION
 RETVAL=$?
 if [ $RETVAL -ne 0 ] ; then
     exitWithError $RETVAL
@@ -262,37 +263,37 @@ echo "DeployR server configured" >> $PWDD/install_log.txt 2>&1
 installDeployrDatabase() {
 ##                mkdir $INSTALL_FOLDER/deployr/database >> $PWDD/install_log.txt 2>&1
                 if [ $IS_ROOT -eq 1 ] ; then
-              	    chown -R $USER.$GROUP $INSTALL_FOLDER
+                    chown -R $USER.$GROUP $INSTALL_FOLDER
                     chmod -R 775 $INSTALL_FOLDER
-        	fi
+            fi
 # start mongo database
                 $INSTALL_FOLDER/mongo/mongod.sh start >> $PWDD/install_log.txt 2>&1
                 RETVAL=$?
-		if [ $RETVAL -ne 0 ] ; then
+        if [ $RETVAL -ne 0 ] ; then
                     echo "Error in starting Mongo"  | tee -a $PWDD/install_log.txt 2>&1
-		    exitWithError $RETVAL
-		fi
+            exitWithError $RETVAL
+        fi
                 sleep 5
                 $PWDD/installFiles/installDeployrTables.sh $PWDD $INSTALL_FOLDER $PWDD/install_log.txt
                 RETVAL=$?
-		if [ $RETVAL -ne 0 ] ; then
-		    echo "Error in installDeployrTables"  | tee -a $PWDD/install_log.txt 2>&1
-		    exitWithError $RETVAL
-		fi
+        if [ $RETVAL -ne 0 ] ; then
+            echo "Error in installDeployrTables"  | tee -a $PWDD/install_log.txt 2>&1
+            exitWithError $RETVAL
+        fi
                 echo "MongoDB database configured"  | tee -a $PWDD/install_log.txt 2>&1
 }
 
 #restart() {
-#	out "Now starting Rserve and Tomcat. Please wait as this may take a moment." | tee -a $PWDD/install_log.txt 2>&1
+#   out "Now starting Rserve and Tomcat. Please wait as this may take a moment." | tee -a $PWDD/install_log.txt 2>&1
 
-#	$INSTALL_FOLDER/tomcat/tomcat7.sh start >> $PWDD/install_log.txt 2>&1
+#   $INSTALL_FOLDER/tomcat/tomcat7.sh start >> $PWDD/install_log.txt 2>&1
 #        cd $INSTALL_FOLDER
 #        $INSTALL_FOLDER/rserve/rserve.sh start >> $PWDD/install_log.txt 2>&1
-#	printURL
+#   printURL
 #}
 
 restartNode() {
-	out "Now restarting Rserve. Please wait as this may take a moment." | tee -a $PWDD/install_log.txt 2>&1
+    out "Now restarting Rserve. Please wait as this may take a moment." | tee -a $PWDD/install_log.txt 2>&1
         $INSTALL_FOLDER/rserve/rserve.sh restart >> $PWDD/install_log.txt 2>&1
 }
 
@@ -317,7 +318,7 @@ acknowledgeInuts() {
     echo "**********************************************************************"
     read ans
     if [[ ! $ans =~ ^[Yy]$ ]] ; then
-	echo "installation terminated"
+    echo "installation terminated"
         rm -rf $INSTALL_FOLDER >> $PWDD/install_log.txt 2>&1
         exit 0
     fi
@@ -334,12 +335,12 @@ printURL() {
         echo "*" | tee -a $PWDD/install_log.txt 2>&1
         echo "*     Open the following URL in your browser to access DeployR's landing page:" | tee -a $PWDD/install_log.txt 2>&1
         echo "*" | tee -a $PWDD/install_log.txt 2>&1
-        echo "*     http://$HOST_NAME:$TOMCAT_PORT/revolution" | tee -a $PWDD/install_log.txt 2>&1
+        echo "*     http://$HOST_NAME:$TOMCAT_PORT/deployr/landing" | tee -a $PWDD/install_log.txt 2>&1
         echo "*" | tee -a $PWDD/install_log.txt 2>&1
         echo "*     Please log in as 'admin'. For your security, you must set a new password for that account." | tee -a $PWDD/install_log.txt 2>&1
         echo "*     Note: The default password for the 'admin' and 'testuser' accounts is 'changeme'." | tee -a $PWDD/install_log.txt 2>&1
         echo "*" | tee -a $PWDD/install_log.txt 2>&1
-	echo "*     From there, you can access:" | tee -a $PWDD/install_log.txt 2>&1
+    echo "*     From there, you can access:" | tee -a $PWDD/install_log.txt 2>&1
         echo "*     - DeployR Administration Console" | tee -a $PWDD/install_log.txt 2>&1
         echo "*     - DeployR Repository Manager" | tee -a $PWDD/install_log.txt 2>&1
         echo "*     - Product Documentation" | tee -a $PWDD/install_log.txt 2>&1
@@ -354,19 +355,19 @@ printURL() {
 }
 
 printAttentionMsg() {
-	echo "**********************************************************************"
-	echo "*"
-	echo "*"
-	echo "*     $@"
-	echo "*"
-	echo "*"
-	echo "**********************************************************************"
+    echo "**********************************************************************"
+    echo "*"
+    echo "*"
+    echo "*     $@"
+    echo "*"
+    echo "*"
+    echo "**********************************************************************"
 }
 
 printKeystoreMsg() {
-	echo "**********************************************************************"
-	echo "*"
-	echo "*"
+    echo "**********************************************************************"
+    echo "*"
+    echo "*"
         echo "*     A certificate is needed to secure the server."
         echo "*     If you have a registered certificate (recommended),"
         echo "*     do *not* create a temporary one now."
@@ -374,14 +375,14 @@ printKeystoreMsg() {
         echo "*     will be prompted for the location of your certificate."
         echo "*"
         echo "*     Create temporary keystore ?  (y or n)"
-	echo "*"
-	echo "*"
-	echo "**********************************************************************"
+    echo "*"
+    echo "*"
+    echo "**********************************************************************"
 }
 
 printInstallMsg() {
-	echo "**********************************************************************"
-	echo "*"
+    echo "**********************************************************************"
+    echo "*"
         echo "*     Install DeployR ${VERSION}.${MINOR_VERSION} Server Options"
         echo "*"
         echo "*     1. Install DeployR ${VERSION}.${MINOR_VERSION} Server & Database Server (single host)"
@@ -389,12 +390,12 @@ printInstallMsg() {
         echo "*"
         echo "*"
         echo "*     Please Select Option.  (1, 2)"
-	echo "*"
-	echo "**********************************************************************"
+    echo "*"
+    echo "**********************************************************************"
 }
 
 doInstallOptionOneorThree() {  
-         	     
+                 
     checkPrerequisites
     getInstallDirectory
     getMongodbpath
@@ -407,40 +408,40 @@ doInstallOptionOneorThree() {
 getInstallOption() {
         while [ 1 ]
         do
-	        printInstallMsg
-	        read ans
-		if [ "1" = $ans ] ; then
+            printInstallMsg
+            read ans
+        if [ "1" = $ans ] ; then
                     doInstallOptionOneorThree
-	            break
+                break
                 elif [ "2" = $ans ] ; then
                     exitProgram 1
-	        else
-	            echo "Illegal input, Please enter 1, 2"
-	            continue
-	        fi
+            else
+                echo "Illegal input, Please enter 1, 2"
+                continue
+            fi
         done
 }
 
 getInstallDirectory() {
 
-	printAttentionMsg "Please enter the folder name where DeployR ${VERSION}.${MINOR_VERSION} will be installed"
-	echo " "
+    printAttentionMsg "Please enter the folder name where DeployR ${VERSION}.${MINOR_VERSION} will be installed"
+    echo " "
         echo "Hit return for default folder = ${INSTALL_FOLDER}"        
         while [ 1 ]
-	do
-		read ans
+    do
+        read ans
                 if [ -z "${ans}" ] ; then                   
                    break
                 fi
                 echo "Is this the correct folder ?  ${ans}"
                 echo "Enter y or n"
-		read ans2
-		if [[ $ans2 =~ ^[Yy]$ ]] ; then
+        read ans2
+        if [[ $ans2 =~ ^[Yy]$ ]] ; then
                      INSTALL_FOLDER=$ans
-		     break
-		else
-		    echo "Please re-enter folder name"
-		    continue
+             break
+        else
+            echo "Please re-enter folder name"
+            continue
                 fi
         done
 
@@ -474,21 +475,21 @@ getInstallDirectory() {
 
 getUser() {
 
-	printAttentionMsg "Please enter the user name."
-	        
+    printAttentionMsg "Please enter the user name."
+            
         while [ 1 ]
-	do
-		read ans
+    do
+        read ans
                 echo "Is this the correct user ?  ${ans}"
                 echo "Enter y or n"
-		read ans2
-		if [[ $ans2 =~ ^[Yy]$ ]] ; then
+        read ans2
+        if [[ $ans2 =~ ^[Yy]$ ]] ; then
                      user=$ans
                      group=$ans2
-		     break
-		else
-		    echo "Please re-enter user name."
-		    continue
+             break
+        else
+            echo "Please re-enter user name."
+            continue
                 fi
         done
 
@@ -496,29 +497,29 @@ getUser() {
 
 getTomcatPort() {
 
-	printAttentionMsg "Please enter the port for Tomcat.  Hit return for default port = ${TOMCAT_PORT}"
-	        
+    printAttentionMsg "Please enter the port for Tomcat.  Hit return for default port = ${TOMCAT_PORT}"
+            
         while [ 1 ]
-	do
-		read ans
+    do
+        read ans
                 if [ -z "${ans}" ] ; then                   
                    break
                 fi
                 echo "Is this the correct port ?  ${ans}"
                 echo "Enter y or n"
-		read ans2
-		if [[ $ans2 =~ ^[Yy]$ ]] ; then
+        read ans2
+        if [[ $ans2 =~ ^[Yy]$ ]] ; then
                      TOMCAT_PORT=$ans
-		     if [ $TOMCAT_PORT -eq $TOMCAT_PORT 2> /dev/null ]; then
+             if [ $TOMCAT_PORT -eq $TOMCAT_PORT 2> /dev/null ]; then
                         break
                      else
                        echo "Port must be an integer. Please re-enter Tomcat port"
                        continue
                      fi
 
-		else
-		    echo "Please re-enter Tomcat port"
-		    continue
+        else
+            echo "Please re-enter Tomcat port"
+            continue
                 fi
         done
 }
@@ -542,29 +543,29 @@ getMongodbpath() {
         DB_PATH=${INSTALL_FOLDER}/deployr/database
         if [ $NOASK = "false" ] ; then
         echo "**********************************************************************"
-	echo "*"
-	echo "*"
-	echo "*     Please enter the path to the data directory (dbpath) for the MongoDB database."
+    echo "*"
+    echo "*"
+    echo "*     Please enter the path to the data directory (dbpath) for the MongoDB database."
         echo "*     Hit return for default dbpath = ${INSTALL_FOLDER}/deployr/database"
-	echo "*"
-	echo "*"
-	echo "**********************************************************************"
-	        
+    echo "*"
+    echo "*"
+    echo "**********************************************************************"
+            
         while [ 1 ]
-	do
-		read ans
+    do
+        read ans
                 if [ -z "${ans}" ] ; then                   
                    break
                 fi
                 echo "Is this the correct dbpath ?  ${ans}"
                 echo "Enter y or n"
-		read ans2
-		if [[ $ans2 =~ ^[Yy]$ ]] ; then
+        read ans2
+        if [[ $ans2 =~ ^[Yy]$ ]] ; then
                      DB_PATH=$ans
-		     break
-		else
-		    echo "Please re-enter the dbpath for Mongo"
-		    continue
+             break
+        else
+            echo "Please re-enter the dbpath for Mongo"
+            continue
                 fi
         done
         fi
@@ -579,7 +580,7 @@ getMongodbpath() {
         if [ $IS_ROOT -eq 1 ] ; then
                     cd $DB_PATH
                     cd ..
-              	    chown -R $USER.$GROUP *
+                    chown -R $USER.$GROUP *
                     chmod -R 775 *
         fi
 ## get full path in case it's a relative path
@@ -608,4 +609,3 @@ if [ "$HOST_NAME" == " " -o "$HOST_NAME" == "" ]; then
         exit -1
 fi
 start "$@"
-
