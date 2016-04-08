@@ -33,7 +33,8 @@ def run_analysis_task(self, analysis_id, parameters, user=None):
     deployr_input_parameters_dict = analysis.to_deployr_input_parameters(parameters)
     self.update_state(state='PROCESSING')
     job = deployr.run_script(script_name=analysis.basename, parameters=deployr_input_parameters_dict,
-                             user=user, job_name='{}-{}'.format(analysis.name, output.pk))
+                             workdir=analysis.project.slug, user=user,
+                             job_name='{}-{}'.format(analysis.name, output.pk))
     output.response = job.response.text
     output.save()
     self.update_state(state='RETRIEVING_OUTPUT',
