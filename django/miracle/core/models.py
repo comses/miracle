@@ -3,7 +3,7 @@ from django.core.files.storage import FileSystemStorage
 from django.core.urlresolvers import reverse_lazy
 from django.contrib.auth.models import User, Group
 from django.contrib.postgres.fields import JSONField
-from django.db import models, connections
+from django.db import models, connections, transaction
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django_extensions.db.fields import AutoSlugField
@@ -19,6 +19,8 @@ import utils
 
 from pygments.lexers import guess_lexer_for_filename
 from pygments.lexers.special import TextLexer
+
+from .deployr import DeployrAPI
 
 logger = logging.getLogger(__name__)
 
@@ -178,7 +180,6 @@ class Project(MiracleMetadataMixin):
     submitted_archive = models.FileField(help_text=_("The uploaded zipfile containing all data and scripts for this Project"), null=True, blank=True)
     objects = ProjectQuerySet.as_manager()
 
-
     @property
     def archive_path(self):
         return self.submitted_archive.path
@@ -212,13 +213,18 @@ class Project(MiracleMetadataMixin):
 
     def clear_archive(self, user):
         self.log("Clearing project archive", user)
-        self.data_table_groups.all().delete()
-        self.submitted_archive.delete()
+        # delete all data table groups, data analysis scripts, and files.
+        with transaction.atomic():
+            self.data_table_groups.all().delete()
+            self.analyses.all().delete()
+            self.files.all().delete()
+            self.submitted_archive.delete()
         # FIXME: add error handlers
         logger.debug("Deleting extracted project tree %s", self.project_path)
         shutil.rmtree(self.project_path, True)
         logger.debug("Deleting extracted packrat path %s", self.packrat_path)
         shutil.rmtree(self.packrat_path, True)
+        DeployrAPI.clear_project_archive(self)
 
     @staticmethod
     def splitext(path):
@@ -593,7 +599,6 @@ class DataColumn(models.Model):
     description = models.TextField(blank=True)
     data_type = models.CharField(max_length=128, choices=DataType, default=DataType.text)
     table_order = models.PositiveIntegerField(default=1, help_text=_("This column's one-based index into the table"))
-
 
     def all_values(self, distinct=False):
         ''' returns a list resulting from select name from data table using miracle_data database '''

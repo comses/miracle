@@ -57,6 +57,10 @@ class DeployrAPI(object):
     """
 
     @staticmethod
+    def clear_project_archive(project):
+        logger.debug("Deleting project archive %s (not implemented yet)", project)
+
+    @staticmethod
     def create_working_directory(name, session):
         response = session.post(create_working_directory_url,
                                 data={'format': 'json', 'directory': name})
