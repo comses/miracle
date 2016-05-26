@@ -21,10 +21,12 @@
 # baseimages/min, base, r
 
 #cd docker && docker build -t miracle/min --build-arg uid=$uid .
-cd docker && docker build -t miracle/min -f min.Dockerfile . && \
-    docker build -t miracle/base -f base.Dockerfile . && \
-    docker build -t miracle/r -f r.Dockerfile . && \
-    cd .. && docker-compose build && docker-compose up
+cd docker;
+for dn in min base r;
+do docker build -t miracle/$dn -f $dn.Dockerfile .;
+done
+cd ..;
+docker-compose build
 # in Dockerfile
 # ARG uid
 # adduser -u $uid

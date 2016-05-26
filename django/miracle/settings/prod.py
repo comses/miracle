@@ -1,7 +1,28 @@
 # Production Django settings
 from .base import *
+import os
 
 DEBUG = False
+
+os.environ.setdefault('DB_ENV_DB_USER', 'miracle')
+os.environ.setdefault('DB_ENV_DB_HOST', 'localhost')
+os.environ.setdefault('DB_ENV_DB_PORT', '5432')
+os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_USER', 'miracle')
+os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_URL', 'https://deployr.comses.net')
+os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_HOST', 'deployr.comses.net')
+os.environ.setdefault('RADIANT_ENV_RADIANT_URL', 'https://miracle.comses.net/radiant/')
+
+# DeployR settings
+DEFAULT_DEPLOYR_USER = get_env_variable('DEPLOYR_USER')
+DEFAULT_DEPLOYR_PASSWORD = 'changeme_deployr'
+DEPLOYR_URL = get_env_variable('DEPLOYR_URL')
+DEPLOYR_HOST = get_env_variable('DEPLOYR_HOST')
+
+# Radiant settings
+# The url to link to the radiant frame with
+# In production this is the link that you need to connect Radiant going through Nginx
+# The https:// in the url should not be included
+RADIANT_URL = get_env_variable('RADIANT_URL')
 
 ALLOWED_HOSTS = ['.comses.net']
 

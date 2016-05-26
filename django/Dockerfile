@@ -17,7 +17,7 @@ RUN mkdir -p /miracle/packrat /miracle/archives /miracle/projects /miracle/socke
 RUN chown -R miracle:miracle /code
 RUN chmod +x /code/entrypoint.sh
 
-ADD supervisord.conf /etc/supervisor/conf.d/
+ADD deploy/supervisord/supervisord.conf /etc/supervisor/conf.d/
 
 ENV TERM xterm
 
