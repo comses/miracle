@@ -22,7 +22,7 @@ class Command(BaseCommand):
                             dest='password',
                             default=os.environ.get('MIRACLE_USER_PASSWORD', settings.SECRET_KEY),
                             help='Initial admin password')
-        parser.add_argument('email',
+        parser.add_argument('--email',
                             dest='email',
                             default=os.environ.get('MIRACLE_EMAIL', settings.SERVER_EMAIL),
                             help='Initial admin email')

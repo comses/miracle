@@ -4,4 +4,4 @@ python manage.py makemigrations
 python manage.py migrate
 python manage.py collectstatic --noinput
 python manage.py initadmin
-systemctl start supervisord 
+/usr/bin/supervisord
