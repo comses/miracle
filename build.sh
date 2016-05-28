@@ -23,9 +23,13 @@
 #cd docker && docker build -t miracle/min --build-arg uid=$uid .
 
 # generate custom dhparam.pem for logjam https://blog.cloudflare.com/logjam-the-latest-tls-vulnerability-explained/
-openssl dhparam -out nginx/dhparam.pem 4096;
+if [ -f nginx/dhparam.pem ]; then
+    echo "Using existing nginx/dhparam.pem";
+else 
+    openssl dhparam -out nginx/dhparam.pem 4096;
+fi
 # make sure you copy server key and server crt to this directory
-echo "Copy the SSL key and cert to nginx/ as server.crt and server.key before deployment (until we switch to lets encrypt)"
+echo "For production, copy the SSL key and cert to nginx/ as server.crt and server.key before deployment (until we switch to lets encrypt)"
 cd docker;
 for dn in min base r;
 do docker build -t miracle/$dn -f $dn.Dockerfile .;

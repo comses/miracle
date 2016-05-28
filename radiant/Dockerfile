@@ -26,7 +26,7 @@ RUN git clone --depth 1 https://github.com/warmdev/radiant-mod.git radiant \
 # Configure Shiny and Radiant
 # ---------------------------
 RUN sed -i -e 's/run_as shiny/run_as miracle/g' /etc/shiny-server/shiny-server.conf
-ADD shiny-server.sh /usr/bin/shiny-server.sh
+COPY shiny-server.sh /usr/bin/shiny-server.sh
 USER root
 RUN mkdir -p $projects_path \
     && ln -s $projects_path /srv/shiny-server/miracle \
