@@ -28,14 +28,18 @@ services:
       DB_NAME: 'miracle_data,miracle_metadata'
 
   django:
-    build: django
+    build: 
+        context: ./django
+        args:
+            reqfile: "production.txt"
     volumes:
-      - code:/code
+      - .:/code
       - projects:/miracle/projects
       - packrat:/miracle/packrat
       - static:/miracle/static
       - archives:/miracle/archives
       - socket:/miracle/socket
+      - logs:/miracle/logs
     environment:
   #### Change local.py file for DEPLOYR_PASS, change entrypoint.sh file for MIRACLE_PASS
   #### Default MIRACLE_USER is a Django admin user
@@ -57,7 +61,8 @@ services:
       - socket:/miracle/socket
       - static:/miracle/static
     ports:
-      - "9999:9999"
+      - "80:80"
+      - "443:443"
     depends_on:
       - django
     
@@ -69,6 +74,8 @@ volumes:
   static: 
     driver: local
   archives: 
+    driver: local
+  logs:
     driver: local
   socket:
     driver: local
