@@ -7,7 +7,7 @@
 <meta name="google-signin-scope" content="profile email">
 <meta name="google-signin-client_id" content="">
 <script src="//apis.google.com/js/platform.js" async defer></script>
-<link rel='stylesheet' href='{% static "css/bootstrap-social.css" %}'>
+<link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/bootstrap-social/5.0.0/bootstrap-social.min.css'>
 {% endblock %}
 
 {% block content %}
@@ -29,12 +29,11 @@
     </div>
     <div class='col-sm-6'>
         <h3>External Sign In</h3>
-        <p>Sign in or create a new user using an existing account.</p>
+        <p>Sign in or create a new user with an existing social account.</p>
         <div class='col-sm-6 social-buttons'>
-            <a class='btn btn-lg btn-block btn-social btn-github' href="{% url 'social:begin' 'github' %}"><i class='fa fa-github-square'></i> GitHub Sign In</a>
-            <a class='btn btn-lg btn-block btn-social btn-twitter' href="{% url 'social:begin' 'twitter' %}"><i class='fa fa-twitter'></i> Twitter Sign In</a>
-            <a class='btn btn-lg btn-facebook btn-block btn-social' href="{% url 'social:begin' 'facebook' %}"><i class='fa fa-facebook'></i> Facebook Sign In</a>
-            <a class="btn btn-lg btn-google btn-block btn-social" href="{% url 'social:begin' 'google' %}" data-onsuccess="onSignIn" data-theme="dark"><i class='fa fa-google'></i> Google Sign In</a>
+            <a class='btn btn-lg btn-block btn-social btn-github' href="{% url 'social:begin' 'github' %}"><i class='fa fa-github-square'></i> github</a>
+            <a class='btn btn-lg btn-facebook btn-block btn-social' href="{% url 'social:begin' 'facebook' %}"><i class='fa fa-facebook'></i> facebook</a>
+            <a class="btn btn-lg btn-google btn-block btn-social" href="{% url 'social:begin' 'google' %}" data-onsuccess="onSignIn" data-theme="dark"><i class='fa fa-google'></i> google</a>
         </div>
     </div>
 </div>

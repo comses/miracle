@@ -2,21 +2,28 @@
 from .base import *
 import os
 
+# security settings
 DEBUG = False
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
 
-os.environ.setdefault('DB_ENV_DB_USER', 'miracle')
-os.environ.setdefault('DB_ENV_DB_HOST', 'localhost')
-os.environ.setdefault('DB_ENV_DB_PORT', '5432')
-os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_USER', 'miracle')
-os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_URL', 'https://deployr.comses.net')
-os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_HOST', 'deployr.comses.net')
-os.environ.setdefault('RADIANT_ENV_RADIANT_URL', 'https://miracle.comses.net/radiant/')
+os.environ.setdefault('DB_USER', 'miracle')
+os.environ.setdefault('DB_HOST', 'localhost')
+os.environ.setdefault('DB_PORT', '5432')
+os.environ.setdefault('DEPLOYR_USER', 'miracle')
+os.environ.setdefault('DEPLOYR_URL', 'https://deployr.comses.net')
+os.environ.setdefault('DEPLOYR_HOST', 'deployr.comses.net')
+os.environ.setdefault('RADIANT_URL', 'https://miracle.comses.net/radiant/')
 
 # DeployR settings
 DEFAULT_DEPLOYR_USER = get_env_variable('DEPLOYR_USER')
 DEFAULT_DEPLOYR_PASSWORD = 'changeme_deployr'
 DEPLOYR_URL = get_env_variable('DEPLOYR_URL')
 DEPLOYR_HOST = get_env_variable('DEPLOYR_HOST')
+
 
 # Radiant settings
 # The url to link to the radiant frame with

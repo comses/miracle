@@ -108,7 +108,7 @@ class MiracleMetadataMixin(models.Model):
             self.published_by = user
             if not defer:
                 self.save()
-            ActivityLog.objects.log_user(user, 'Published {} on {}'.format(unicode(self), self.published_on))
+            ActivityLog.objects.log_user(user, 'Published {} on {}'.format(str(self), self.published_on))
 
     def unpublish(self, user, defer=False):
         original_published_on = self.published_on
@@ -118,7 +118,7 @@ class MiracleMetadataMixin(models.Model):
             if not defer:
                 self.save()
             ActivityLog.objects.log_user(
-                user, 'Unpublished {}, originally published on {}'.format(unicode(self), original_published_on))
+                user, 'Unpublished {}, originally published on {}'.format(str(self), original_published_on))
 
     def deactivate(self, user):
         if not self.deleted_on:
@@ -126,7 +126,7 @@ class MiracleMetadataMixin(models.Model):
             self.deleted_by = user
             self.save()
             ActivityLog.objects.log_user(
-                user, 'Deactivating {} on {}'.format(unicode(self), self.deleted_on))
+                user, 'Deactivating {} on {}'.format(str(self), self.deleted_on))
 
     def activate(self, user):
         original_deleted_on = self.deleted_on
@@ -135,7 +135,7 @@ class MiracleMetadataMixin(models.Model):
             self.deleted_by = None
             self.save()
             ActivityLog.objects.log_user(
-                user, 'Reactivating {}, originally deactivated on {}'.format(unicode(self), original_deleted_on))
+                user, 'Reactivating {}, originally deactivated on {}'.format(str(self), original_deleted_on))
 
     def __unicode__(self):
         return u'{} (internal: {})'.format(self.full_name, self.name)
@@ -396,6 +396,7 @@ class DataAnalysisScript(MiracleMetadataMixin):
 class AnalysisParameter(models.Model):
 
     # XXX: currently 1:1 with R data types, support for other types of analysis scripts require additional mappings
+    # FIXME: add array and range types
     ParameterType = Choices(
         ('integer', _('integer')),
         ('logical', _('boolean')),

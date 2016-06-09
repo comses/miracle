@@ -1,6 +1,4 @@
-from django.conf import settings
 from django.conf.urls import include, url
-from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 
@@ -21,15 +19,8 @@ urlpatterns = [
         {'template_name': 'account/password-reset-done.html'}, name='password_reset_done'),
     url(r'^account/password-reset-complete/$', auth_views.password_reset_complete,
         {'template_name': 'account/password-reset-complete.html'}, name='password_reset_complete'),
-# django-contrib-comments URLs
+    # django-contrib-comments URLs
     url(r'^comments/', include('django_comments.urls')),
     # fallback, core.urls will catch all other unmatched urls
     url(r'', include('miracle.core.urls', namespace='core', app_name='core')),
 ]
-
-# add user uploaded files to handled urlpatterns in development mode.
-# NOTE: never allow this in production, see
-# https://docs.djangoproject.com/en/1.8/howto/static-files/#serving-uploaded-files-in-development for more details
-# otherwise this can be a security risk.
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

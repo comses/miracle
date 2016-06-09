@@ -4,13 +4,13 @@ import os
 
 DEBUG = True
 
-os.environ.setdefault('DB_ENV_DB_USER', 'miracle')
-os.environ.setdefault('DB_ENV_DB_HOST', 'localhost')
-os.environ.setdefault('DB_ENV_DB_PORT', '5432')
-os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_USER', 'miracle')
-os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_URL', 'https://deployr.comses.net')
-os.environ.setdefault('DEPLOYR_ENV_DEPLOYR_HOST', 'deployr.comses.net')
-os.environ.setdefault('RADIANT_ENV_RADIANT_URL', 'https://miracle.comses.net/radiant/')
+os.environ.setdefault('DB_USER', 'miracle')
+os.environ.setdefault('DB_HOST', 'localhost')
+os.environ.setdefault('DB_PORT', '5432')
+os.environ.setdefault('DEPLOYR_USER', 'miracle')
+os.environ.setdefault('DEPLOYR_URL', 'http://deployr:8000')
+os.environ.setdefault('DEPLOYR_HOST', 'deployr.comses.net')
+os.environ.setdefault('RADIANT_URL', 'https://miracle.comses.net/radiant/')
 
 DATABASES = {
     'default': {
@@ -35,6 +35,7 @@ INSTALLED_APPS += (
     'debug_toolbar',
 )
 
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # disabling i18n until we need it
@@ -57,9 +58,6 @@ SECRET_KEY = 'django_secret_key'
 
 SOCIAL_AUTH_FACEBOOK_KEY = 'facebook_key'
 SOCIAL_AUTH_FACEBOOK_SECRET = 'facebook_secret'
-
-SOCIAL_AUTH_TWITTER_KEY = 'twitter_key'
-SOCIAL_AUTH_TWITTER_SECRET = 'twitter_secret'
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'google_key'
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'google_secret'

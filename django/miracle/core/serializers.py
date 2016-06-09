@@ -65,10 +65,20 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 class AnalysisParameterSerializer(serializers.ModelSerializer):
     value = serializers.ReadOnlyField(source='default_value')
+    html_input_type = serializers.SerializerMethodField()
+    html_input_type_converter = defaultdict(lambda: 'text', {
+        'integer': 'number',
+        'numeric': 'number',
+        'character': 'text',
+        'logical': 'checkbox',  # FIXME: needs additional UI support for checkboxes
+    })
+
+    def get_html_input_type(self, obj):
+        return AnalysisParameterSerializer.html_input_type_converter[obj.data_type]
 
     class Meta:
         model = AnalysisParameter
-        fields = ('id', 'name', 'label', 'data_type', 'description', 'value')
+        fields = ('id', 'name', 'label', 'data_type', 'description', 'value', 'html_input_type')
 
 
 class DataAnalysisScriptSerializer(serializers.HyperlinkedModelSerializer):
