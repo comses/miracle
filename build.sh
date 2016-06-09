@@ -28,8 +28,16 @@ if [ -f nginx/dhparam.pem ]; then
 else 
     openssl dhparam -out nginx/dhparam.pem 4096;
 fi
-# make sure you copy server key and server crt to this directory
-echo "For production, copy the SSL key and cert to nginx/ as server.crt and server.key before deployment (until we switch to lets encrypt)"
+# make sure you copy server key and server crt to nginx/ directory
+echo "For production, copy the SSL key and cert to nginx/ as server.crt and server.key before deployment (may consider switch to lets encrypt at some point)"
+if [ -f nginx/server.crt ]; then
+    echo "Using existing nginx/server.crt"
+else
+    echo "For production, copy the appropriate SSL key and cert to nginx/ as server.crt and server.key before deployment (consider switch to lets encrypt)";
+    cd nginx;
+    sh make-cert.sh;
+    cd ..;
+fi
 cd docker;
 for dn in min base r;
 do docker build -t miracle/$dn -f $dn.Dockerfile .;

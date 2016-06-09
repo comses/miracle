@@ -1,17 +1,22 @@
-# Ignore docker-compose
+# docker compose is split into development and production
 docker-compose.yml
 
-# ignore development data folders
+# generated files
+*.pem
+*.pid
+*.crt
+*.key
+
+# development data folders
 django/projects
 django/packrat
 django/archives
-/miracle/
 
 # backup files
 *~
 # ctags index
 tags
-# ignore local settings
+# local settings
 django/miracle/settings/local.py
 # ignore database dumps, for now
 *.sql
@@ -23,7 +28,7 @@ django/miracle/static/js/react.min.js
 django/miracle/core/migrations/*
 !django/miracle/core/migrations/__init__.py
 
-# Google Drive
+# os x custom file metadata 
 *.DS_Store
 
 # Ignore test generated files

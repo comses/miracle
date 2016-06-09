@@ -31,8 +31,7 @@ services:
     build: 
         context: ./django
         args:
-            reqfile: "production.txt"
-            uwsgi_ini: "miracle.ini"
+            reqfile: "local.txt"
     volumes:
       - .:/code
       - projects:/miracle/projects
@@ -42,7 +41,7 @@ services:
       - socket:/miracle/socket
       - logs:/miracle/logs
     environment:
-  #### Change local.py file for DEPLOYR_PASS, change entrypoint.sh file for MIRACLE_PASS
+  #### Change settings/local.py file for DEPLOYR_PASS 
   #### Default MIRACLE_USER is a Django admin user
       DB_USER: miracle
       DB_HOST: db
@@ -60,17 +59,16 @@ services:
     build: 
         context: ./nginx
         args:
-            siteconf: "miracle.conf"
+            siteconf: "local.conf"
     volumes:
       - socket:/miracle/socket
       - static:/miracle/static
-      - logs:/var/log
     ports:
       - "80:80"
       - "443:443"
     depends_on:
       - django
-    
+   
 volumes:
   projects:
     driver: local
