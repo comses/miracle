@@ -15,15 +15,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--username',
-                            dest='username',
                             default=os.environ.get('MIRACLE_USER'),
                             help='Initial admin username')
         parser.add_argument('--password',
-                            dest='password',
                             default=os.environ.get('MIRACLE_USER_PASSWORD', settings.SECRET_KEY),
                             help='Initial admin password')
         parser.add_argument('--email',
-                            dest='email',
                             default=os.environ.get('MIRACLE_EMAIL', settings.SERVER_EMAIL),
                             help='Initial admin email')
 

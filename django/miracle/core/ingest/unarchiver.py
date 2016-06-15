@@ -18,14 +18,12 @@ def extract(project, archive):
     Extract a project archive into the project folder
 
     :param project: a project to associate the archive with
-    :type project: Project
+    :type project: miracle.core.models.Project
     :param archive: a path to an archive file
     :type archive: str
-    :param projects_folder: the directory where the projects are stored
-    :type projects_folder: str
 
-    :return: a packrat object with the project token and the projectpath db records
-    :rtype: FilePathExtractor
+    :return: a ProjectFilePaths object with the project token and the project path db records
+    :rtype: ProjectFilePaths
     """
 
     projects_folder = settings.MIRACLE_PROJECT_DIRECTORY
@@ -48,6 +46,7 @@ def extract(project, archive):
             raise PackratException("root {} is not a folder".format(projects_folder))
 
         project_folder_contents = os.listdir(project_folder)
+        logger.debug("project folder contents: %s", project_folder_contents)
         if "packrat" not in project_folder_contents:
             raise PackratException("no Packrat folder")
         if token not in project_folder_contents:

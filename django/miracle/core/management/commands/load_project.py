@@ -1,7 +1,7 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.conf import settings
-from ...tasks import run_metadata_pipeline
-from ...models import Project, User
+from miracle.core.tasks import run_metadata_pipeline
+from miracle.core.models import Project, User
 import logging
 import os
 import sys
@@ -18,25 +18,22 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--creator',
-                            nargs=1,
-                            type=str,
-                            help='The creator of the project')
+                            default=os.environ.get('MIRACLE_USER'),
+                            help='Django username for the creator of the project')
         parser.add_argument('--project',
-                            nargs=1,
-                            type=str,
-                            help='The name of the project')
+                            help='The shortname of the project')
         parser.add_argument('archive_file',
-                            nargs=1,
-                            type=str,
-                            help='The archived project file you want to import')
+                            help='''Path to an archived project file to be imported. This file must have a filesystem
+                            structure that conforms to the guidelines listed at
+                            https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines''',
+                            )
 
     def handle(self, *args, **options):
         logger.debug(args)
         logger.debug(options)
-
-        creator_name = options['creator'][0]
-        project_name = options['project'][0]
-        archive_path = options['archive_file'][0]
+        creator_name = options['creator']
+        project_name = options['project']
+        archive_path = options['archive_file']
 
         self.extract(creator_name, project_name, archive_path)
 
@@ -46,7 +43,7 @@ class Command(BaseCommand):
         user_exists = User.objects.filter(username=username).exists()
         if not user_exists:
             sys.stdout.write("User {} does not exist yet\n".format(username))
-            password = getpass.getpass("Enter Password for {}: ".format(username))
+            password = getpass.getpass("Enter a password for {}: ".format(username))
             return User.objects.create_user(
                 username=username,
                 email=email,
@@ -71,7 +68,6 @@ class Command(BaseCommand):
         logger.debug(archive_path)
         try:
             res = run_metadata_pipeline(project, archive_path, delete_archive_on_failure=False)
-            logger.debug("Extraction succeeded for archive `{}`".format(abs_archive_path))
-        except Exception as e:
-            logger.debug("Extraction failed for archive `{}`".format(abs_archive_path))
-            print e
+            logger.debug("Extraction succeeded for archive at %s", abs_archive_path)
+        except Exception:
+            logger.exception("Extraction failed for archive %s", abs_archive_path)
