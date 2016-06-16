@@ -78,7 +78,8 @@ class AnalysisParameterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AnalysisParameter
-        fields = ('id', 'name', 'label', 'data_type', 'description', 'value', 'html_input_type')
+        fields = ('id', 'name', 'label', 'data_type', 'description', 'value', 'html_input_type', 'value_list',
+                  'value_range')
 
 
 class DataAnalysisScriptSerializer(serializers.HyperlinkedModelSerializer):

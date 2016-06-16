@@ -14,10 +14,11 @@ images for the following:
 
 ### First steps
 
-* [Install docker-compose](https://docs.docker.com/compose/install/) 
+* [Install the latest version of docker-compose and docker](https://docs.docker.com/compose/install/) - currently 1.7.1
 * Create a local user named 'miracle'. In order to handle file permissions on our shared volumes properly, make sure you
   create the user with a uid of 2000, or set the `MIRACLE\_UID` build argument before building the Docker images, e.g.,
   `MIRACLE_UID=2772 sh build.sh`
+* add yourself to the docker group
 
 ### Local development
 
