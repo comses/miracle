@@ -1,3 +1,5 @@
 FROM centos:7
 
-RUN useradd -U -m -u 2000 -s /sbin/nologin miracle
+ARG MIRACLE_UID=2000
+
+RUN useradd -U -m -u $MIRACLE_UID -s /sbin/nologin miracle

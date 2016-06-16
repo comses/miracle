@@ -12,10 +12,18 @@ images for the following:
 * One container for a modified version of the [Radiant](https://github.com/vnijs/radiant) business analytics Shiny app
 * One container for [DeployR](https://deployr.revolutionanalytics.com/) that provides our R script execution environment
 
+### First steps
+
+* [Install docker-compose](https://docs.docker.com/compose/install/) 
+* Create a local user named 'miracle'. In order to handle file permissions on our shared volumes properly, make sure you
+  create the user with a uid of 2000, or set the `MIRACLE\_UID` build argument before building the Docker images, e.g.,
+  `MIRACLE_UID=2772 sh build.sh`
+
 ### Local development
 
 * Copy `development.yml` to `docker-compose.yml
 * Copy and edit the Django settings files `cp django/miracle/settings/local.py.example django/miracle/settings/local.py` 
+* Reload code in the uWSGI server via `touch django/miracle/deploy/uwsgi/miracle.ini` (lightweight) or `docker-compose restart miracle\_django\_1` (drastic)
 
 ### Production configuration and deployment
 
@@ -26,7 +34,6 @@ images for the following:
   - `deployr/addUser.py`
   - `django/entrypoint.sh`
   - `django/miracle/settings/local.py`
-* Change uid if needed (`docker/min.Dockerfile`)
 
 ### Build the images and spin up the docker containers
 
@@ -36,10 +43,10 @@ images for the following:
 
 ### Loading Data
 
-You can load the `luxedemo.packrat.tar.gz` and `rhea.packrat.tar.gz` from our 
-[example projects github repository](https://github.com/comses/miracle-example-projects) from the command line by
-downloading these files into the `django` directory (by default, this project's src tree is mapped to /code/ in your
-Django container). The steps to run this might look like:
+You can load the `luxedemo.packrat.tar.gz` and `rhea.packrat.tar.gz` from the
+[miracle example projects github repository](https://github.com/comses/miracle-example-projects) via the command line by
+downloading the `packrat.tar.gz` files into the `django` directory (this project's source tree is mapped to
+/code/ in the Django container by default) and performing the following steps:
 
 ```
 % docker exec -it miracle_django_1 bash # login to the container
