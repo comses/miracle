@@ -160,6 +160,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         group_members = validated_data.pop('group_members')
         published = validated_data.pop('published', False)
         creator = validated_data.get('creator')
+        slug = validated_data.get('slug')
         if published:
             validated_data['published_on'] = timezone.now()
             validated_data['published_by'] = creator
@@ -168,6 +169,10 @@ class ProjectSerializer(serializers.ModelSerializer):
             users = User.objects.filter(username__in=group_members)
             logger.debug("setting group members: %s", users)
             project.set_group_members(User.objects.filter(username__in=group_members))
+            project.save()
+        if slug:
+            logger.debug("Setting slug explicitly to %s", slug)
+            project.slug = slug
             project.save()
         return project
 

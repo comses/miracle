@@ -1,4 +1,4 @@
-<script src='//cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js'></script>
+<script src='//cdnjs.cloudflare.com/ajax/libs/knockout/3.4.0/knockout-min.js'></script>
 <script src='//cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.4.1/knockout.mapping.min.js'></script>
 <script src='//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.1/js/standalone/selectize.min.js'></script><script>
 {% comment %}
@@ -49,7 +49,6 @@ var injectBinding = function (allBindings, key, value) {
         }
     };
 }
-
 ko.bindingHandlers.selectize = {
     init: function (element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         if (!allBindingsAccessor.has('optionsText'))

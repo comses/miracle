@@ -15,7 +15,7 @@
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8" lang=""> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9" lang=""> <![endif]-->
 <!--[if gt IE 8]><!--> <html class="no-js" lang=""> <!--<![endif]-->
-{% with RAVENJS_VERSION="1.1.22" BOOTSWATCH_THEME="paper" JQUERY_VERSION="1.11.3" BOOTSTRAP_VERSION="3.3.5" FONTAWESOME_VERSION="4.4.0" %}
+{% with RAVENJS_VERSION="3.0.5" HUMANE_JS_VERSION="3.2.2" BOOTSWATCH_THEME="paper" JQUERY_VERSION="1.12.4" BOOTSTRAP_VERSION="3.3.6" FONTAWESOME_VERSION="4.6.3" %}
     <head>
     {% block head %}
         <meta charset="utf-8">
@@ -29,11 +29,11 @@
         <!-- <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/{{BOOTSTRAP_VERSION}}/css/bootstrap.min.css"> -->
         <link rel='stylesheet' href="//maxcdn.bootstrapcdn.com/font-awesome/{{FONTAWESOME_VERSION}}/css/font-awesome.min.css">
         <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/selectize.js/0.12.1/css/selectize.bootstrap3.min.css'>
-        <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/themes/original.min.css'>
+        <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/humane-js/{{HUMANE_JS_VERSION}}/themes/original.min.css'>
         <link rel="stylesheet" href="{% static 'css/style.css' %}" media="screen" />
         <link rel="stylesheet" href="{% static 'css/pygments.css' %}" media="screen" />
 
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/{{JQUERY_VERSION}}/jquery.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/{{JQUERY_VERSION}}/jquery.min.js"></script>
         {% with 'js/jquery-'|add:JQUERY_VERSION|add:'.min.js' as jquery_static %}
         <script>window.jQuery || document.write('<script src="{% static jquery_static %}"><\/script>')</script>
         {% endwith %}
@@ -119,8 +119,8 @@
         Place additional base JS includes here that you want available on every page load.
         {% endcomment %}
         <script src="//maxcdn.bootstrapcdn.com/bootstrap/{{BOOTSTRAP_VERSION}}/js/bootstrap.min.js"></script>
-        <script src="//cdn.ravenjs.com/{{RAVENJS_VERSION}}/jquery,native/raven.min.js"></script>
-        <script src='//cdnjs.cloudflare.com/ajax/libs/humane-js/3.2.2/humane.min.js'></script>
+        <script src="//cdn.ravenjs.com/{{RAVENJS_VERSION}}/raven.min.js"></script>
+        <script src='//cdnjs.cloudflare.com/ajax/libs/humane-js/{{HUMANE_JS_VERSION}}/humane.min.js'></script>
  
         <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
         <script>
