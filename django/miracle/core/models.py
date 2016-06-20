@@ -280,7 +280,7 @@ class Project(MiracleMetadataMixin):
         return AnalysisOutput.objects.filter(analysis__project=self)
 
     def get_absolute_url(self):
-        return reverse_lazy('core:project-detail', args=[self.pk])
+        return reverse_lazy('core:project-detail', args=[self.slug])
 
     class Meta(object):
         permissions = (

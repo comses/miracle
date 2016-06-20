@@ -104,7 +104,6 @@ class DataAnalysisScriptSerializer(serializers.HyperlinkedModelSerializer):
 class DataColumnSerializer(serializers.ModelSerializer):
 
     data_table_group = serializers.ReadOnlyField(source='data_table_group.name')
-    detail_url = serializers.CharField(source='get_absolute_url', read_only=True)
 
     class Meta:
         model = DataColumn
@@ -137,14 +136,13 @@ class DataFileSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'archived_file', 'ignored')
 
 
-class ProjectSerializer(serializers.ModelSerializer):
+class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     group_members = StringListField()
     group = serializers.StringRelatedField()
     creator = serializers.SlugRelatedField(slug_field='email', read_only=True)
     published = serializers.BooleanField()
     published_on = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S %Z', read_only=True)
     date_created = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S %Z', read_only=True)
-    detail_url = serializers.CharField(source='get_absolute_url', read_only=True)
     status = serializers.ReadOnlyField()
     number_of_datasets = serializers.IntegerField(read_only=True)
     data_table_groups = DataTableGroupSerializer(many=True, read_only=True)
@@ -235,4 +233,9 @@ class ProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        exclude = ('submitted_archive',)
+        fields = ('id', 'url', 'group_members', 'group', 'creator', 'published', 'published_on', 'date_created',
+                  'status', 'number_of_datasets', 'data_table_groups', 'analyses', 'slug', 'description', 'name',
+                  )
+        extra_kwargs = {
+            'url': {'view_name': 'core:project-detail', 'lookup_field': 'slug'},
+        }

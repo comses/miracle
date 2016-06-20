@@ -21,7 +21,7 @@ from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnal
                      AnalysisOutputFile)
 from .serializers import (ProjectSerializer, DataFileSerializer, UserSerializer, DataTableGroupSerializer,
                           DataAnalysisScriptSerializer, AnalysisOutputSerializer, DataColumnSerializer,
-                          OutputFileSerializer)
+                          )
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task, run_metadata_pipeline
 
@@ -42,14 +42,15 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(DashboardView, self).get_context_data(**kwargs)
-        project_serializer = ProjectSerializer(Project.objects.viewable(self.request.user), many=True,
+        user = self.request.user
+        project_serializer = ProjectSerializer(Project.objects.viewable(user), many=True,
                                                context={'request': self.request})
+        # FIXME: won't scale for many users, change to client lookup
         user_serializer = UserSerializer(User.objects.all(), many=True)
         context.update(
-            activity_log=ActivityLog.objects.for_user(self.request.user),
+            activity_log=ActivityLog.objects.for_user(user),
             project_list_json=dumps(project_serializer.data),
             users_json=dumps(user_serializer.data),
-            request=self.request,
         )
         return context
 
@@ -224,6 +225,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     renderer_classes = (renderers.TemplateHTMLRenderer, renderers.JSONRenderer)
     permission_classes = (CanViewReadOnlyOrEditProject,)
+    lookup_field = 'slug'
 
     @property
     def template_name(self):

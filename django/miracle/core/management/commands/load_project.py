@@ -32,10 +32,10 @@ class Command(BaseCommand):
         logger.debug(args)
         logger.debug(options)
         creator_name = options['creator']
-        project_name = options['project']
+        project_shortname = options['project']
         archive_path = options['archive_file']
 
-        self.extract(creator_name, project_name, archive_path)
+        self.extract(creator_name, project_shortname, archive_path)
 
     @staticmethod
     def create_user(username='testuser', email='miracle-test@mailinator.com',
@@ -56,14 +56,14 @@ class Command(BaseCommand):
             return user
 
     @staticmethod
-    def extract(creator_name, project_name, archive_path):
+    def extract(creator_name, project_shortname, archive_path):
         abs_archive_path = os.path.abspath(archive_path)
         logger.debug("Extracting archive: {}".format(abs_archive_path))
         logger.debug("Working Directory: {}".format(os.getcwd()))
         logger.debug("project path: %s", settings.MIRACLE_PROJECT_DIRECTORY)
 
         creator = Command.create_user(username=creator_name)
-        project, created = Project.objects.get_or_create(name=project_name, creator=creator)
+        project, created = Project.objects.get_or_create(slug=project_shortname, creator=creator)
 
         logger.debug(archive_path)
         try:

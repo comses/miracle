@@ -62,31 +62,9 @@ def load_datafile(metadata_datafile, datatablegroup):
     return datafile
 
 
-def load_analysisparameter(dataanalysis_script, parameter):
-    """
-    :type dataanalysis_script: DataAnalysisScript
-    :type parameter: dict
-    :return:
-    """
-
-    dataanalysis_script.parameters.create(
-        name=parameter["name"],
-        label=parameter["label"],
-        data_type=parameter["render"],
-        default_value=str(parameter["default"]),
-        value_list=parameter.get('valueList'),
-        value_range=parameter.get('valueRange'),
-    )
-
-
-def load_analysisparameters(dataanalysis_script, parameters):
-    for parameter in parameters:
-        load_analysisparameter(dataanalysis_script, parameter)
-
-
 def load_analysis(metadata_analysis, project):
     """
-    Convert analysis metadata to an Analysis
+    Convert raw analysis metadata to an appropriately parameterized DataAnalysisScript
 
     :param metadata_analysis:
 
@@ -110,14 +88,20 @@ def load_analysis(metadata_analysis, project):
     elif ext == ".pl":
         file_type = "Perl"
 
-    dataanalysis_script = DataAnalysisScript(name=metadata_analysis.name,
-                                             creator=project.creator,
-                                             project=project,
-                                             archived_file=metadata_analysis.path,
-                                             file_type=file_type)
-    dataanalysis_script.save()
-    load_analysisparameters(dataanalysis_script, metadata_analysis.parameters)
-
+    data_analysis_script = project.analyses.create(name=metadata_analysis.name,
+                                                   creator=project.creator,
+                                                   archived_file=metadata_analysis.path,
+                                                   file_type=file_type,
+                                                   enabled=True)
+    for parameter in metadata_analysis.parameters:
+        data_analysis_script.parameters.create(
+            name=parameter["name"],
+            label=parameter["label"],
+            data_type=parameter["render"],
+            default_value=str(parameter["default"]),
+            value_list=parameter.get('valueList'),
+            value_range=parameter.get('valueRange'),
+        )
 
 def load_analyses(metadata_analyses, project):
     """Load analyses into database"""
@@ -136,9 +120,8 @@ def load_deployr(metadata_analyses, project):
                                                 project.slug,
                                                 session)
             response200orError(response)
-    except requests.exceptions.ConnectionError as e:
-        logger.exception(e)
-        logger.debug(
+    except requests.exceptions.ConnectionError:
+        logger.exception(
             "CONNECTION ERROR: the deployr server must be running and have a user " +
             "matching the deployr username (DEFAULT_DEPLOYR_USER) and password (DEFAULT_DEPLOYR_PASSWORD)")
         raise
@@ -153,10 +136,10 @@ def load_project(metadata_project):
 
     metadata_analyses = metadata_project.analyses
     metadata_datatablegroups = metadata_project.datatablegroups
-    project = Project.objects.filter(slug=metadata_project.project_token).first()
+    project = Project.objects.get(slug=metadata_project.project_token)
 
     with transaction.atomic():
         load_analyses(metadata_analyses, project)
         load_datatablegroups(metadata_datatablegroups, project)
-        with utils.Chdir(path.join(settings.MIRACLE_PROJECT_DIRECTORY, project.slug)):
+        with utils.Chdir(project.project_path):
             load_deployr(metadata_analyses, project)
