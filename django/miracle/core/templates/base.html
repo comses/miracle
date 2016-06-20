@@ -45,7 +45,7 @@
         <![endif]-->
         {% block header %}
             <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-                <div class="container">
+                <div class="container-fluid">
                     <div class="navbar-header">
                         <button class="navbar-toggle collapsed" type="button" data-toggle="collapse" data-target=".bs-navbar-collapse">
                             <span class="sr-only">Toggle navigation</span>
@@ -85,14 +85,14 @@
           </nav>
         {% endblock header %}
 
-        <section id="content" class="container">
+        <section id="content" class="container-fluid">
             {% block content %}
             {% endblock content %}
         </section>
 
         <footer id="footer">
             {% block footer %}
-            <div class='container'>
+            <div class='container-fluid'>
                 {% block footerlinks %}
                 <ul class='nav-footer list-inline hidden-xs'>
                     <li><a href='http://www.comses.net'>Network for Computational Modeling in the Socio-ecological Sciences</a></li>

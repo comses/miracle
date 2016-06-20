@@ -58,6 +58,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 class MiracleUserInline(InlineFormSet):
     model = MiracleUser
     can_delete = False
+    fields = ('institution', 'user',)
 
     def get_object(self):
         return MiracleUser.objects.get(user=self.request.user)
