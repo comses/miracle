@@ -93,15 +93,8 @@ def load_analysis(metadata_analysis, project):
                                                    archived_file=metadata_analysis.path,
                                                    file_type=file_type,
                                                    enabled=True)
-    for parameter in metadata_analysis.parameters:
-        data_analysis_script.parameters.create(
-            name=parameter["name"],
-            label=parameter["label"],
-            data_type=parameter["render"],
-            default_value=str(parameter["default"]),
-            value_list=parameter.get('valueList'),
-            value_range=parameter.get('valueRange'),
-        )
+    data_analysis_script.add_parameters(metadata_analysis.parameters)
+
 
 def load_analyses(metadata_analyses, project):
     """Load analyses into database"""

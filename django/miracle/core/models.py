@@ -358,6 +358,18 @@ class DataAnalysisScript(MiracleMetadataMixin):
             deployr_input_parameters[name] = parameter_dict
         return deployr_input_parameters
 
+    def add_parameters(self, parameters):
+        """ parameters is a list of dictionaries with (currently) DeployR specific keys """
+        for parameter in parameters:
+            self.parameters.create(
+                name=parameter["name"],
+                label=parameter["label"],
+                data_type=parameter["render"],
+                default_value=str(parameter["default"]),
+                value_list=parameter.get("valueList"),
+                value_range=parameter.get("valueRange"),
+            )
+
     def get_deployr_parameters_dict(self, values=None):
         if values is None:
             values = {}

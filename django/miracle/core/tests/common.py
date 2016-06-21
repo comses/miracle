@@ -5,8 +5,7 @@ from django.test import TestCase
 from django.test.client import RequestFactory, Client
 from django.utils.http import urlencode
 
-from ..models import (DataAnalysisScript, Project, DataColumn, DataTableGroup, DataFile)
-from ..ingest.loader import load_analysisparameters
+from miracle.core.models import (DataAnalysisScript, Project, DataColumn, DataTableGroup, DataFile)
 
 import logging
 import os
@@ -92,7 +91,7 @@ class BaseMiracleTest(TestCase):
                                                      name=name,
                                                      project=project,
                                                      archived_file=script_file)
-        load_analysisparameters(analysis, parameters)
+        analysis.add_parameters(parameters)
         return analysis
 
     def create_project(self, name=None, user=None):
