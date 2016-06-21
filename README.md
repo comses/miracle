@@ -16,7 +16,7 @@ images for the following:
 
 * [Install the latest version of docker-compose and docker](https://docs.docker.com/compose/install/) - currently 1.7.1
 * Create a local user named 'miracle'. In order to handle file permissions on our shared volumes properly, make sure you
-  create the user with a uid of 2000, or set the `MIRACLE\_UID` build argument before building the Docker images, e.g.,
+  create the user with a uid of 2000, or set the `MIRACLE_UID` build argument before building the Docker images, e.g.,
   `MIRACLE_UID=2772 sh build.sh`
 * add yourself to the docker group
 
@@ -24,17 +24,18 @@ images for the following:
 
 * Copy `development.yml` to `docker-compose.yml
 * Copy and edit the Django settings files `cp django/miracle/settings/local.py.example django/miracle/settings/local.py` 
-* Reload code in the uWSGI server via `touch django/miracle/deploy/uwsgi/miracle.ini` (lightweight) or `docker-compose restart miracle\_django\_1` (drastic)
+* Reload code in the uWSGI server via `touch django/miracle/deploy/uwsgi/miracle.ini` (lightweight) or `docker-compose restart miracle_django_1` (drastic)
 
 ### Production configuration and deployment
 
 * Copy `production.yml` to `docker-compose.yml` and edit the relevant environment variables for the MIRACLE_ADMIN
 * Copy SSL certs and private key into the nginx directory as `server.crt` and `server.key`, respectively
-* Change all passwords, keys and secrets in `docker-compose.yml` and 
-  - `docker-compose.yml`
-  - `deployr/addUser.py`
-  - `django/entrypoint.sh`
-  - `django/miracle/settings/local.py`
+
+### Edit secrets
+* Set `deployr_pass` and `deployr_pass_admin` in `deployr/addUser.py` 
+* Set `DB_PASS` in docker-compose.yml
+* Make sure to mirror these changes to `deployr_pass`, and the postgres database passwords in
+  `django/miracle/settings/local.py` under the `DEFAULT_DEPLOYR_PASSWORD` and `DATABASES` variables, respectively.
 
 ### Build the images and spin up the docker containers
 
