@@ -21,7 +21,7 @@ services:
   #### Only need a read_only user for the `miracle_metadata` database
 
   db:
-    image: sameersbn/postgresql:9.4-21
+    image: sameersbn/postgresql:9.4-22
     environment:
       DB_USER: miracle
       DB_PASS: changeme_db
@@ -32,7 +32,6 @@ services:
         context: ./django
         args:
             reqfile: "production.txt"
-            uwsgi_ini: "miracle.ini"
     volumes:
       - .:/code
       - projects:/miracle/projects
@@ -64,7 +63,7 @@ services:
     volumes:
       - socket:/miracle/socket
       - static:/miracle/static
-      - logs:/var/log
+      - logs:/var/log/nginx
     ports:
       - "80:80"
       - "443:443"

@@ -7,12 +7,15 @@ COPY nginx.repo /etc/yum.repos.d/
 
 RUN yum -y update; yum -y install nginx;
 
+RUN mkdir -p /var/log/nginx
+
 COPY nginx.conf /etc/nginx/
 COPY $siteconf /etc/nginx/sites-enabled/
 
 COPY dhparam.pem /etc/nginx/ssl/dhparam.pem
 COPY server.crt /etc/nginx/ssl/
 COPY server.key /etc/nginx/ssl/
+
 
 ENV TERM xterm
 
