@@ -16,6 +16,7 @@
     "dependencies": {
 		"react": "latest",
 		"react-dom": "latest",
+		"react-router-redux": "latest",
 		"react-redux": "latest",
 		"redux": "latest",
         "immutable": "latest",
@@ -33,9 +34,9 @@
         ]
     },
     "scripts": {
-        "lint": "jshint js/**.js",
-        "test": "mocha js/tests/",
-        "build": "browserify -t reactify js/app.js -o miracle/static/js/react.min.js",
+        "lint": "jshint src/**.js",
+        "test": "mocha src/tests/",
+        "build": "browserify -t reactify src/app.js -o ../django/miracle/static/js/app.min.js",
         "prepublish": "npm run build"
 
     }

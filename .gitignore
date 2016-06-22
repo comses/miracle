@@ -1,6 +1,9 @@
 # docker compose is split into development and production
 docker-compose.yml
 
+# elm
+elm-stuff
+
 # generated files
 *.pem
 *.pid
