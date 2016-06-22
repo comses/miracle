@@ -41,7 +41,7 @@
 </template>
 <script>
 function ProjectModel(params) {
-    params = params || {
+    var params = params || {
         data: {
             id: -1,
             name: "",
@@ -64,7 +64,7 @@ function ProjectModel(params) {
     if (params.model) {
         return params.model;
     }
-    model = ko.mapping.fromJS(params.data);
+    var model = ko.mapping.fromJS(params.data);
     model.users = ko.observableArray({{users_json|safe}})
     model.endpointUrl = ko.pureComputed(function() {
         return (model.id() === -1) ? {% url 'core:project-list' %} : model.url();

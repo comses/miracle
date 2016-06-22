@@ -147,10 +147,11 @@ class CommentSerializer(serializers.ModelSerializer):
 class ActivityLogSerializer(serializers.ModelSerializer):
     creator = serializers.SlugRelatedField(slug_field='username', read_only=True)
     date_created = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S %Z', read_only=True)
+    project = serializers.SlugRelatedField(slug_field='slug', read_only=True)
 
     class Meta:
         model = ActivityLog
-        fields = ('creator', 'action', 'message', 'date_created', 'data')
+        fields = ('creator', 'action', 'message', 'date_created', 'data', 'project')
 
 class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     group_members = StringListField()
