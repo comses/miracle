@@ -1,14 +1,15 @@
+from django.conf import settings
+from django.contrib.auth.models import User, Group
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.core.urlresolvers import reverse_lazy
-from django.contrib.auth.models import User, Group
-from django.contrib.postgres.fields import JSONField
 from django.db import models, connections, transaction
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from django_extensions.db.fields import AutoSlugField
-from django.conf import settings
 
+from django_comments.models import Comment
+from django_extensions.db.fields import AutoSlugField
 from model_utils import Choices
 
 import logging
@@ -108,7 +109,7 @@ class MiracleMetadataMixin(models.Model):
             self.published_by = user
             if not defer:
                 self.save()
-            ActivityLog.objects.log_user(user, 'Published {} on {}'.format(str(self), self.published_on))
+            ActivityLog.objects.log_user(user, 'Published {0} on {1}'.format(str(self), self.published_on))
 
     def unpublish(self, user, defer=False):
         original_published_on = self.published_on
@@ -117,16 +118,14 @@ class MiracleMetadataMixin(models.Model):
             self.published_by = None
             if not defer:
                 self.save()
-            ActivityLog.objects.log_user(
-                user, 'Unpublished {}, originally published on {}'.format(str(self), original_published_on))
+            ActivityLog.objects.log_user(user, 'Unpublished {0} (originally published on {1})'.format(str(self), original_published_on))
 
     def deactivate(self, user):
         if not self.deleted_on:
             self.deleted_on = timezone.now()
             self.deleted_by = user
             self.save()
-            ActivityLog.objects.log_user(
-                user, 'Deactivating {} on {}'.format(str(self), self.deleted_on))
+            ActivityLog.objects.log_user(user, 'Deactivated {0} on {1}'.format(str(self), self.deleted_on))
 
     def activate(self, user):
         original_deleted_on = self.deleted_on
@@ -134,8 +133,7 @@ class MiracleMetadataMixin(models.Model):
             self.deleted_on = None
             self.deleted_by = None
             self.save()
-            ActivityLog.objects.log_user(
-                user, 'Reactivating {}, originally deactivated on {}'.format(str(self), original_deleted_on))
+            ActivityLog.objects.log_user(user, 'Reactivated {0} (originally deactivated on {1})'.format(str(self), original_deleted_on))
 
     def __unicode__(self):
         return u'{} (internal: {})'.format(self.full_name, self.name)
@@ -183,6 +181,10 @@ class Project(MiracleMetadataMixin):
     @property
     def archive_path(self):
         return self.submitted_archive.path
+
+    @property
+    def comments(self):
+        return Comment.objects.for_model(self)
 
     @property
     def packrat_path(self):
@@ -246,9 +248,9 @@ class Project(MiracleMetadataMixin):
     def group_members(self):
         return self.group.user_set.values_list('username', flat=True)
 
-    def log(self, message, user=None):
-        logger.debug("(user %s, project %s) %s", user, self, message)
-        return ActivityLog.objects.log_project_update(user, self, message)
+    def log(self, message, user=None, data=None):
+        logger.debug("(user %s modifying project %s) %s with data %s", user, self, message, data)
+        return ActivityLog.objects.log_project_update(user, self, message, data)
 
     def has_admin_privileges(self, user):
         return user.is_superuser and self.has_group_member(user)
@@ -267,7 +269,7 @@ class Project(MiracleMetadataMixin):
 
     def bookmark_for(self, user=None):
         if user is None:
-            raise ValueError("Specify a user to bookmark this project")
+            raise ValueError("No user specified for bookmarking this project")
         bookmarked_project, created = BookmarkedProject.objects.get_or_create(project=self, user=user)
         return bookmarked_project
 
@@ -658,8 +660,8 @@ class ActivityLogManager(models.Manager):
     def log(self, message):
         return self.create(message=message)
 
-    def log_project_update(self, user=None, project=None, message=None):
-        self.log_user(user, '<Project> {}: {}'.format(project.name, message))
+    def log_project_update(self, user=None, project=None, message=None, action=None):
+        return self.create(creator=user, project=project, message=message, action=ActivityLog.ActionType.USER)
 
     def log_user(self, user, message):
         return self.create(creator=user, message=message, action=ActivityLog.ActionType.USER)
@@ -675,11 +677,14 @@ class ActivityLog(models.Model):
     message = models.TextField()
     date_created = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, blank=True, null=True)
+    project = models.ForeignKey(Project, blank=True, null=True, related_name='activity_logs')
     action = models.CharField(max_length=32, choices=ActionType, default=ActionType.SYSTEM)
+    data = JSONField(blank=True, null=True)
+
     objects = ActivityLogManager.from_queryset(ActivityLogQuerySet)()
 
     class Meta:
         ordering = ['-date_created']
 
     def __unicode__(self):
-        return u"{} {} {}".format(self.creator, self.action, self.message)
+        return u"{0} {1} {2}".format(self.action, self.creator, self.message)

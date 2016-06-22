@@ -21,6 +21,7 @@ from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnal
                      AnalysisOutputFile)
 from .serializers import (ProjectSerializer, DataFileSerializer, UserSerializer, DataTableGroupSerializer,
                           DataAnalysisScriptSerializer, AnalysisOutputSerializer, DataColumnSerializer,
+                          ActivityLogSerializer,
                           )
 from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditProjectResource, )
 from .tasks import run_analysis_task, run_metadata_pipeline
@@ -47,12 +48,24 @@ class DashboardView(LoginRequiredMixin, TemplateView):
                                                context={'request': self.request})
         # FIXME: won't scale for many users, change to client lookup
         user_serializer = UserSerializer(User.objects.all(), many=True)
+        activity_serializer = ActivityLogSerializer(ActivityLog.objects.for_user(user), many=True)
         context.update(
-            activity_log=ActivityLog.objects.for_user(user),
+            activity_log_json=dumps(activity_serializer.data),
             project_list_json=dumps(project_serializer.data),
             users_json=dumps(user_serializer.data),
         )
         return context
+
+
+class UserActivityView(generics.GenericAPIView):
+    renderer_classes = (renderers.JSONRenderer,)
+    # FIXME: need to revisit permissions
+    permission_classes = (permissions.IsAuthenticated,)
+
+    def get(self, request, username=None):
+        activity_logs = ActivityLog.objects.filter(creator__username=username)
+        serializer = ActivityLogSerializer(activity_logs, many=True)
+        return Response(serializer.data, status=200)
 
 
 class MiracleUserInline(InlineFormSet):
@@ -238,7 +251,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         user = self.request.user
         project = serializer.save(creator=user)
-        ActivityLog.objects.log_project_update(user, project, "was created")
+        ActivityLog.objects.log_project_update(user, project, "created")
 
     def retrieve(self, request, *args, **kwargs):
         response = super(ProjectViewSet, self).retrieve(request, *args, **kwargs)
