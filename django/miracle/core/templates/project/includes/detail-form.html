@@ -54,7 +54,7 @@ function ProjectModel(params) {
             published_by: null,
             deleted_on: null,
             deleted_by: null,
-            url: null,
+            url: "{% url 'core:project-list' %}",
             creator: null,
             status: null,
             date_created: null,
@@ -66,13 +66,12 @@ function ProjectModel(params) {
     }
     model = ko.mapping.fromJS(params.data);
     model.users = ko.observableArray({{users_json|safe}})
-    model.detailUrl = ko.pureComputed(function() {
-        var projectId = model.id();
-        return (projectId === -1) ? {% url 'core:project-list' %} : {% url 'core:project-list' %} + projectId + "/";
+    model.endpointUrl = ko.pureComputed(function() {
+        return (model.id() === -1) ? {% url 'core:project-list' %} : model.url();
     });
     model.toJSON = ko.pureComputed(function() {
         return ko.mapping.toJSON(model, {
-            ignore: ["detailUrl", "requestType", "toJSON"]
+            ignore: ["endpointUrl", "requestType", "toJSON"]
         });
     });
     model.requestType = ko.pureComputed(function() {
@@ -84,7 +83,7 @@ function ProjectModel(params) {
             console.error("trying to refresh a transient model. ignoring");
             return;
         }
-        $.get(model.detailUrl(), { format: 'json' }, function(response) {
+        $.get(model.endpointUrl(), { format: 'json' }, function(response) {
             console.debug("REFRESH SUCCESS");
             console.debug(response);
             ko.mapping.fromJSON(response.project_json, model);
@@ -110,16 +109,14 @@ function ProjectModel(params) {
                 humane.log(messages);
             }
         }
-        var promise = $.ajax({
-            url: model.detailUrl(),
+        return $.ajax({
+            url: model.endpointUrl(),
             type: model.requestType(),
             data: model.toJSON(),
             contentType: 'application/json; charset=utf-8',
             dataType: 'json',
             crossDomain: false,
-        })
-        .done(doneCallback)
-        .fail(failCallback);
+        }).done(doneCallback).fail(failCallback);
     }
     return model;
 }

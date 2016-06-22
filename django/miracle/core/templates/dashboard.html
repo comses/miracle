@@ -15,10 +15,10 @@
                 </h4>
             </div>
             <div class='panel-body dynamic-content'>
-                <div data-bind='if: projects().length'>
+                <div class='projects' data-bind='if: projects().length'>
                 <table class='table striped'>
                     <thead>
-                        <th class='col-md-1'>Status</th>
+                        <th class='col-md-1'>Datasets</th>
                         <th class='col-md-3'>Name</th>
                         <th class='col-md-4'>Description</th>
                         <th class='col-md-1'>Owner</th>
@@ -47,21 +47,17 @@
                 <h4 class='panel-title'><i class='fa fa-history'></i> Recent Activity</h4>
             </div>
             <div class='panel-body'>
-                {% comment %}
-                FIXME: this needs to be put into JS so it can get updated without a manual refresh
-                {% endcomment %}
-                {% for activity in activity_log %}
-                <div class='row'>
-                    <div class='col-md-12'>
-                        <span class='label label-primary'>{{ activity.date_created }}</span>
-                        <span class='label label-info'>{{activity.creator}}</span> <span class='text-info'>{{ activity.message }}</span>
+                <div class='activitylog' data-bind='foreach: recent_activity'>
+                    <div class='row'>
+                        <div class='col-md-12'>
+                            <span class='label label-primary' data-bind='text: date_created'></span>
+                            <span class='label label-info' data-bind='text: creator'></span> <span class='text-info' data-bind='text: message'></span>
+                        </div>
                     </div>
                 </div>
-                {% empty %}
-                <div class='well'>
+                <div data-bind='visible: ! recent_activity()' class='well'>
                     <i class='fa fa-info-circle'></i> No recent activity.
                 </div>
-                {% endfor %}
             </div>
         </div>
     </div>
@@ -119,14 +115,16 @@
     </div>
 </div>
 <script>
-var projectArray = $.parseJSON("{{ project_list_json | escapejs }}");
+{% autoescape off %}
+var projects = $.parseJSON("{{ project_list_json | escapejs}}");
+var activityLog = $.parseJSON("{{ activity_log_json | escapejs }}");
+{% endautoescape %}
 $(function() {
-    function ProjectListModel(projectArray) {
+    function ProjectListModel(projects, activityLog) {
         var self = this;
-        var model = ko.mapping.fromJS({projects: projectArray});
+        var model = ko.mapping.fromJS({projects: projects, recent_activity: activityLog});
         model.project = ko.observable(new ProjectModel());
         model.activateNewProject = ko.observable(false);
-        model.templateId = ko.observable('project-list');
         model.createNewProject = function() {
             model.project(new ProjectModel());
             model.activateNewProject(true);
@@ -137,11 +135,24 @@ $(function() {
                 project.save();
                 model.activateNewProject(false);
                 model.projects.push(project);
+                model.refreshActivityLog();
             }
+        }
+        model.refreshActivityLog = function() {
+            $.get('{% url "core:user-activity" username=request.user.username %}')
+                .done(function(data) {
+                    console.debug(data);
+                    ko.mapping.fromJS({recent_activity: data}, model);
+                    humane.log("Refreshed activity log");
+                })
+            .fail(function(response) {
+                console.debug(response);
+                humane.log("Failed to refresh activity log");
+            });
         }
         return model;
     }
-    ko.applyBindings(new ProjectListModel(projectArray));
+    ko.applyBindings(new ProjectListModel(projects, activityLog));
     $('#new-project-form').validate();
     document.documentElement.className = "js";
 });

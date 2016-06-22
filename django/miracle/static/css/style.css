@@ -2,6 +2,18 @@ body {
     font-size: 14px;
     line-height: 1.42857143;
 }
+.projects {
+    min-height: 60%;
+    max-height: 60%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.activitylog {
+    min-height: 60%;
+    max-height: 60%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 #footer {
     margin-top: 10px;
     height: 60px;

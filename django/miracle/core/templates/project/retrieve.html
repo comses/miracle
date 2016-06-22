@@ -51,10 +51,20 @@
                                         </div>
                                     </div>
                                 </form>
-                                <hr>
+                                </div>
+                            </div>
+                            <div class='col-md-6'>
+                                <h5><i class='fa fa-history'></i> Recent Activity</h5>
+                                <div class='activitylog' data-bind='foreach: recent_activity'>
+                                </div>
                                 <h5><i class='fa fa-comment'></i> Comments</h5>
-                                {# FIXME: add to Project serializer and manage via JS #}
-                                {% render_comment_list for project %}
+                                <div class='comments' data-bind='foreach: comments'>
+                                    <div class='well well-sm'>
+                                        <span class='label label-info' data-bind='text: user_name'></span>
+                                        <span class='pull-right label label-primary' data-bind='text: submit_date'></span>
+                                        <div data-bind='text: comment'></div>
+                                    </div>
+                                </div>
                                 {% get_comment_form for project as comment_form %}
                                 <form data-bind='submit: $root.postComment' class='form' id='project-comment-form'>
                                     {% csrf_token %}
@@ -78,11 +88,6 @@
                                         <button type='submit' class='btn btn-primary'>Post</button>
                                     </div>
                                 </form>
-                                </div>
-                            </div>
-                            <div class='col-md-6'>
-                                <h5><i class='fa fa-history'></i> Recent Activity</h5>
-
 
                             </div>
                         </div>

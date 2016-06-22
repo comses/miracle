@@ -2,11 +2,12 @@ from django.contrib.auth.models import User
 from django.core.validators import slug_re
 from django.db import transaction
 from django.utils import timezone, text
+from django_comments.models import Comment
 from collections import defaultdict
 from rest_framework import serializers
 
 from .models import (Project, DataFile, DataColumn, DataTableGroup, DataAnalysisScript, AnalysisOutput, AnalysisOutputFile,
-                     AnalysisParameter, ParameterValue, Author)
+                     AnalysisParameter, ParameterValue, Author, ActivityLog)
 
 import logging
 
@@ -136,6 +137,21 @@ class DataFileSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('id', 'archived_file', 'ignored')
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    submit_date = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S %Z', read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ('user_name', 'user_email', 'comment', 'submit_date')
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    creator = serializers.SlugRelatedField(slug_field='username', read_only=True)
+    date_created = serializers.DateTimeField(format='%b %d, %Y %H:%M:%S %Z', read_only=True)
+
+    class Meta:
+        model = ActivityLog
+        fields = ('creator', 'action', 'message', 'date_created', 'data')
+
 class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     group_members = StringListField()
     group = serializers.StringRelatedField()
@@ -147,7 +163,9 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     number_of_datasets = serializers.IntegerField(read_only=True)
     data_table_groups = DataTableGroupSerializer(many=True, read_only=True)
     analyses = DataAnalysisScriptSerializer(many=True, read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
     slug = serializers.CharField(allow_blank=True)
+    recent_activity = ActivityLogSerializer(many=True, read_only=True, source='activity_logs')
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)
@@ -235,6 +253,7 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         model = Project
         fields = ('id', 'url', 'group_members', 'group', 'creator', 'published', 'published_on', 'date_created',
                   'status', 'number_of_datasets', 'data_table_groups', 'analyses', 'slug', 'description', 'name',
+                  'comments', 'recent_activity'
                   )
         extra_kwargs = {
             'url': {'view_name': 'core:project-detail', 'lookup_field': 'slug'},
