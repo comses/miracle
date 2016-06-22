@@ -9,7 +9,7 @@
     ],
     "exposed-modules": [
         "Api",
-        "Project"
+        "Metadata"
     ],
     "dependencies": {
         "Fresheyeball/elm-font-awesome": "2.0.0 <= v < 3.0.0",

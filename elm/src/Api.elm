@@ -9,6 +9,8 @@ import Hop.Types exposing (Config, Query, Location, PathMatcher, Router)
 
 import Platform exposing (Task)
 
+import Metadata
+
 -- Routes
 
 type Route
@@ -48,20 +50,9 @@ reverse route =
 
 -- Projects API
 
-apply : Json.Decoder (a -> b) -> Json.Decoder a -> Json.Decoder b
-apply func value =
-        Json.object2 (<|) func value
+getProjectMetadata: String -> Task Http.Error Metadata.Model
+getProjectMetadata slug =
 
-projectDecoder : Json.Decoder Project
-projectDecoder =
-    Json.map Project ("id" := Json.int)
-    `apply` ("name" := Json.string)
-    `apply` ("url" := Json.string)
-    `apply` ("slug" := Json.string)
-    `
-
-projectsDecoder : Json.Decoder (List Project)
-projectsDecoder = 
 
 getProjectsForUser : Task Http.Error (List String)
 getProjectsForUser =
