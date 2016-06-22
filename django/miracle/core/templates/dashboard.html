@@ -14,8 +14,8 @@
                     <button class='pull-right btn btn-default btn-xs' data-bind='click: createNewProject'><i class='fa fa-plus'></i> New</button>
                 </h4>
             </div>
-            <div class='panel-body dynamic-content'>
-                <div class='projects' data-bind='if: projects().length'>
+            <div class='panel-body dynamic-content projects'>
+                <div data-bind='if: projects().length'>
                 <table class='table striped'>
                     <thead>
                         <th class='col-md-1'>Datasets</th>
@@ -46,8 +46,8 @@
             <div class='panel-heading'>
                 <h4 class='panel-title'><i class='fa fa-history'></i> Recent Activity</h4>
             </div>
-            <div class='panel-body'>
-                <div class='activitylog' data-bind='foreach: recent_activity'>
+            <div class='panel-body activitylog'>
+                <div data-bind='foreach: recent_activity'>
                     <div class='row'>
                         <div class='col-md-12'>
                             <span class='label label-primary' data-bind='text: date_created'></span>
@@ -55,7 +55,7 @@
                         </div>
                     </div>
                 </div>
-                <div data-bind='visible: ! recent_activity()' class='well'>
+                <div data-bind='visible: recent_activity().length === 0' class='alert alert-info'>
                     <i class='fa fa-info-circle'></i> No recent activity.
                 </div>
             </div>
@@ -132,14 +132,15 @@ $(function() {
         model.saveProject = function() {
             if ($('#new-project-form').valid()) {
                 var project = model.project();
-                project.save();
+                project.save().done(function() {
+                    model.refreshActivityLog();
+                    model.projects.push(project);
+                });
                 model.activateNewProject(false);
-                model.projects.push(project);
-                model.refreshActivityLog();
             }
         }
         model.refreshActivityLog = function() {
-            $.get('{% url "core:user-activity" username=request.user.username %}')
+            return $.get('{% url "core:user-activity" username=request.user.username %}')
                 .done(function(data) {
                     console.debug(data);
                     ko.mapping.fromJS({recent_activity: data}, model);

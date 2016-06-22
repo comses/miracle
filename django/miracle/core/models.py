@@ -75,7 +75,7 @@ class MiracleMetadataMixin(models.Model):
     """
     Provides commonly used metadata fields for Miracle metadata
     """
-    name = models.CharField(max_length=255, blank=True)
+    name = models.CharField(max_length=255)
     full_name = models.CharField(max_length=512, blank=True)
     description = models.TextField(blank=True)
     date_created = models.DateTimeField(auto_now_add=True)
