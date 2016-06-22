@@ -63,7 +63,7 @@ class Command(BaseCommand):
         logger.debug("project path: %s", settings.MIRACLE_PROJECT_DIRECTORY)
 
         creator = Command.create_user(username=creator_name)
-        project, created = Project.objects.get_or_create(slug=project_shortname, creator=creator)
+        project, created = Project.objects.get_or_create(name=project_shortname, slug=project_shortname, creator=creator)
 
         logger.debug(archive_path)
         try:
