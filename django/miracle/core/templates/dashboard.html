@@ -144,11 +144,9 @@ $(function() {
                 .done(function(data) {
                     console.debug(data);
                     ko.mapping.fromJS({recent_activity: data}, model);
-                    humane.log("Refreshed activity log");
                 })
             .fail(function(response) {
                 console.debug(response);
-                humane.log("Failed to refresh activity log");
             });
         }
         return model;

@@ -254,7 +254,7 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         model = Project
         fields = ('id', 'url', 'group_members', 'group', 'creator', 'published', 'published_on', 'date_created',
                   'status', 'number_of_datasets', 'data_table_groups', 'analyses', 'slug', 'description', 'name',
-                  'comments', 'recent_activity'
+                  'comments', 'recent_activity', 'submitted_archive'
                   )
         extra_kwargs = {
             'url': {'view_name': 'core:project-detail', 'lookup_field': 'slug'},

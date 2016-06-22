@@ -84,7 +84,7 @@ function ProjectModel(params) {
             return;
         }
         $.get(model.endpointUrl(), { format: 'json' }, function(response) {
-            console.debug("REFRESH SUCCESS");
+            console.debug("refresh success");
             console.debug(response);
             ko.mapping.fromJSON(response.project_json, model);
         });

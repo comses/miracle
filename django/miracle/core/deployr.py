@@ -58,7 +58,7 @@ class DeployrAPI(object):
 
     @staticmethod
     def clear_project_archive(project):
-        logger.debug("Deleting project archive %s (not implemented yet)", project)
+        logger.debug("Deleting project archive %s from deployr (not implemented yet)", project)
 
     @staticmethod
     def create_working_directory(name, session):
