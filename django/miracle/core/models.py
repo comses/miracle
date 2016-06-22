@@ -175,7 +175,8 @@ class Project(MiracleMetadataMixin):
     group = models.OneToOneField(Group, editable=False,
                                  help_text=_("Members of this group can edit this project's datasets and metadata"),
                                  null=True)
-    submitted_archive = models.FileField(help_text=_("The uploaded zipfile containing all data and scripts for this Project"), null=True, blank=True)
+    submitted_archive = models.FileField(help_text=_("The uploaded zipfile containing all data and scripts for this Project"), null=True, blank=True,
+                                         storage=FileSystemStorage(location=settings.MIRACLE_ARCHIVE_DIRECTORY))
     objects = ProjectQuerySet.as_manager()
 
     @property
@@ -199,18 +200,16 @@ class Project(MiracleMetadataMixin):
         if os.path.exists(lock_file_path):
             with open(lock_file_path) as f:
                 lock_file_contents = f.read()
-            highlighted_lock_file_contents = utils.highlight(lock_file_contents,
-                                                             TextLexer())
+                return utils.highlight(lock_file_contents, TextLexer())
         else:
-            highlighted_lock_file_contents = "<p>No lock file</p>"
-        return highlighted_lock_file_contents
+            return "No packrat.lock file found"
 
     def write_archive(self, f):
         """
         :type f: UploadedFile
         """
         _, ext = self.splitext(f.name)
-        filename = os.path.join(settings.MIRACLE_ARCHIVE_DIRECTORY, str(self.slug) + ext)
+        filename = os.path.join(settings.MIRACLE_ARCHIVE_DIRECTORY, str(self.pk), str(self.slug) + ext)
         self.submitted_archive.save(name=filename, content=f)
 
     def clear_archive(self, user):
@@ -502,11 +501,6 @@ class AnalysisOutputFile(models.Model):
     @property
     def basename(self):
         return os.path.basename(self.output_file.path)
-
-    def output_file_contents(self):
-        with open(self.path) as f:
-            contents = f.read()
-        return contents
 
     @property
     def get_absolute_url(self):

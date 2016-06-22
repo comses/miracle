@@ -16,13 +16,13 @@
             <li role='presentation' class='active'>
                 <a href='#overview' aria-controls='overview' role='tab' data-toggle='tab'><i class='fa fa-table'></i> Overview</a>
             </li>
-            <li role='presentation'>
-                <a href='#explorer' aria-controls='explorer' role='tab' data-toggle='tab'><i class='fa fa-binoculars'></i> Data explorer</a>
+            <li data-bind='visible: number_of_datasets() != 0' role='presentation'>
+                <a href='#explorer' data-bind='click: loadRadiant' aria-controls='explorer' role='tab' data-toggle='tab'><i class='fa fa-binoculars'></i> Data explorer</a>
             </li>
-            <li role='presentation'>
+            <li data-bind='visible: number_of_datasets() != 0'role='presentation'>
                 <a href='#data-groups' aria-controls='metadata' role='tab' data-toggle='tab'><i class='fa fa-database'></i> Metadata</a>
             </li>
-            <li role='presentation'>
+            <li data-bind='visible: number_of_datasets() != 0' role='presentation'>
                 <a href='#analysis' aria-controls='analysis' role='tab' data-toggle='tab'><i class='fa fa-terminal'></i> Analysis scripts</a>
             </li>
             <li role='presentation'>
@@ -32,7 +32,7 @@
         <br>
         <div class='panel panel-primary'>
             <div class='panel-heading'>
-                <h1 class='panel-title'><span data-bind='text: name'></span><span class='label label-badge label-info pull-right' data-bind='text: status'></span></h1>
+                <h1 class='panel-title'><span class='label label-info'>PROJECT</span> <span data-bind='text: name'></span><span class='label label-badge label-info pull-right' data-bind='text: status'></span></h1>
             </div>
             <div class='panel-body'>
                 <div class='tab-content'>
@@ -47,7 +47,7 @@
                                             <button type='submit' class='btn btn-primary'><i class='fa fa-save'></i> Save</button>
                                         </div>
                                         <div class='col-sm-3'>
-                                            <button data-bind='click: $root.delete' class='btn btn-danger'><i class='fa fa-trash'></i> Delete</button>
+                                            <button data-bind='click: $root.deleteArchive' class='btn btn-danger'><i class='fa fa-trash'></i> Delete</button>
                                         </div>
                                     </div>
                                 </form>
@@ -95,7 +95,7 @@
                     <div role='tabpanel' class='tab-pane' id='explorer'>
                         <a class='btn btn-xs btn-default' target='_blank' href='{{ radiant_url }}?project={{ project.slug }}'><i class='fa fa-external-link'></i> Open in new window</a>
                         <div class='embed-responsive embed-responsive-4by3'>
-                            <iframe id='radiant-iframe' src='{{ radiant_url }}?project={{ project.slug }}'></iframe>
+                            <iframe id='radiant-iframe' data-src='{{ radiant_url }}?project={{ project.slug }}'></iframe>
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='dependencies'>
@@ -105,12 +105,10 @@
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='data-groups'>
-                        <div class='bs-callout bs-callout-default'>
-                            <h4><i class='fa fa-database'></i> Data Groups</h4>
-                        </div>
+                        <h4><i class='fa fa-database'></i> Data Groups</h4>
                         <div data-bind='if: data_table_groups().length === 0'>
                             <div class='alert alert-info alert-block' role='alert'>
-                                <i class='fa fa-info-circle'></i> No data has been uploaded yet. 
+                                <i class='fa fa-info-circle'></i> No data has been uploaded yet.
                                 <br> Select "Upload archive" on the left navbar to upload your data and script package.
                             </div>
                         </div>
@@ -183,9 +181,7 @@
                     </div>
                     <div role='tabpanel' class='tab-pane' id='analysis'>
                         {# FIXME: should eventually extract into component (react or KO) #}
-                        <div class='bs-callout bs-callout-default'>
-                            <h4><i class='fa fa-code'></i> Analyses</h4>
-                        </div>
+                        <h4><i class='fa fa-code'></i> Analyses</h4>
                         <div data-bind='if: activeAnalysisScripts().length === 0'>
                             <div class='alert alert-info alert-block' role='alert'>
                                 <i class='fa fa-info-circle'></i> No analysis scripts have been uploaded yet.
@@ -279,15 +275,16 @@
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
-                        <div class='bs-callout bs-callout-default'>
-                            <h4><i class='fa fa-cloud-upload'></i> Upload project archive</h4>
-                        </div>
+                        <h4><i class='fa fa-cloud-upload'></i> Upload project archive</h4>
                         <section>
+                            <div data-bind='if: submitted_archive'>
+                                <div data-bind='text: submitted_archive'></div>
+                            </div>
                             <div class='well'>
                                 Please follow the guidelines at
                                 <a href='https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines'>
                                     https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines
-                                </a> when preparing your project archive for submission. In short,
+                                </a> when preparing your project archive for submission.
                                 <ol>
                                     <li>
                                         <a href='https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines#required-file-structure'>
@@ -301,27 +298,27 @@
 └──<i class='fa fa-folder-o'></i> <mark>packrat</mark>
     └── <mark>init.R</mark>
 </pre>
-Highlighted names like <mark>data</mark>, <mark>src</mark> and your project's current short name, <mark data-bind='text: slug'></mark>,
+Highlighted names like <mark>data</mark>, <mark>src</mark> and your project's current short name, <span class='label label-info' data-bind='text: slug'></span>,
 must be used verbatim. The <code>{Root Directory}</code> can be any arbitrary name, we just expect it as a way to
 lump all your files together.
                                     </li>
                                     <li>
                                         <a href='https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines#prepare-your-r-code'>
                                             Declare your R package dependencies, input parameters, and input data using
-                                            <code>deployrUtils</code> so we can set up your scripts for execution
-                                            against our DeployR server.
+                                            <code>deployrUtils</code> so we can execute your scripts remotely using
+                                            DeployR.
                                         </a>
                                     </li>
                                     <li><a href='https://github.com/comses/miracle/wiki/Project-Archive-Preparation-Guidelines#prepare-your-archive'>
                                             Prepare your archive with all required dependencies using
-                                            <code>packrat</code>, which is part of RStudio.
+                                            <code>packrat</code>
                                         </a>
                                     </li>
                                 </ol>
                                 We accept zipfiles or tarballs with <code>.zip</code> or <code>.tar.gz</code> extensions.
                             </div>
                         </section>
-                        <form action="{% url 'core:upload' %}" class="dropzone" enctype="multipart/form-data" method="post" id="my-dropzone">
+                        <form action="{% url 'core:upload' %}" class="dropzone" enctype="multipart/form-data" method="post" id="project-archive-dropzone">
                             {% csrf_token %}
                             <input type="hidden" name="id" data-bind='value: id'>
                             <div class="fallback">
@@ -424,27 +421,38 @@ lump all your files together.
 <script>
 var gm;
 $(function() {
-    Dropzone.options.myDropzone = {
-        paramName: "file"
-    };
     var model = new ProjectModel({data: {{ project_json|safe}}} );
+    Dropzone.options.projectArchiveDropzone = {
+        paramName: "file",
+        init: function() {
+            this.on("queuecomplete", function(file) {
+                window.setTimeout(model.refresh, 5000);
+                humane.log("Upload successful. Please wait a few seconds while we process your archive.");
+            });
+        }
+    };
     var ColumnDataType = function(label, name) {
         this.label = label;
         this.name = name;
     };
-    model.delete = function() {
-        console.debug("Deleting project");
-        $.ajax({
-            url: '/projects/' + model.id(),
-            type: 'DELETE',
-            contentType: 'application/json; charset=utf-8',
-            dataType: 'json',
-        }).done(function(response) {
-            console.debug(response);
-        }).fail(function(response) {
-            console.debug("FAIL");
-            console.debug(response);
-        });
+    model.deleteArchive = function() {
+        bootbox.confirm("Delete the project archive and files associated with this project? This action cannot be undone.",
+                function (result) {
+                    if (result) {
+                        console.debug("Deleting archive");
+                        $.ajax({
+                            url: model.url() + "/clear_archive/",
+                            type: 'DELETE',
+                            contentType: 'application/json; charset=utf-8',
+                            dataType: 'json',
+                        }).done(function(response) {
+                            console.debug(response);
+                        }).fail(function(response) {
+                            console.debug("FAIL");
+                            console.debug(response);
+                        });
+                    }
+                });
     };
     model.activeAnalysisScripts = ko.pureComputed(function() {
         return ko.utils.arrayFilter(model.analyses(), function(analysis) { return analysis.enabled() });
@@ -484,6 +492,10 @@ $(function() {
     model.selectedOutput = ko.observable();
     model.analysisParameters = ko.observableArray();
     model.currentInterval = ko.observable();
+    model.loadRadiant = function() {
+        var radiantIframe = $('#radiant-iframe');
+        radiantIframe.attr('src', radiantIframe.data('src'));
+    }
     model.postComment = function() {
         var formData = $('#project-comment-form').serialize();
         console.debug(formData);
@@ -605,10 +617,9 @@ $(function() {
         e.preventDefault();
         $(this).tab('show');
     });
-    $('ul.nav-pills > li > a').on('shown.bs.tab', function (e) {
-        var href = $(e.target).attr('href');
-        var id = href.substr(1);
-        window.location.hash = id;
+    $('ul.nav-tabs > li > a').on('shown.bs.tab', function (e) {
+        var hash = $(e.target).attr('href');
+        history.pushState(null, null, hash);
     });
     var hash = window.location.hash;
     $('#project-tab a[href="' + hash + '"]').tab('show');

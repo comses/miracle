@@ -27,6 +27,7 @@ from .permissions import (CanViewReadOnlyOrEditProject, CanViewReadOnlyOrEditPro
 from .tasks import run_analysis_task, run_metadata_pipeline
 
 import logging
+from os import path
 
 logger = logging.getLogger(__name__)
 
@@ -157,11 +158,10 @@ class OutputViewSet(viewsets.ModelViewSet):
     def template_name(self):
         return 'output/{}.html'.format(self.action)
 
-    @detail_route(methods=['GET'])
+    @detail_route(methods=['get'])
     def download(self, request, pk):
-        output = AnalysisOutputFile.objects.get(id=pk)
-        content = output.output_file_contents()
-        response = HttpResponse(content, content_type='application/octet-stream')
+        output = AnalysisOutputFile.objects.get(pk=pk)
+        response = HttpResponse(output.output_file.file, content_type='application/octet-stream')
         response['Content-Disposition'] = 'attachment; filename="{}"'.format(output.basename)
         return response
 
@@ -281,15 +281,25 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         instance.deactivate(self.request.user)
 
-    @detail_route(methods=['post'])
-    def clear_archive(self, request, pk=None):
+    @detail_route(methods=['get'])
+    def download_archive(self, request, slug=None):
+        project = self.get_object()
+        logger.debug("getting project %s with slug %s", project, slug)
+        archive_file = project.submitted_archive.file
+        response = HttpResponse(archive_file, content_type='application/octet-stream')
+        response['Content-Disposition'] = 'attachment; filename="{0}"'.format(path.basename(archive_file.name))
+        return response
+
+    @detail_route(methods=['delete'])
+    def clear_archive(self, request, slug=None):
         """ Deletes project archive directory and related entities"""
         project = self.get_object()
+        user = request.user
         # FIXME: replace this with DRF permissions
-        if project.has_admin_privileges(request.user):
+        if project.has_admin_privileges(user):
             logger.debug("Resetting project archive for %s", project)
-            project.clear_archive()
-            return Response({'success': True})
+            project.clear_archive(user)
+            return Response({'success': True, 'project': dumps(ProjectSerializer(project).data)})
         else:
             return Response({
                 'success': False,
