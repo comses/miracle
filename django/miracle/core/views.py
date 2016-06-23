@@ -227,7 +227,8 @@ class DataTableGroupViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         response = super(DataTableGroupViewSet, self).retrieve(request, *args, **kwargs)
         data_group = response.data
-        response.data['data_group_json'] = dumps(data_group)
+        if request.accepted_renderer.format == 'html':
+            response.data['data_group_json'] = dumps(data_group)
         return response
 
     def get_queryset(self):
@@ -259,14 +260,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
         project_data = response.data
         project = self.get_object()
         dependencies = project.package_dependencies()
-        response.data = {
-            'project_json': dumps(project_data),
-            'users_json': dumps(user_serializer.data),
-            'dependencies': dependencies,
-            'radiant_url': settings.RADIANT_URL
-        }
+
         if request.accepted_renderer.format == 'html':
-            response.data['project'] = self.get_object()
+            response.data = {'project_json': dumps(project_data), 'users_json': dumps(user_serializer.data),
+                             'dependencies': dependencies, 'radiant_url': settings.RADIANT_URL,
+                             'project': self.get_object()}
+        else:
+            slug = kwargs["slug"]
+            logger.debug("ProjectViewSet slug: {}".format(slug))
+            response.data = ProjectSerializer(Project.objects.get(slug=slug), context={'request': request}).data
         return response
 
     def perform_update(self, serializer):

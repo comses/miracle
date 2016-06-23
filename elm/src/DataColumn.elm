@@ -10,13 +10,13 @@ import DecodeExtra exposing (apply, pure)
 import Json.Encode as Encode
 
 
-type alias Model = {
-    id: Int,
-    name: String,
-    full_name: TextField.Model,
-    description: TextField.Model,
-    warning: String
-}
+type alias Model =
+    { id: Int
+    , name: String
+    , full_name: TextField.Model
+    , description: TextField.Model
+    , warning: String
+    }
 
 
 columnDecode: Decode.Decoder Model

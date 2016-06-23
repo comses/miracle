@@ -11,7 +11,7 @@ import IntDict
 
 import DataColumn as Column exposing (column)
 import TextField exposing (textfield)
-
+import Raw exposing (DataTableGroup)
 
 type alias Model = 
     { id: Int
