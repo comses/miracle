@@ -14,6 +14,7 @@ type alias Column =
     , data_table_group: String
     , name: String
     , full_name: String
+    , description: String
     , data_type: String
     , table_order: Int
     }
@@ -21,10 +22,11 @@ type alias Column =
 
 columnDecoder: Decoder Column
 columnDecoder =
-    Decode.object6
+    Decode.object7 Column
     ("id" := Decode.int)
     ("name" := Decode.string)
     ("full_name" := Decode.string)
+    ("description" := Decode.string)
     ("data_type" := Decode.string)
     ("data_table_group" := Decode.string)
     ("table_order" := Decode.int)
@@ -33,12 +35,23 @@ columnDecoder =
 columnEncoder: Column -> Encode.Value
 columnEncoder column =
     Encode.object
-    [ ("id", Encode.string column.id)
+    [ ("id", Encode.int column.id)
     , ("name", Encode.string column.name)
     , ("full_name", Encode.string column.full_name)
     , ("data_type", Encode.string column.data_type)
     , ("data_table_group", Encode.string column.data_table_group)
     , ("table_order", Encode.int column.table_order)]
+
+columnEx: Column
+columnEx =
+    { id=0
+    , data_table_group= "price"
+    , name="A"
+    , full_name="B"
+    , description="Foo"
+    , data_type="bigint"
+    , table_order=2
+    }
 
 --
 
@@ -47,6 +60,7 @@ type alias DataTableGroup =
     , name: String
     , full_name: String
     , project: String
+    , description: String
     , url: String
     , columns: Array.Array Column
     , number_of_files: Int
@@ -56,15 +70,16 @@ type alias DataTableGroup =
 
 datatablegroupDecoder: Decoder DataTableGroup
 datatablegroupDecoder =
-    Decode.object8
-    ("id" := Decode.int)
-    ("name" := Decode.string)
-    ("full_name" := Decode.string)
-    ("project" := Decode.string)
-    ("url" := Decode.string)
-    ("columns":= Decode.array columnDecoder)
-    ("number_of_files" := Decode.int)
-    ("number_of_columns" := Decode.int)
+    pure DataTableGroup
+    `apply` ("id" := Decode.int)
+    `apply` ("name" := Decode.string)
+    `apply` ("full_name" := Decode.string)
+    `apply` ("project" := Decode.string)
+    `apply` ("description" := Decode.string)
+    `apply` ("url" := Decode.string)
+    `apply` ("columns":= Decode.array columnDecoder)
+    `apply` ("number_of_files" := Decode.int)
+    `apply` ("number_of_columns" := Decode.int)
 
 
 datatablegroupEncoder: DataTableGroup -> Encode.Value
@@ -77,7 +92,19 @@ datatablegroupEncoder datatablegroup =
     , ("url", Encode.string datatablegroup.url)
     , ("columns", Encode.array (Array.map columnEncoder datatablegroup.columns))
     , ("number_of_files", Encode.int datatablegroup.number_of_files)
-    , ("number_of_columns", Encode.int datatablegroup.number_of_columns)]
+    , ("number_of_columns", Encode.int datatablegroup.number_of_columns) ]
+
+
+datatablegroupEx =
+    { id=0
+    , name="DT"
+    , full_name="DTG"
+    , project="Luxe Demo"
+    , url="d"
+    , columns= Array.fromList [columnEx]
+    , number_of_files= 10
+    , number_of_columns= 1
+    }
 
 --
 
@@ -89,8 +116,8 @@ type alias Parameter =
     , description: String
     , value: String
     , html_input_type: String
-    , value_list: Maybe (Array.Array String)
-    , value_range: Maybe (Array.Array String)
+    , value_list: Array.Array String
+    , value_range: Array.Array String
     }
 
 
@@ -98,6 +125,7 @@ parameterDecoder: Decoder Parameter
 parameterDecoder =
     pure Parameter
     `apply` ("id" := Decode.int)
+    `apply` ("name" := Decode.string)
     `apply` ("label" := Decode.string)
     `apply` ("data_type" := Decode.string)
     `apply` ("description" := Decode.string)

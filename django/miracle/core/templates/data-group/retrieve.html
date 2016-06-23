@@ -1,59 +1,64 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class='panel panel-primary'>
-    <div class='panel-heading'>
-        <h3 class='panel-title'><i class='fa fa-database'></i> {{name}} (pk: {{id}})</h3>
-    </div>
-    <div class='panel-body' data-bind='foreach: columns'>
-        <div class='well'>
-            <form class='form form-inline' data-bind='submit: function() { $root.updateColumn($data) }'>
-                <input type='hidden' name='id' data-bind='value: id'>
-                <div class='form-group'>
-                    <label for='name'>Name</label>
-                    <input name='name' type='text' class='form-control' data-bind='value: name'>
-                </div>
-                <div class='form-group'>
-                    <label for='description'>Description</label>
-                    <textarea class='form-control' name='description' data-bind='value: description' rows='3'></textarea>
-                </div>
-                <div class='form-group'>
-                    <label for='dataType'>Data type</label>
-                    <input name='data_type' type='text' class='form-control' data-bind='value: data_type'>
-                </div>
-                <div class='form-group'>
-                    <button type='submit' class='btn btn-default'>Update</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+{#<div class='panel panel-primary'>#}
+{#    <div class='panel-heading'>#}
+{#        <h3 class='panel-title'><i class='fa fa-database'></i> {{name}} (pk: {{id}})</h3>#}
+{#    </div>#}
+{#    <div class='panel-body' data-bind='foreach: columns'>#}
+{#        <div class='well'>#}
+{#            <form class='form form-inline' data-bind='submit: function() { $root.updateColumn($data) }'>#}
+{#                <input type='hidden' name='id' data-bind='value: id'>#}
+{#                <div class='form-group'>#}
+{#                    <label for='name'>Name</label>#}
+{#                    <input name='name' type='text' class='form-control' data-bind='value: name'>#}
+{#                </div>#}
+{#                <div class='form-group'>#}
+{#                    <label for='description'>Description</label>#}
+{#                    <textarea class='form-control' name='description' data-bind='value: description' rows='3'></textarea>#}
+{#                </div>#}
+{#                <div class='form-group'>#}
+{#                    <label for='dataType'>Data type</label>#}
+{#                    <input name='data_type' type='text' class='form-control' data-bind='value: data_type'>#}
+{#                </div>#}
+{#                <div class='form-group'>#}
+{#                    <button type='submit' class='btn btn-default'>Update</button>#}
+{#                </div>#}
+{#            </form>#}
+{#        </div>#}
+{#    </div>#}
+{#</div>#}
+    <div id="elm-main"></div>
 {% endblock content %}
 
 {% block javascript %}
-{% include "includes/ko.js" %}
+{#{% include "includes/ko.js" %}#}
 {% include "includes/csrf.js" %}
 <script>
-$(function() {
-    var DataGroupViewModel = function(data) {
-        var self = ko.mapping.fromJS(data);
-        self.updateColumn = function(column) {
-            console.debug(column);
-            var columnJson = ko.toJSON(column);
-            console.debug(columnJson);
-            $.ajax({
-                url: column.detail_url(),
-                type: 'PUT',
-                data: columnJson,
-                contentType: 'application/json; charset=utf-8',
-                dataType: 'json',
-                crossDomain: false,
-            });
-        };
-        return self;
-    }
-    var model = new DataGroupViewModel({{ data_group_json|safe}});
-    ko.applyBindings(model);
-});
+{% include "includes/elm-data-group.js" %}
+</script>
+<script>
+{#$(function() {#}
+{#    var DataGroupViewModel = function(data) {#}
+{#        var self = ko.mapping.fromJS(data);#}
+{#        self.updateColumn = function(column) {#}
+{#            console.debug(column);#}
+{#            var columnJson = ko.toJSON(column);#}
+{#            console.debug(columnJson);#}
+{#            $.ajax({#}
+{#                url: column.detail_url(),#}
+{#                type: 'PUT',#}
+{#                data: columnJson,#}
+{#                contentType: 'application/json; charset=utf-8',#}
+{#                dataType: 'json',#}
+{#                crossDomain: false,#}
+{#            });#}
+{#        };#}
+{#        return self;#}
+{#    }#}
+{#    var model = new DataGroupViewModel({{ data_group_json|safe}});#}
+{#    ko.applyBindings(model););#}
+    var el = document.getElementById("elm-main");
+    var app = Elm.Metadata.embed(el);
 </script>
 {% endblock javascript %}

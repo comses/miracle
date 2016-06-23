@@ -1,4 +1,4 @@
-module TextField exposing (textfield, update, view, Model, Msg(ToggleEditable,SetValue))
+module TextField exposing (textfield, toString, update, view, Model, Msg(ToggleEditable,SetValue))
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -12,6 +12,10 @@ type alias Model =
         , value: String
         , disabled: Bool
         }
+
+
+toString: Model -> String
+toString model = model.name
 
 
 type Msg

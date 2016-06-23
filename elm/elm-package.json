@@ -8,8 +8,7 @@
         "test"
     ],
     "exposed-modules": [
-        "Api",
-        "Metadata"
+        "Api"
     ],
     "dependencies": {
         "Fresheyeball/elm-font-awesome": "2.0.0 <= v < 3.0.0",

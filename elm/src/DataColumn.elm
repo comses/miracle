@@ -1,4 +1,4 @@
-module DataColumn exposing (column, Model, Msg, update, view)
+module DataColumn exposing (column, fromColumn, Model, Msg, update, view)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -9,23 +9,18 @@ import Json.Decode as Decode exposing ((:=))
 import DecodeExtra exposing (apply, pure)
 import Json.Encode as Encode
 
+import Raw exposing (Column)
 
 type alias Model =
     { id: Int
     , name: String
     , full_name: TextField.Model
     , description: TextField.Model
+    , data_table_group: String
+    , data_type: String
+    , table_order: Int
     , warning: String
     }
-
-
-columnDecode: Decode.Decoder Model
-columnDecode =
-    pure Model
-    `apply` ("id":= Decode.int)
-    `apply` ("name":= Decode.string)
-    `apply` ("full_name":= Decode.string)
-    `apply` ("description":= Decode.string)
 
 
 type Msg 
@@ -36,23 +31,38 @@ type Msg
     | Warn String
 
 
-column: { id: Int, name: String, full_name: String, description: String } -> Model
-column {id, name, full_name, description} =
+column: Column -> Model
+column {id, name, full_name, description, data_table_group, data_type, table_order} =
     { id = id
     , name = name
     , full_name = textfield "Full Name" full_name
     , description = textfield "Description" description
+    , data_table_group = data_table_group
+    , data_type = data_type
+    , table_order = table_order
     , warning = ""
     }
 
 
-init: Model
-init = column 
-    { id=1
-    , name="price_data"
-    , full_name="Price Data"
-    , description="Purchase price of a home"
+fromColumn: Model -> Column
+fromColumn {id, name, full_name, description, data_table_group, data_type, table_order, warning} =
+    { id = id
+    , name = name
+    , full_name = TextField.toString full_name
+    , description = TextField.toString description
+    , data_table_group = data_table_group
+    , data_type = data_type
+    , table_order = table_order
     }
+
+
+--init: Model
+--init = column
+--    { id=1
+--    , name="price_data"
+--    , full_name="Price Data"
+--    , description="Purchase price of a home"
+--    }
 
 
 update: Msg -> Model -> Model

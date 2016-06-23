@@ -127,7 +127,7 @@ class DataTableGroupSerializer(serializers.HyperlinkedModelSerializer):
         extra_kwargs = {
             'url': {'view_name': 'core:data-group-detail'}
         }
-        fields = ('id', 'name', 'full_name', 'project', 'url', 'columns', 'number_of_files', 'number_of_columns')
+        fields = ('id', 'name', 'full_name', 'description', 'project', 'url', 'columns', 'number_of_files', 'number_of_columns')
 
 
 class DataFileSerializer(serializers.HyperlinkedModelSerializer):
