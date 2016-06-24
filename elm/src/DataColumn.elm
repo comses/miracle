@@ -1,4 +1,4 @@
-module DataColumn exposing (column, fromColumn, Model, Msg, update, view)
+module DataColumn exposing (fromColumn, toColumn, Model, Msg, update, view)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -31,8 +31,8 @@ type Msg
     | Warn String
 
 
-column: Column -> Model
-column {id, name, full_name, description, data_table_group, data_type, table_order} =
+fromColumn: Column -> Model
+fromColumn {id, name, full_name, description, data_table_group, data_type, table_order} =
     { id = id
     , name = name
     , full_name = textfield "Full Name" full_name
@@ -44,8 +44,8 @@ column {id, name, full_name, description, data_table_group, data_type, table_ord
     }
 
 
-fromColumn: Model -> Column
-fromColumn {id, name, full_name, description, data_table_group, data_type, table_order, warning} =
+toColumn: Model -> Column
+toColumn {id, name, full_name, description, data_table_group, data_type, table_order, warning} =
     { id = id
     , name = name
     , full_name = TextField.toString full_name
@@ -54,15 +54,6 @@ fromColumn {id, name, full_name, description, data_table_group, data_type, table
     , data_type = data_type
     , table_order = table_order
     }
-
-
---init: Model
---init = column
---    { id=1
---    , name="price_data"
---    , full_name="Price Data"
---    , description="Purchase price of a home"
---    }
 
 
 update: Msg -> Model -> Model

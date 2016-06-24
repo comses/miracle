@@ -15,7 +15,7 @@ type alias Model =
 
 
 toString: Model -> String
-toString model = model.name
+toString model = model.value
 
 
 type Msg

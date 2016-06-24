@@ -226,9 +226,9 @@ class DataTableGroupViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         response = super(DataTableGroupViewSet, self).retrieve(request, *args, **kwargs)
-        data_group = response.data
+        data_id = {'id': response.data['id']}
         if request.accepted_renderer.format == 'html':
-            response.data['data_group_json'] = dumps(data_group)
+            response.data['data_id_json'] = dumps(data_id)
         return response
 
     def get_queryset(self):

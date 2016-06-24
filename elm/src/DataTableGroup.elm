@@ -10,7 +10,7 @@ import Platform.Cmd as Cmd
 import IntDict
 import Array
 
-import DataColumn as Column exposing (column)
+import DataColumn as Column exposing (fromColumn)
 import TextField exposing (textfield)
 import Raw exposing (DataTableGroup, columnEx)
 
@@ -39,7 +39,7 @@ toDataTableGroup model =
     , number_of_files= model.number_of_files
     , number_of_columns= model.number_of_columns
     , columns =
-        Array.fromList (List.map Column.fromColumn (IntDict.values model.indexed_columns))
+        Array.fromList (List.map Column.toColumn (IntDict.values model.indexed_columns))
     }
 
 
@@ -53,7 +53,7 @@ fromDataTableGroup datatablegroup =
     , url = datatablegroup.url
     , number_of_files= datatablegroup.number_of_files
     , number_of_columns = datatablegroup.number_of_columns
-    , indexed_columns = IntDict.fromList  (Array.toIndexedList (Array.map Column.column datatablegroup.columns))
+    , indexed_columns = IntDict.fromList  (Array.toIndexedList (Array.map Column.fromColumn datatablegroup.columns))
     }
 
 
@@ -76,10 +76,10 @@ init =
     , number_of_columns= 20
     , indexed_columns=IntDict.fromList [
         (0
-        , column columnEx
+        , Column.fromColumn columnEx
         ),
         (1
-        , column { columnEx | id = 1}
+        , Column.fromColumn { columnEx | id = 1}
         )]
     }
 

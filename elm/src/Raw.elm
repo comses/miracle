@@ -11,11 +11,11 @@ import Json.Encode as Encode
 
 type alias Column =
     { id: Int
-    , data_table_group: String
     , name: String
     , full_name: String
     , description: String
     , data_type: String
+    , data_table_group: String
     , table_order: Int
     }
 
@@ -38,9 +38,11 @@ columnEncoder column =
     [ ("id", Encode.int column.id)
     , ("name", Encode.string column.name)
     , ("full_name", Encode.string column.full_name)
+    , ("description", Encode.string column.description)
     , ("data_type", Encode.string column.data_type)
     , ("data_table_group", Encode.string column.data_table_group)
     , ("table_order", Encode.int column.table_order)]
+
 
 columnEx: Column
 columnEx =
