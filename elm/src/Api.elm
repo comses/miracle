@@ -1,4 +1,4 @@
-module Api exposing (getProjectsForUser, updateProject)
+module Api exposing (..)
 
 import Http
 import Json.Decode as Json exposing ((:=))
@@ -7,10 +7,16 @@ import Hop exposing (..)
 import Hop.Matchers exposing (match1, match2, int, str)
 import Hop.Types exposing (Config, Query, Location, PathMatcher, Router)
 
-import Platform exposing (Task)
+import Task
 
-import Metadata
+import Csrf
+import Raw
 
+import DataColumn exposing (fromColumn, toColumn)
+import DataTableGroup exposing (fromDataTableGroup, toDataTableGroup)
+
+
+-- TODO: convert API to use routes
 -- Routes
 
 type Route
@@ -47,14 +53,3 @@ reverse route =
 
         NotFound -> 
             ""
-
--- Projects API
-
-getProjectMetadata: String -> Task Http.Error Metadata.Model
-getProjectMetadata slug =
-
-
-getProjectsForUser : Task Http.Error (List String)
-getProjectsForUser =
-    Http.get projects (reverse ProjectListRoute)
-

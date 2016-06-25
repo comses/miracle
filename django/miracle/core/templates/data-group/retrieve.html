@@ -38,29 +38,7 @@
 {% include "includes/elm-data-group.js" %}
 </script>
 <script>
-{#$(function() {#}
-{#    var DataGroupViewModel = function(data) {#}
-{#        var self = ko.mapping.fromJS(data);#}
-{#        self.updateColumn = function(column) {#}
-{#            console.debug(column);#}
-{#            var columnJson = ko.toJSON(column);#}
-{#            console.debug(columnJson);#}
-{#            $.ajax({#}
-{#                url: column.detail_url(),#}
-{#                type: 'PUT',#}
-{#                data: columnJson,#}
-{#                contentType: 'application/json; charset=utf-8',#}
-{#                dataType: 'json',#}
-{#                crossDomain: false,#}
-{#            });#}
-{#        };#}
-{#        return self;#}
-{#    }#}
-{#    var model = new DataGroupViewModel({{ data_group_json|safe}});#}
-{#    ko.applyBindings(model););#}
-    var initial_state = {{ data_id_json|safe }};
-    initial_state.csrftoken = $.cookie("csrftoken");
     var el = document.getElementById("elm-main");
-    var app = Elm.Metadata.embed(el, initial_state);
+    var app = Elm.Metadata.embed(el, {{ data_id_json|safe }});
 </script>
 {% endblock javascript %}

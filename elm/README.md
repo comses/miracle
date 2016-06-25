@@ -1,5 +1,10 @@
 ### Elm front end JS for the miracle project
 
+### Testing
+
+- Run `./elm-deploy` in this directory. This will create a js file in the
+  `django/miracle/core/templates/includes` directory.
+
 ### Setup
 
 * Install nodejs and npm, e.g., sudo apt-get install npm

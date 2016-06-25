@@ -1,4 +1,4 @@
-module Metadata exposing (Model, Msg, update, view, init)
+module Metadata exposing (update, view, init)
 
 import Html exposing (..)
 import Html.App as App
@@ -8,107 +8,94 @@ import Http
 import Task
 import Debug
 import Json.Encode as Encode
+import Platform.Cmd
 
-import DataTableGroup
+import Api.DataTableGroup
+import Api.DataColumn
+
+import Csrf
+
 import DataColumn as Column
-import Raw as R
+import DataTableGroup
 
-
-getDataTableGroup: Int -> Task.Task Http.RawError Http.Response
-getDataTableGroup id =
-  let url = "https://localhost/data-group/" ++ toString id ++ ".json"
-      headers = [ ("Content-Type", "application/json")]
-  in Http.send Http.defaultSettings
-    { verb = "GET"
-    , headers = headers
-    , url = url
-    , body = Http.empty
-    } `Task.andThen` (\res -> let _ = Debug.log "Headers" res.headers in Task.succeed res)
-
-
-getDataTableGroupCmd: Int -> Cmd Msg
-getDataTableGroupCmd id =
-    Task.perform FetchFail FetchSucceed
-        (getDataTableGroup id |> (Http.fromJson R.datatablegroupDecoder))
-
-
-setDataTableGroup: Model -> Task.Task Http.RawError Http.Response
-setDataTableGroup model =
-    let datatablegroup = DataTableGroup.toDataTableGroup model.current
-        -- prepending or appending csrftoken here instead of manually defining headers
-        -- produces an run time error "TypeError: xs is undefined".
-        headers =
-            [ ("Accept", "application/json, text/javascript, */*; q=0.01")
-            , ("Content-Type", "application/json; charset=utf-8")
-            , ("X-CSRFToken", model.csrftoken)
-            , ("X-Requested-With", "XMLHttpRequest")
-            ]
-        url = "https://localhost/data-group/" ++ toString datatablegroup.id ++ "/"
-    in Http.send Http.defaultSettings
-        { verb = "PUT"
-        , headers = headers
-        , url = url
-        , body = Http.string (Encode.encode 0 (R.datatablegroupEncoder datatablegroup))
-        }
-
-
-setDataTableGroupCmd: Model -> Cmd Msg
-setDataTableGroupCmd model =
-    Task.perform FetchFail FetchSucceed
-        (setDataTableGroup model |> (Http.fromJson R.datatablegroupDecoder))
-
+import Raw
 
 type alias Model =
-    { current: DataTableGroup.Model
-    , old: DataTableGroup.Model
+    { datatablegroup: DataTableGroup.Model
     , warning: String
-    , csrftoken: String
     , loading: Bool
     }
 
 
-type Msg 
-    = Current DataTableGroup.Msg
-    | Cancel
-    | Get Int
-    | Set
-    | FetchSucceed R.DataTableGroup
-    | FetchFail Http.Error
+type Msg
+    = Content DataTableGroup.Msg
+    | Reset
+    | DataTableGroupR Api.DataTableGroup.Msg
+    | DataColumnR Int Api.DataColumn.Msg
+
+
+updateDataTableGroupR: Api.DataTableGroup.Msg -> Model -> (Model, Cmd Msg)
+updateDataTableGroupR msg model =
+    let mapDTG = Platform.Cmd.map DataTableGroupR
+    in case msg of
+
+        Api.DataTableGroup.Get id -> (model, mapDTG (Api.DataTableGroup.get id))
+
+        Api.DataTableGroup.Set ->
+
+            let _ = Debug.log "CSRFToken: " Csrf.getCsrfToken
+                _ = Debug.log "Current: " model.datatablegroup
+                datatablegroup = DataTableGroup.toDataTableGroup model.datatablegroup
+                _ = Debug.log "Set: " datatablegroup
+
+            in (model, mapDTG (Api.DataTableGroup.set model.datatablegroup))
+
+        Api.DataTableGroup.FetchFail error ->
+            ({ model | warning = toString error }, Cmd.none)
+
+        Api.DataTableGroup.FetchSucceed raw_datatablegroup ->
+
+            let _ = Debug.log "FetchSucceeded" raw_datatablegroup
+                datatablegroup = DataTableGroup.fromDataTableGroup raw_datatablegroup
+
+            in ({model | datatablegroup = datatablegroup
+                       , loading = False}, Cmd.none)
+
+
+-- TODO: make a updateDataColumnR function to deal with
+--updateDataColumnR: Api.DataColumn.Msg -> Api.Model -> (Api.Model, Cmd Api.Msg)
+--updateDataColumnR msg model =
+--    case msg of
+--
+--        Api.DataColumn.Set id -> (model, Api.setDataColumnCmd id)
 
 
 update: Msg -> Model -> (Model, Cmd Msg)
 update msg model = 
     case msg of
-        Current msg' -> ({ model | current = DataTableGroup.update msg' model.current }, Cmd.none)
+        Content msg' ->
+            ({ model | datatablegroup = DataTableGroup.update msg' model.datatablegroup }, Cmd.none)
 
-        Cancel -> ({ model | current = model.old }, Cmd.none)
+        Reset -> ({ model | warning = ""
+                              , datatablegroup = DataTableGroup.update DataTableGroup.Reset model.datatablegroup}
+                     , Cmd.none)
 
-        Get id -> (model, getDataTableGroupCmd id)
+        DataTableGroupR msg' -> updateDataTableGroupR msg' model
 
-        Set -> let _ = Debug.log "CSRFToken: " model.csrftoken
-                   _ = Debug.log "Current: " model.current
-                   datatablegroup = DataTableGroup.toDataTableGroup model.current
-                   _ = Debug.log "Set: " datatablegroup
-               in (model, setDataTableGroupCmd model)
-
-        FetchFail error -> ({ model | warning = toString error }, Cmd.none)
-
-        FetchSucceed current_datatablegroup ->
-            let _ = Debug.log "FetchSucceeded" current_datatablegroup
-                current = DataTableGroup.fromDataTableGroup current_datatablegroup
-            in ({model | current = current
-                       , old = current
-                       , loading = False}, Cmd.none)
+        DataColumnR id msg' -> (model, Cmd.none)
 
 
 view: Model -> Html Msg
 view model =
-    let contents = if model.loading then [ text "Loading" ]
-            else [ h1 [] [ text "Metadata" ]
-            , App.map Current (DataTableGroup.view model.current)
-            , input [ type' "button", onClick Set, value "Save"] []
-            , input [ type' "button", onClick Cancel, value "Cancel"] []
+    let onClickDtgBtn = onClick (DataTableGroupR Api.DataTableGroup.Set)
+
+        contents = if model.loading then [ text "Loading" ]
+            else [ h4 [] [ text "Metadata" ]
+            , App.map Content (DataTableGroup.view model.datatablegroup)
+            , input [ type' "button", onClickDtgBtn, class "btn", value "Save"] []
+            , input [ type' "button", onClick Reset, class "btn", value "Cancel"] []
             ]
+
         contents_with_warning = if model.warning /= "" then
             contents ++ [ text model.warning ]
             else contents
@@ -117,15 +104,15 @@ view model =
     div [ class "container"] contents_with_warning
 
 
-init: {id: Int, csrftoken: String} -> (Model, Cmd Msg)
-init {id, csrftoken} = let model =
-                { current=DataTableGroup.init
-                , old=DataTableGroup.init
-                , warning=""
-                , csrftoken=csrftoken
-                , loading=True
-                }
-            in (model, getDataTableGroupCmd id)
+init: {id: Int} -> (Model, Cmd Msg)
+init {id} =
+    let mapDTG = Platform.Cmd.map DataTableGroupR
+        model =
+            { datatablegroup= DataTableGroup.init
+            , warning=""
+            , loading=True
+            }
+    in (model, mapDTG (Api.DataTableGroup.get id))
 
 
 main = App.programWithFlags { init = init, view = view, update = update, subscriptions = \_ -> Sub.none }

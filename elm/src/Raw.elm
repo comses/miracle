@@ -3,11 +3,18 @@ module Raw exposing (..)
 import Date
 import Array
 
+import Http
 import Json.Decode as Decode exposing (Decoder, (:=))
 import DecodeExtra exposing (pure, apply)
 import Json.Encode as Encode
 
+
+toBody: a -> (a -> Encode.Value) -> Http.Body
+toBody model modelEncoder = Http.string (Encode.encode 0 (modelEncoder model))
+
+
 --
+
 
 type alias Column =
     { id: Int
@@ -44,6 +51,10 @@ columnEncoder column =
     , ("table_order", Encode.int column.table_order)]
 
 
+columnToBody: Column -> Http.Body
+columnToBody column = toBody column columnEncoder
+
+
 columnEx: Column
 columnEx =
     { id=0
@@ -55,7 +66,9 @@ columnEx =
     , table_order=2
     }
 
+
 --
+
 
 type alias DataTableGroup =
     { id: Int
@@ -97,6 +110,10 @@ datatablegroupEncoder datatablegroup =
     , ("number_of_columns", Encode.int datatablegroup.number_of_columns) ]
 
 
+datatablegroupBody: DataTableGroup -> Http.Body
+datatablegroupBody datatablegroup = toBody datatablegroup datatablegroupEncoder
+
+
 datatablegroupEx =
     { id=0
     , name="DT"
@@ -108,7 +125,9 @@ datatablegroupEx =
     , number_of_columns= 1
     }
 
+
 --
+
 
 type alias Parameter =
     { id: Int

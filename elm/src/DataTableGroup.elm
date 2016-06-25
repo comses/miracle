@@ -1,8 +1,8 @@
-module DataTableGroup exposing (Model, toDataTableGroup, fromDataTableGroup, rawStr, Msg, update, view, init)
+module DataTableGroup exposing (init, view, update, Model, toDataTableGroup, fromDataTableGroup, Msg(..))
 
 import Html exposing (..)
 import Html.App as App
-import Html.Attributes exposing (type', value)
+import Html.Attributes exposing (type', value, class)
 import Html.Events exposing (onClick)
 
 import Platform.Cmd as Cmd
@@ -11,20 +11,21 @@ import IntDict
 import Array
 
 import DataColumn as Column exposing (fromColumn)
-import TextField exposing (textfield)
+import Cancelable exposing (toCancelable, fromCancelable)
 import Raw exposing (DataTableGroup, columnEx)
 
 
 type alias Model = 
     { id: Int
     , name: String 
-    , full_name: TextField.Model 
-    , description: TextField.Model
+    , full_name: Cancelable.Model String
+    , description: Cancelable.Model String
     , project: String
     , url: String
     , number_of_files: Int
     , number_of_columns: Int
     , indexed_columns: IntDict.IntDict Column.Model
+    , dirty: Bool
     }
 
 
@@ -32,8 +33,8 @@ toDataTableGroup: Model -> DataTableGroup
 toDataTableGroup model =
     { id=model.id
     , name=model.name
-    , full_name= TextField.toString model.full_name
-    , description= TextField.toString model.description
+    , full_name= fromCancelable model.full_name
+    , description= fromCancelable model.description
     , project= model.project
     , url= model.url
     , number_of_files= model.number_of_files
@@ -47,29 +48,31 @@ fromDataTableGroup: DataTableGroup -> Model
 fromDataTableGroup datatablegroup =
     { id= datatablegroup.id
     , name= datatablegroup.name
-    , full_name= textfield "Full Name" datatablegroup.full_name
-    , description= textfield "Description" datatablegroup.description
+    , full_name= toCancelable datatablegroup.full_name
+    , description= toCancelable datatablegroup.description
     , project= datatablegroup.project
     , url = datatablegroup.url
     , number_of_files= datatablegroup.number_of_files
     , number_of_columns = datatablegroup.number_of_columns
     , indexed_columns = IntDict.fromList  (Array.toIndexedList (Array.map Column.fromColumn datatablegroup.columns))
+    , dirty = False
     }
 
 
 type Msg 
-    = FullName TextField.Msg
-    | Description TextField.Msg
+    = FullName (Cancelable.Msg String)
+    | Description (Cancelable.Msg String)
     | Modify Int Column.Msg 
-    | Edit
+    | Reset
+    | Dirty
 
 
 init: Model
 init =
     { id=0
     , name="price_data"
-    , full_name=textfield "Full Name" "Price Data"
-    , description=textfield "Description" "Foo"
+    , full_name= toCancelable "Price Data"
+    , description= toCancelable "Foo"
     , project="Luxe Demo"
     , url="/data-groups/1/"
     , number_of_files= 10
@@ -81,15 +84,16 @@ init =
         (1
         , Column.fromColumn { columnEx | id = 1}
         )]
+    , dirty = False
     }
 
 
 update: Msg -> Model -> Model
 update msg model =
     case msg of
-        FullName msg -> { model | full_name = TextField.update msg model.full_name }
+        FullName msg -> { model | full_name = Cancelable.update msg model.full_name }
 
-        Description msg -> { model | description = TextField.update msg model.description }
+        Description msg -> { model | description = Cancelable.update msg model.description }
 
         Modify id col_msg ->
             let column = IntDict.get id model.indexed_columns
@@ -97,31 +101,32 @@ update msg model =
             in case val of
 
                 Just column' ->
-                        { model | indexed_columns 
+                        { model | indexed_columns
                                 = IntDict.update id (always (Just column')) model.indexed_columns }
 
                 Nothing -> model
 
-        Edit -> { model
-                | full_name = TextField.update TextField.ToggleEditable model.full_name
-                , description = TextField.update TextField.ToggleEditable model.description }
+        Reset -> { model | dirty = False
+                         , full_name = Cancelable.update Cancelable.Reset model.full_name
+                         , description = Cancelable.update Cancelable.Reset model.description }
+
+        Dirty -> { model | dirty = True }
 
 
 view: Model -> Html Msg
 view model =
     div []
-        [ h1 [] 
+        [ h4 []
             [ text "DataGroup: "
             , viewTextField model.full_name
-            , input [ type' "button", onClick Edit, value "Edit" ] []
+            , input [ type' "button", onClick Reset, class "btn", value "Reset" ] []
             , i [] [text (" " ++ model.name) ]]
         , div [] (List.map viewColumn (IntDict.toList model.indexed_columns))
         ] 
 
 
-
-viewTextField: TextField.Model -> Html Msg
-viewTextField model = App.map FullName (TextField.view model)
+viewTextField: Cancelable.Model String -> Html Msg
+viewTextField model = App.map FullName (Cancelable.viewTextField model "Full Name")
 
 
 viewColumn: (Int, Column.Model) -> Html Msg
