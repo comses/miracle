@@ -14,7 +14,7 @@ DEFAULT_WORKING_DIRECTORY = getattr(settings, 'DEFAULT_WORKING_DIRECTORY_NAME', 
 
 
 def deployr_url(uri):
-    return '{}/r/{}'.format(settings.DEPLOYR_URL, uri)
+    return '{0}/r/{1}'.format(settings.DEPLOYR_URL, uri)
 
 
 login_url = deployr_url('user/login')
@@ -81,7 +81,7 @@ class DeployrAPI(object):
 
     @staticmethod
     def run_job(script_path, project_name, parameters, session):
-        job_name = '{}.job'.format(project_name)
+        job_name = '{0}.job'.format(project_name)
         execute_script_data = {
             'format': 'json',
             'name': job_name,
@@ -96,12 +96,6 @@ class DeployrAPI(object):
         job.submit(execute_script_data)
         logger.debug("JOB SUBMITTED: %s" % job_name)
         return job
-
-    @staticmethod
-    def check_job_status(job):
-        (response, completed) = job.check_status()
-        logger.debug("RUN SCRIPT successful? [{}] response: {}".format(completed, response.text))
-        return (response, completed)
 
 
 class Job(object):
@@ -140,27 +134,30 @@ class Job(object):
         response = self.post(job_status_url, job=job_id)
         response_json = response.json()
         completed = self.is_job_completed(response_json)
-        logger.debug("job was completed? %s with response %s", completed, response.text)
-        if not completed:
-            logger.debug("job wasn't completed, trying again in 10 seconds.")
+        while not completed:
+            logger.debug("job was completed? %s with response %s", completed, response.text)
             if retry and counter < limit:
                 # recur up to the limit
                 time.sleep(10)
                 logger.debug("done sleeping, about to retry")
-                return self.check_status(retry, counter=counter + 1, limit=limit, job_id=job_id)
+                counter += 1
+                response = self.post(job_status_url, job=job_id)
+                response_json = response.json()
+                completed = self.is_job_completed(response_json)
             else:
-                logger.debug("job took too long to complete - aborting")
-        else:
-            self.project_id = self.get_project_id(response_json)
-            logger.debug("project id %s", self.project_id)
-            # retrieve results
-            response = self.post(job_results_url, project=self.project_id)
-            logger.debug("results response: %s", response.text)
-            self.results = self.get_results(response.json())
-            logger.debug("results: %s", self.results)
+                logger.warning("job %s failed to complete in %s retries - aborting", job_id, limit)
+                return None
+
+        self.project_id = self.get_project_id(response_json)
+        logger.debug("project id %s", self.project_id)
+        # retrieve results
+        response = self.post(job_results_url, project=self.project_id)
+        logger.debug("results response: %s", response.text)
+        self.results = self.get_results(response.json())
+        logger.debug("results: %s", self.results)
         self.response = response
         self.completed = completed
-        return (response, completed)
+        return response
 
     def get_results(self, response_json):
         return response_json['deployr']['response']['directory']['files']
@@ -238,6 +235,6 @@ def run_script(script_name=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
         job = Job(session)
         job.submit(execute_script_data)
         time.sleep(15)
-        (response, completed) = job.check_status()
-        logger.debug("RUN SCRIPT successful? [{}] response: {}".format(completed, response.text))
+        job.check_status()
+        logger.debug("RUN SCRIPT successful? [{}] response: {}".format(job.completed, job.response.text))
         return job
