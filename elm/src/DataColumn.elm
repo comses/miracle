@@ -104,33 +104,35 @@ update msg model =
 view: Model -> Html Msg
 view model = 
     let view_name = h5 [] [ text model.name ]
-        view_full_name = App.map FullName (Cancelable.viewTextField model.full_name "Full Name")
-        view_description = App.map Description (Cancelable.viewTextField model.description "Description")
-        view_data_type = App.map DataType (CancelableSelect.view [ class "form-control" ] model.data_type)
+        view_full_name =
+            App.map FullName
+                (Cancelable.viewTextField
+                    (SN.onChange Cancelable.Dirty)
+                    model.full_name
+                    (text "Full Name"))
+        view_description =
+            App.map Description
+                (Cancelable.viewTextArea
+                    (SN.onChange Cancelable.Dirty)
+                    model.description
+                    (text "Description"))
+        view_data_type = App.map DataType (CancelableSelect.view [] (text "Data Type") model.data_type)
 
         btnClass = classList
             [ ("btn", True)
             , ("btn-primary", True)
             , ("hidden", not model.dirty)
             ]
-        divClass = classList
-            [ ("form-group", True)
-            , ("has-warning", model.dirty)
-            ]
 
     in div
-        [ ]
+        [ SN.onChange Dirty
+        , class "form form-horizontal"
+        ]
 
-        [ div
-            [ SN.onChange Dirty
-            , divClass
-            ]
-
-            [ view_name
-            , view_full_name
-            , view_description
-            , view_data_type
-            ]
+        [ view_name
+        , view_full_name
+        , view_description
+        , view_data_type
         , input [ type' "button", onClick Set, btnClass, value "Save"] []
         , input [ type' "button", onClick Reset, btnClass, value "Cancel" ] []
         ]

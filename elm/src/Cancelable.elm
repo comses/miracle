@@ -1,4 +1,4 @@
-module Cancelable exposing (toCancelable, fromCancelable, update, viewTextField, Model, Msg(..))
+module Cancelable exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -11,6 +11,7 @@ import StyledNodes as SN
 type alias Model a =
         { current: a
         , old: a
+        , dirty: Bool
         }
 
 
@@ -20,21 +21,55 @@ fromCancelable model = model.current
 
 type Msg a
         = SetValue a
+        | Dirty
         | Reset
         | Save
 
 
-viewTextField: Model String -> String -> Html (Msg String)
-viewTextField model name =
-    div []
-        [ label [] [ text name ]
-        , input
-            [ type' "text"
-            , classList
-                [ ("form-control", True) ]
-            , onInput SetValue
-            , value model.current ] []
+viewFormGroup:
+    { tag: List (Attribute (Msg String)) -> List (Html (Msg String)) -> Html (Msg String)
+    , attributes: List (Attribute (Msg String)) } ->
+    Attribute (Msg String) ->
+    Model String ->
+    Html (Msg String) ->
+    Html (Msg String)
+viewFormGroup node onEventDirty model label_name =
+    let textClass =
+            classList
+                [ ("form-group", True)
+                , ("has-warning", model.dirty)
+                ]
+    in
+    div [ onEventDirty, textClass ]
+        [ label [ class "col-sm-2 control-label" ] [ label_name ]
+        , div [ class "col-sm-10" ]
+            [ node.tag ((class "form-control") :: node.attributes) []
+            ]
         ]
+
+viewTextField:
+    Attribute (Msg String) ->
+    Model String ->
+    Html (Msg String) ->
+    Html (Msg String)
+viewTextField onEventDirty model =
+    viewFormGroup
+        { tag = input, attributes = [ type' "text", onInput SetValue, value model.current ]}
+        onEventDirty
+        model
+
+
+viewTextArea:
+    Attribute (Msg String) ->
+    Model String ->
+    Html (Msg String) ->
+    Html (Msg String)
+viewTextArea onEventDirty model =
+    viewFormGroup
+        { tag = textarea, attributes = [ onInput SetValue, value model.current ]}
+        onEventDirty
+        model
+
 
 
 update: Msg a -> Model a -> Model a
@@ -43,10 +78,12 @@ update msg model =
 
         SetValue value -> { model | current = value }
 
-        Reset -> { model | current = model.old }
+        Dirty -> { model | dirty = True }
+
+        Reset -> { model | current = model.old, dirty = False }
 
         Save -> { model | old = model.current }
 
 
 toCancelable: a -> Model a
-toCancelable value = { current = value, old = value }
+toCancelable value = { current = value, old = value, dirty = False }

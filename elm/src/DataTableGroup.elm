@@ -2,8 +2,8 @@ module DataTableGroup exposing (init, view, update, Model, toRawDataTableGroup, 
 
 import Html exposing (..)
 import Html.App as App
-import Html.Attributes exposing (type', value, class)
-import Html.Events exposing (onClick)
+import Html.Attributes exposing (type', value, class, classList)
+import Html.Events exposing (onClick, onInput)
 
 import Platform.Cmd as Cmd
 
@@ -18,7 +18,7 @@ import Api.DataTableGroup
 import DataColumn as Column exposing (fromColumn)
 import Cancelable exposing (toCancelable, fromCancelable)
 import Raw exposing (DataTableGroup, columnEx)
-
+import StyledNodes as SN
 
 type alias Model = 
     { id: Int
@@ -140,24 +140,42 @@ update msg model =
 
 view: Model -> Html Msg
 view model =
-    div []
-        [ h4 []
-            [ text "DataGroup: "
-            , form [ class "form form-horizontal" ]
-                [ viewTextField model.full_name
-                , input [ type' "button", onClick Set, class "btn", value "Save"] []
-                , input [ type' "button", onClick Reset, class "btn", value "Cancel"] []
-                , i [] [text (" " ++ model.name) ]
+    let btnClass = classList
+            [ ("btn btn-primary", True)
+            , ("hidden", not model.dirty)
+            ]
+    in if not model.loading then
+        div [ class "panel panel-primary" ]
+            [ div [ class "panel-heading" ]
+                [ text "DataGroup: "
+                , i []
+                    [ text ("(" ++ model.name ++ ")")
+                , text " Files: "
+                , span [ class "label label-badge label-default" ] [ text (toString model.number_of_files) ]
+                , text " Columns: "
+                , span [ class "label label-badge label-default" ] [ text (toString model.number_of_columns) ]
                 ]
             ]
-        , if not model.loading then
-            div [] (List.map viewColumn (IntDict.toList model.indexed_columns))
-          else text "Loading"
-        ] 
+            , div [ class "panel-body" ]
+                [ form [ class "form form-horizontal", onInput (\_ -> Dirty) ]
+                    [ viewFullName model
+                    , input [ type' "button", onClick Set, btnClass, value "Save"] []
+                    , input [ type' "button", onClick Reset, btnClass, value "Cancel"] []
+                    ]
+                , div [ class "panel panel-default" ]
+                    [ div [ class "panel-heading" ] [ text "Columns" ]
+                    , div [ class "panel-body" ]
+                        (List.intersperse (hr [] []) (List.map viewColumn (IntDict.toList model.indexed_columns)))
+                    ]
+                ]
+            ]
+    else
+        text "Loading"
 
 
-viewTextField: Cancelable.Model String -> Html Msg
-viewTextField model = App.map FullName (Cancelable.viewTextField model "Full Name")
+viewFullName: Model -> Html Msg
+viewFullName model = App.map FullName
+    (Cancelable.viewTextField (onInput (always Cancelable.Dirty)) model.full_name (text "Full Name"))
 
 
 viewColumn: (Int, Column.Model) -> Html Msg
@@ -179,9 +197,6 @@ set model =
         (toString >> FetchFail)
         FetchSucceed
         (Api.DataTableGroup.setTask (toRawDataTableGroup model) |> (Http.fromJson Raw.datatablegroupDecoder))
-
-
-rawStr = """{"id":1,"name":"runLog","full_name":"","description":"","project":"luxedemo","url":"https://localhost/data-group/1.json","columns":[{"id":1,"data_table_group":"runLog","name":"runID","full_name":"","description":"","data_type":"bigint","table_order":1},{"id":2,"data_table_group":"runLog","name":"random","full_name":"","description":"","data_type":"bigint","table_order":2},{"id":3,"data_table_group":"runLog","name":"runNumber","full_name":"","description":"","data_type":"bigint","table_order":3},{"id":4,"data_table_group":"runLog","name":"msgOutLevel","full_name":"","description":"","data_type":"bigint","table_order":4},{"id":5,"data_table_group":"runLog","name":"worldx","full_name":"","description":"","data_type":"bigint","table_order":5},{"id":6,"data_table_group":"runLog","name":"worldy","full_name":"","description":"","data_type":"bigint","table_order":6},{"id":7,"data_table_group":"runLog","name":"centerx","full_name":"","description":"","data_type":"bigint","table_order":7},{"id":8,"data_table_group":"runLog","name":"centery","full_name":"","description":"","data_type":"bigint","table_order":8},{"id":9,"data_table_group":"runLog","name":"buyer","full_name":"","description":"","data_type":"bigint","table_order":9},{"id":10,"data_table_group":"runLog","name":"seller","full_name":"","description":"","data_type":"bigint","table_order":10},{"id":11,"data_table_group":"runLog","name":"maxBiddingTries","full_name":"","description":"","data_type":"bigint","table_order":11},{"id":12,"data_table_group":"runLog","name":"unitTransportCost","full_name":"","description":"","data_type":"bigint","table_order":12},{"id":13,"data_table_group":"runLog","name":"neighborhoodSize","full_name":"","description":"","data_type":"bigint","table_order":13},{"id":14,"data_table_group":"runLog","name":"budget","full_name":"","description":"","data_type":"bigint","table_order":14},{"id":15,"data_table_group":"runLog","name":"sdbudget","full_name":"","description":"","data_type":"bigint","table_order":15},{"id":16,"data_table_group":"runLog","name":"search","full_name":"","description":"","data_type":"bigint","table_order":16},{"id":17,"data_table_group":"runLog","name":"bid","full_name":"","description":"","data_type":"bigint","table_order":17},{"id":18,"data_table_group":"runLog","name":"agr","full_name":"","description":"","data_type":"bigint","table_order":18},{"id":19,"data_table_group":"runLog","name":"util","full_name":"","description":"","data_type":"decimal","table_order":19},{"id":20,"data_table_group":"runLog","name":"sdp","full_name":"","description":"","data_type":"decimal","table_order":20},{"id":21,"data_table_group":"runLog","name":"range","full_name":"","description":"","data_type":"decimal","table_order":21},{"id":22,"data_table_group":"runLog","name":"steps","full_name":"","description":"","data_type":"bigint","table_order":22},{"id":23,"data_table_group":"runLog","name":"luFile","full_name":"","description":"","data_type":"text","table_order":23},{"id":24,"data_table_group":"runLog","name":"tpFile","full_name":"","description":"","data_type":"text","table_order":24},{"id":25,"data_table_group":"runLog","name":"lufile2","full_name":"","description":"","data_type":"text","table_order":25},{"id":26,"data_table_group":"runLog","name":"tpFile2","full_name":"","description":"","data_type":"text","table_order":26},{"id":27,"data_table_group":"runLog","name":"agents","full_name":"","description":"","data_type":"text","table_order":27}],"number_of_files":1,"number_of_columns":27}"""
 
 
 main = App.program { init = init { id=4 }, update = update, view = view, subscriptions = \_ -> Sub.none }

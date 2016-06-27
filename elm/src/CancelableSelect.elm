@@ -15,11 +15,13 @@ type alias Model =
     { options: Array.Array (String, String)
     , currentSelectedIndex: Maybe Int
     , oldSelectedIndex: Maybe Int
+    , dirty: Bool
     }
 
 
 type Msg
     = Select Int
+    | Dirty
     | Reset
     | Save
 
@@ -30,17 +32,28 @@ update msg model =
 
         Select index -> { model | currentSelectedIndex = Debug.log "Index" (Just index) }
 
-        Reset -> { model | currentSelectedIndex = model.oldSelectedIndex }
+        Dirty -> { model | dirty = True }
+
+        Reset -> { model | currentSelectedIndex = model.oldSelectedIndex, dirty = False }
 
         Save -> { model | oldSelectedIndex = model.currentSelectedIndex }
 
 
-view: List (Attribute Msg) -> Model -> Html Msg
-view attributes model =
-    let options = List.map
+view: List (Attribute Msg) -> Html Msg -> Model -> Html Msg
+view attributes label_name model =
+    let divClass = classList
+            [ ("form-group", True)
+            , ("has-warning", model.dirty)
+            ]
+        options = List.map
             (\(id, (val, name)) -> option [ value val, selected (model.currentSelectedIndex == Just id) ] [ text name ])
             (Array.toIndexedList model.options)
-    in select ((SN.onChangeIndex Select) :: attributes) options
+    in
+        div [ SN.onChange Dirty, divClass ]
+            [ label [ class "col-sm-2 control-label" ] [ label_name ]
+            , div [ class "col-sm-10" ]
+                [ select ((SN.onChangeIndex Select) :: (class "form-control") :: attributes) options ]
+            ]
 
 
 index: String -> Array.Array String -> Maybe Int
@@ -73,6 +86,7 @@ toCancelableSelect value =
     { options = options
     , currentSelectedIndex = selectedIndex
     , oldSelectedIndex = selectedIndex
+    , dirty = False
     }
 
 
@@ -83,4 +97,4 @@ fromCancelableSelect model =
         `Maybe.andThen` (\(val, text) -> Just val) |> Maybe.withDefault ""
 
 
-main = App.beginnerProgram { model = toCancelableSelect "text", view = view [ class "form-control" ], update = update }
+main = App.beginnerProgram { model = toCancelableSelect "text", view = view [ class "form-control" ] (text "Foo"), update = update }
