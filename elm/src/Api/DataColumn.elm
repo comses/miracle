@@ -6,18 +6,10 @@ import Task
 import Raw
 import Csrf
 
-import DataColumn exposing (toColumn)
 
-
-type Msg
-    = Set
-    | FetchSucceed Raw.Column
-    | FetchFail Http.Error
-
-
-setTask: DataColumn.Model -> Task.Task Http.RawError Http.Response
-setTask model =
-    let column = toColumn model
+setTask: Raw.Column -> Task.Task Http.RawError Http.Response
+setTask column =
+    let
         -- prepending or appending csrftoken here instead of manually defining headers
         -- produces an run time error "TypeError: xs is undefined".
         headers =
@@ -33,11 +25,3 @@ setTask model =
         , url = url
         , body = Raw.columnToBody column
         }
-
-
-set: DataColumn.Model -> Cmd Msg
-set model =
-    Task.perform
-        FetchFail
-        FetchSucceed
-        (setTask model |> (Http.fromJson Raw.columnDecoder))

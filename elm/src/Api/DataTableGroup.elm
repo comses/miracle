@@ -6,15 +6,6 @@ import Task
 import Raw
 import Csrf
 
-import DataTableGroup exposing (toDataTableGroup)
-
-
-type Msg
-    = Get Int
-    | Set
-    | FetchSucceed Raw.DataTableGroup
-    | FetchFail Http.Error
-
 
 getTask: Int -> Task.Task Http.RawError Http.Response
 getTask id =
@@ -28,17 +19,9 @@ getTask id =
     } `Task.andThen` (\res -> let _ = Debug.log "Headers" res.headers in Task.succeed res)
 
 
-get: Int -> Cmd Msg
-get id =
-    Task.perform
-        FetchFail
-        FetchSucceed
-        (getTask id |> (Http.fromJson Raw.datatablegroupDecoder))
-
-
-setTask: DataTableGroup.Model -> Task.Task Http.RawError Http.Response
-setTask model =
-    let datatablegroup = toDataTableGroup model
+setTask: Raw.DataTableGroup -> Task.Task Http.RawError Http.Response
+setTask datatablegroup =
+    let
         -- prepending or appending csrftoken here instead of manually defining headers
         -- produces an run time error "TypeError: xs is undefined".
         headers =
@@ -54,11 +37,3 @@ setTask model =
         , url = url
         , body = Raw.datatablegroupBody datatablegroup
         }
-
-
-set: DataTableGroup.Model -> Cmd Msg
-set model =
-    Task.perform
-        FetchFail
-        FetchSucceed
-        (setTask model |> (Http.fromJson Raw.datatablegroupDecoder))
