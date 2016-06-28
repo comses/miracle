@@ -20,6 +20,7 @@ import Cancelable exposing (toCancelable, fromCancelable)
 import Raw exposing (DataTableGroup, columnEx)
 import StyledNodes as SN
 
+
 type alias Model = 
     { id: Int
     , name: String 
@@ -142,7 +143,7 @@ view: Model -> Html Msg
 view model =
     let btnClass = classList
             [ ("btn btn-primary", True)
-            , ("hidden", not model.dirty)
+            , ("invisible", not model.dirty)
             ]
     in if not model.loading then
         div [ class "panel panel-primary" ]
@@ -157,8 +158,9 @@ view model =
                 ]
             ]
             , div [ class "panel-body" ]
-                [ form [ class "form form-horizontal", onInput (\_ -> Dirty) ]
+                [ form [ class "form form-horizontal", SN.onChange Dirty ]
                     [ viewFullName model
+                    , viewDescription model
                     , input [ type' "button", onClick Set, btnClass, value "Save"] []
                     , input [ type' "button", onClick Reset, btnClass, value "Cancel"] []
                     ]
@@ -175,7 +177,12 @@ view model =
 
 viewFullName: Model -> Html Msg
 viewFullName model = App.map FullName
-    (Cancelable.viewTextField (onInput (always Cancelable.Dirty)) model.full_name (text "Full Name"))
+    (Cancelable.viewTextField (SN.onChange Cancelable.Dirty) model.full_name (text "Full Name"))
+
+
+viewDescription: Model -> Html Msg
+viewDescription model = App.map Description
+    (Cancelable.viewTextArea (SN.onChange Cancelable.Dirty) model.description (text "Description"))
 
 
 viewColumn: (Int, Column.Model) -> Html Msg

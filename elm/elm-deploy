@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-set -e
+set -eu
 
-elm make src/Metadata.elm --output elm-data-group.js
-mv elm-data-group.js ../django/miracle/core/templates/includes/.
+elm make src/$1.elm --output elm-$2.js
+mv elm-$2.js ../django/miracle/core/templates/includes/.
 
 touch ../django/deploy/uwsgi/miracle.ini

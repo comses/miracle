@@ -137,8 +137,8 @@ type alias Parameter =
     , description: String
     , value: String
     , html_input_type: String
-    , value_list: Array.Array String
-    , value_range: Array.Array String
+    , value_list: Maybe (Array.Array String)
+    , value_range: Maybe (Array.Array String)
     }
 
 
@@ -152,12 +152,25 @@ parameterDecoder =
     `apply` ("description" := Decode.string)
     `apply` ("value" := Decode.string)
     `apply` ("html_input_type" := Decode.string)
-    `apply` ("value_list" := Decode.array Decode.string)
-    `apply` ("value_range" := Decode.array Decode.string)
+    `apply` ("value_list" := Decode.maybe
+        (Decode.oneOf
+            [ Decode.array Decode.string
+            , Decode.customDecoder (Decode.array Decode.float) (\xs -> Result.Ok (Array.map toString xs))
+            ]))
+    `apply` ("value_range" := Decode.maybe
+        (Decode.oneOf
+            [ Decode.array Decode.string
+            , Decode.customDecoder (Decode.array Decode.float) (\xs -> Result.Ok (Array.map toString xs))
+            ]))
 
 
 parameterEncoder: Parameter -> Encode.Value
 parameterEncoder parameter =
+    let encodeMaybeArray maybe_array =
+            case maybe_array of
+                Just list -> Encode.array (Array.map Encode.string list)
+                Nothing -> Encode.null
+    in
     Encode.object
     [ ("id", Encode.int parameter.id)
     , ("label", Encode.string parameter.label)
@@ -165,8 +178,8 @@ parameterEncoder parameter =
     , ("description", Encode.string parameter.description)
     , ("value", Encode.string parameter.value)
     , ("html_input_type", Encode.string parameter.html_input_type)
-    , ("value_list", Encode.array (Array.map Encode.string parameter.value_list))
-    , ("value_range", Encode.array (Array.map Encode.string parameter.value_range))]
+    , ("value_list", encodeMaybeArray parameter.value_list)
+    , ("value_range", encodeMaybeArray parameter.value_range)]
 
 
 type alias Analysis =
@@ -178,10 +191,70 @@ type alias Analysis =
     , description: String
     , project: String
     , file_type: String
-    , parameters: Array.Array Parameter}
+    , parameters: Array.Array Parameter
+    }
 
 
-type alias Metadata =
+analysisDecoder: Decoder Analysis
+analysisDecoder =
+    let dateDecoder = Decode.customDecoder Decode.string Date.fromString
+    in
+    pure Analysis
+    `apply` ("id" := Decode.int)
+    `apply` ("name" := Decode.string)
+    `apply` ("full_name" := Decode.string)
+    `apply` ("date_created" := dateDecoder)
+    `apply` ("last_modified" := dateDecoder)
+    `apply` ("description" := Decode.string)
+    `apply` ("project" := Decode.string)
+    `apply` ("file_type" := Decode.string)
+    `apply` ("parameters" := Decode.array parameterDecoder)
+
+
+analysisEncoder: Analysis -> Encode.Value
+analysisEncoder { id
+                , name
+                , full_name
+                , date_created
+                , last_modified
+                , description
+                , project
+                , file_type
+                , parameters} =
+    Encode.object
+    [ ("id", Encode.int id)
+    , ("name", Encode.string name)
+    , ("full_name", Encode.string full_name)
+--    , ("date_created", Encode.string date_created)
+--    , ("last_modified", Encode.string last_modified)
+    , ("description", Encode.string description)
+    , ("project", Encode.string project)
+    , ("file_type", Encode.string file_type)
+    , ("parameters", Encode.array (Array.map parameterEncoder parameters))]
+
+
+type alias RecentActivity =
+ { creator: String
+ , action: String
+ , message: String
+ , date_created: Date.Date
+ , project: String
+ }
+
+
+recentactivityDecoder: Decoder RecentActivity
+recentactivityDecoder =
+    let dateDecoder = Decode.customDecoder Decode.string Date.fromString
+    in
+    pure RecentActivity
+    `apply` ("creator" := Decode.string)
+    `apply` ("action" := Decode.string)
+    `apply` ("message" := Decode.string)
+    `apply` ("date_created" := dateDecoder)
+    `apply` ("project" := Decode.string)
+
+
+type alias ProjectIncoming =
     { id: Int
     , url: String
     , group_members: Array.Array String
@@ -196,5 +269,59 @@ type alias Metadata =
     , description: String
     , name: String
     , comments: Array.Array String
-    , recent_activity: Array.Array String
+    , recent_activity: Array.Array RecentActivity
     }
+
+
+projectDecoder: Decoder ProjectIncoming
+projectDecoder =
+    let dateDecoder = Decode.customDecoder Decode.string Date.fromString
+    in
+    pure ProjectIncoming
+    `apply` ("id" := Decode.int)
+    `apply` ("url" := Decode.string)
+    `apply` ("group_members" := Decode.array Decode.string)
+    `apply` ("creator" := Decode.string)
+    `apply` ("published" := Decode.bool)
+    `apply` ("published_on" :=
+        Decode.customDecoder
+            (Decode.maybe Decode.string)
+            (\ms -> case ms of
+                Just s -> Result.map Just (Date.fromString s)
+
+                Nothing -> Result.Ok Nothing))
+    `apply` ("date_created" := dateDecoder)
+    `apply` ("number_of_datasets" := Decode.int)
+    `apply` ("data_table_groups" := Decode.array datatablegroupDecoder)
+    `apply` ("analyses" := Decode.array analysisDecoder)
+    `apply` ("slug" := Decode.string)
+    `apply` ("description" := Decode.string)
+    `apply` ("name" := Decode.string)
+    `apply` ("comments" := Decode.array Decode.string)
+    `apply` ("recent_activity" := Decode.array recentactivityDecoder)
+
+
+type alias ProjectOutgoing =
+    { id: Int
+    , creator: String
+    , published: Bool
+    , slug: String
+    , description: String
+    , name: String
+    }
+
+projectEncoder: ProjectOutgoing -> Encode.Value
+projectEncoder { id
+               , creator
+               , published
+               , slug
+               , description
+               , name
+               } =
+    Encode.object
+    [ ("id", Encode.int id)
+    , ("creator", Encode.string creator)
+    , ("published", Encode.bool published)
+    , ("slug", Encode.string slug)
+    , ("description", Encode.string description)
+    , ("name", Encode.string name)]

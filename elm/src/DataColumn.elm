@@ -121,7 +121,7 @@ view model =
         btnClass = classList
             [ ("btn", True)
             , ("btn-primary", True)
-            , ("hidden", not model.dirty)
+            , ("invisible", not model.dirty)
             ]
 
     in div

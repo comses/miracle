@@ -19,11 +19,16 @@ import DataTableGroup exposing (fromDataTableGroup, toDataTableGroup)
 -- TODO: convert API to use routes
 -- Routes
 
+type DataColumnRoute
+    = Get Int
+    | Put Int
+
 type Route
     = DashboardRoute
     | ProjectRoute String
     | ProjectListRoute
     | NotFound
+    |
 
 
 dashboardMatcher : PathMatcher Route
