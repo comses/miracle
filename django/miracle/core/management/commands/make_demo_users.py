@@ -20,6 +20,7 @@ class Command(BaseCommand):
                             help='Purge all demo users')
         parser.add_argument('--number',
                             default=35,
+                            type=int,
                             help='Number of demo users to create')
         parser.add_argument('--prefix',
                             default='demo',
