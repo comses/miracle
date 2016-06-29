@@ -1,7 +1,7 @@
 module Project exposing (..)
 
 import Html exposing (..)
-import Html.Attributes
+import Html.Attributes exposing (class)
 import Html.Events
 import Html.App as App
 
@@ -79,6 +79,7 @@ type Msg
     = Get String
     | FetchSucceed Raw.ProjectIncoming
     | FetchFail String
+    | Modify Int DataTableGroup.Msg
 
 
 update: Msg -> Model -> (Model, Cmd Msg)
@@ -94,9 +95,48 @@ update msg model =
 
                 Splash model' -> (Splash { model' | warning = err }, Cmd.none)
 
+        Modify id datatablegroup_msg ->
+            case model of
+                Main model' ->
+                    let datatablegroup = Array.get id model'.data_table_groups
+                        val = Maybe.map (DataTableGroup.update datatablegroup_msg) datatablegroup
+                    in case val of
+
+                        Just (datatablegroup', datatablegroup_msg') ->
+                            (Main { model' | data_table_groups =
+                                Array.set id datatablegroup' model'.data_table_groups }
+                            , Cmd.map (Modify id) datatablegroup_msg'
+                            )
+
+                        Nothing ->
+                            (model, Cmd.none)
+
+                _ -> (model, Cmd.none)
+
 
 view: Model -> Html Msg
-view model = text (toString model)
+view model =
+    case model of
+        Main model' ->
+            let contents =
+                    [ h4 [] [ text "Metadata" ]
+                    , div []
+                        (List.map viewDataTableGroup (Array.toIndexedList model'.data_table_groups))
+                    ]
+
+
+                contents_with_warning = if model'.warning /= "" then
+                    contents ++ [ text model'.warning ]
+                    else contents
+            in
+
+            div [ class "container"] contents_with_warning
+
+        Splash model' -> div [ class "container" ] [ text model'.warning ]
+
+
+viewDataTableGroup: (Int, DataTableGroup.Model) -> Html Msg
+viewDataTableGroup (id, model) = App.map (Modify id) (DataTableGroup.view model)
 
 
 init: (Model, Cmd Msg)

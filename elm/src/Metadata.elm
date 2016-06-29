@@ -10,6 +10,8 @@ import Debug
 import Json.Encode as Encode
 import Platform.Cmd
 
+import Array
+
 import Api.DataTableGroup
 import Api.DataColumn
 
@@ -20,25 +22,33 @@ import DataTableGroup
 
 import Raw
 
-type alias Model = DataTableGroup.Model
+type alias Model = Array.Array DataTableGroup.Model
 
 type Msg
-    = Content DataTableGroup.Msg
+    = Modify Int DataTableGroup.Msg
 
 
 update: Msg -> Model -> (Model, Cmd Msg)
 update msg model = 
     case msg of
-        Content datatablegroup_msg ->
-            let (datatablegroup', datatablegroup_msg') = DataTableGroup.update datatablegroup_msg model
-            in (datatablegroup', Cmd.map Content datatablegroup_msg')
+        Modify id datatablegroup_msg ->
+            let datatablegroup = Array.get id model
+                val = Maybe.map (DataTableGroup.update datatablegroup_msg) datatablegroup
+            in case val of
+
+                Just (datatablegroup', datatablegroup_msg') ->
+                    (Array.set id datatablegroup' model, Cmd.map (Modify id) datatablegroup_msg')
+
+                Nothing ->
+                    (model, Cmd.none)
+
 
 
 view: Model -> Html Msg
 view model =
     let contents =
             [ h4 [] [ text "Metadata" ]
-            , App.map Content (DataTableGroup.view model)
+            , List.map viewDataTableGroup (Array.toIndexedList model)
             ]
 
         contents_with_warning = if model.warning /= "" then
@@ -49,11 +59,15 @@ view model =
     div [ class "container"] contents_with_warning
 
 
+viewDataTableGroup: (Int, DataTableGroup.Model) -> Html Msg
+viewDataTableGroup (id, model) = App.map (Modify id) (DataTableGroup.view model)
+
+
 init: {id: Int} -> (Model, Cmd Msg)
 init {id} =
     let (datatablegroup, datatablegroup_cmd) = DataTableGroup.init {id = id}
         model = datatablegroup
-    in (model, Cmd.map Content datatablegroup_cmd)
+    in (model, Cmd.map (Modify id) datatablegroup_cmd)
 
 
 main = App.programWithFlags { init = init, view = view, update = update, subscriptions = \_ -> Sub.none }

@@ -65,7 +65,7 @@ fromRawDataTableGroup datatablegroup =
     , indexed_columns = IntDict.fromList  (Array.toIndexedList (Array.map Column.fromColumn datatablegroup.columns))
     , dirty = False
     , warning = ""
-    , loading = True
+    , loading = False
     }
 
 
@@ -100,7 +100,7 @@ init {id} =
         )]
     , dirty = False
     , warning = ""
-    , loading = True
+    , loading = False
     }, get id)
 
 
