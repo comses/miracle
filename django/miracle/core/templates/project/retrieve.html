@@ -17,7 +17,7 @@
                 <a href='#overview' aria-controls='overview' role='tab' data-toggle='tab'><i class='fa fa-table'></i> Overview</a>
             </li>
             <li data-bind='visible: number_of_datasets() != 0' role='presentation'>
-                <a href='#explorer' data-bind='click: loadRadiant' aria-controls='explorer' role='tab' data-toggle='tab'><i class='fa fa-binoculars'></i> Data explorer</a>
+                <a href='#explorer' aria-controls='explorer' role='tab' data-toggle='tab'><i class='fa fa-binoculars'></i> Data explorer</a>
             </li>
             <li data-bind='visible: number_of_datasets() != 0'role='presentation'>
                 <a href='#data-groups' aria-controls='metadata' role='tab' data-toggle='tab'><i class='fa fa-database'></i> Metadata</a>
@@ -619,6 +619,9 @@ $(function() {
     });
     $('ul.nav-tabs > li > a').on('shown.bs.tab', function (e) {
         var hash = $(e.target).attr('href');
+        if (hash === "#explorer") {
+            model.loadRadiant();
+        }
         history.pushState(null, null, hash);
     });
     var hash = window.location.hash;
