@@ -181,16 +181,16 @@
                     </div>
                     <div role='tabpanel' class='tab-pane' id='analysis'>
                         {# FIXME: should eventually extract into component (react or KO) #}
-                        <h4><i class='fa fa-code'></i> Analyses</h4>
+                        <h4><i class='fa fa-code'></i> Data Analysis Scripts</h4>
                         <div data-bind='if: activeAnalysisScripts().length === 0'>
                             <div class='alert alert-info alert-block' role='alert'>
-                                <i class='fa fa-info-circle'></i> No analysis scripts have been uploaded yet.
+                                <i class='fa fa-info-circle'></i> No data analysis scripts found.
                             </div>
                         </div>
                         <div data-bind='foreach: activeAnalysisScripts'>
                             <div class='well' data-bind='if: enabled'>
                                 <h5><span data-bind='text: name'></span>
-                                    <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
+                                    <small class='pull-right'><span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
                                 </h5>
                                 <div>
                                     <strong>Status</strong>:
@@ -232,8 +232,8 @@
                                 </div>
                                 <ul class='list-group' data-bind='foreach: outputs'>
                                     <li class='list-group-item'>
-                                        <h5><span data-bind='text: name'></span>
-                                            <small class='pull-right'>created <span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
+                                        <h5><span class='label label-primary' data-bind='text: creator'></span><span data-bind='text: name'></span>
+                                            <small class='pull-right'><span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
                                         </h5>
                                         <div class='collapse' data-bind='attr: {id: "collapseOutput" + id() }'>
                                             <div class='well'>
@@ -258,7 +258,7 @@
                                             <a class='btn btn-primary' role='button' data-toggle='collapse'
                                                 aria-expanded='false'
                                                 data-bind='attr: {href: "#collapseOutput" + id()}'>
-                                                <i class='fa fa-eye'></i> View details
+                                                <i class='fa fa-eye'></i> Details
                                             </a>
                                             <a class='btn btn-success' role='button' data-bind='click: $root.showShareOutputForm.bind($data)'>
                                                 <i class='fa fa-share'></i> Share

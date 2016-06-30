@@ -50,6 +50,7 @@ class AnalysisOutputSerializer(serializers.ModelSerializer):
     analysis = serializers.StringRelatedField()
     files = OutputFileSerializer(many=True)
     parameter_values = ParameterValueSerializer(many=True, read_only=True)
+    creator = serializers.SlugRelatedField(slug_field='email', read_only=True)
 
     class Meta:
         model = AnalysisOutput
