@@ -7,6 +7,8 @@ import Html.Events exposing (..)
 import Json.Decode as Decode exposing ((:=))
 import DecodeExtra exposing (pure, apply)
 
+import Util
+
 type alias Model a =
         { current: a
         , old: a
@@ -69,6 +71,37 @@ viewTextArea onEventDirty model =
         onEventDirty
         model
 
+
+viewInputInTable: Model String -> Html (Msg String)
+viewInputInTable model =
+    let tdClass =
+            classList
+                [ ("metadata-td", True)
+                , ("has-warning", model.dirty)
+                ]
+    in
+    td
+        [ tdClass ]
+        [ input
+            [ type' "text", onInput SetValue, Util.onChange Dirty, value model.current, class "form-control" ]
+            []
+        ]
+
+
+viewTextAreaInTable: Model String -> Html (Msg String)
+viewTextAreaInTable model =
+    let tdClass =
+            classList
+                [ ("metadata-td", True)
+                , ("has-warning", model.dirty)
+                ]
+    in
+    td
+        [ tdClass ]
+        [ textarea
+            [ onInput SetValue, Util.onChange Dirty, value model.current, class "form-control metadata-td-textarea" ]
+            []
+        ]
 
 
 update: Msg a -> Model a -> Model a

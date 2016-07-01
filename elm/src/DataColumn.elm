@@ -1,4 +1,4 @@
-module DataColumn exposing (fromColumn, toColumn, Model, Msg, update, view)
+module DataColumn exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -106,71 +106,37 @@ update msg model =
         FetchFail error -> ({ model | warning = error }, Cmd.none)
 
 
-lessPadding = style
-    [ ("padding", "5px 5px")]
-
-view: Model -> Html Msg
-view model = 
-    let view_full_name =
-            App.map FullName
-                (Cancelable.viewTextField
-                    (Util.onChange Cancelable.Dirty)
-                    model.full_name
-                    (text "Full Name"))
-        view_description =
-            App.map Description
-                (Cancelable.viewTextArea
-                    (Util.onChange Cancelable.Dirty)
-                    model.description
-                    (text "Description"))
-        view_data_type = App.map DataType (CancelableSelect.view [] (text "Data Type") model.data_type)
-
-        btnClass = class "btn btn-primary"
-        view_title_class = classList
-            [ ("text-primary", model.expanded)]
-        view_head_full_name = text (Cancelable.fromCancelable model.full_name)
-        view_head_name = text model.name
-
-        form_body =
-            if model.expanded then
-                [ br [] []
-                , div
-                    [ Util.onChange Dirty
-                    , class "form form-horizontal"
-                    ]
-
-                    [ view_full_name
-                    , view_description
-                    , view_data_type
-                    , div [ class "form-group" ]
-                        [ div [ class "btn-group col-xs-offset-2" ]
-                            [ button [ onClick Set, btnClass ] [ text "Save" ]
-                            , button [ onClick Reset, btnClass ] [ text "Cancel" ]
-                            ]
-                        ]
-                    ]
-                ]
-            else []
-
---style [ ("overflow-y", "auto"), ("padding", "5px 5px") ]
+viewTableRow: Model -> Html Msg
+viewTableRow model =
+    let text_name = text model.name
+        td_full_name = App.map FullName (Cancelable.viewInputInTable model.full_name)
+        td_data_type = App.map DataType (CancelableSelect.viewSelectInTable model.data_type)
+        td_description = App.map Description (Cancelable.viewTextAreaInTable model.description)
     in
-        li  [ class "item-metadata list-group-item" ]
-            ([ div
-                [ onClick Expand
-                , classList
-                    [ ("item-metadata-header", True)
-                    , ("item-metadata-header-selected", model.expanded)
-                    ]
+    tr
+        [ ]
+        [ td
+            [ ]
+            [ h6
+                [ ]
+                [ text_name ]
+            ]
+        , td_full_name
+        , td_data_type
+        , td_description
+        , td
+            [ ]
+            [ div
+                [ class "btn-group btn-group-sm pull-right"]
+                [ button
+                    [ onClick Set, class "btn btn-primary" ]
+                    [ span [ class "fa fa-floppy-o", attribute "aria-hidden" "true" ] [] ]
+                , button
+                    [ onClick Reset, class "btn btn-primary" ]
+                    [ span [ class "fa fa-undo", attribute "aria-hidden" "true" ] [] ]
                 ]
-
-                [ div [ class "pull-left" ]
-                    [ view_head_name ]
-                , div [ class "pull-right" ]
-                    [ view_head_full_name ]
-                ]
-
-            ] ++ form_body)
-
+            ]
+        ]
 
 
 set: Model -> Cmd Msg

@@ -161,8 +161,11 @@ viewForm model =
             form [ class "form form-horizontal", Util.onChange Dirty ]
                 [ viewFullName model
                 , viewDescription model
-                , input [ type' "button", onClick Set, btnClass, value "Save"] []
-                , input [ type' "button", onClick Reset, btnClass, value "Cancel"] []
+                , div
+                    [ class "btn-group btn-group-sm"]
+                    [ input [ type' "button", onClick Set, btnClass, value "Save"] []
+                    , input [ type' "button", onClick Reset, btnClass, value "Cancel"] []
+                    ]
                 ]
         else
             div [ class "hidden" ] []
@@ -178,17 +181,35 @@ viewDescription model = App.map Description
     (Cancelable.viewTextArea (Util.onChange Cancelable.Dirty) model.description (text "Description"))
 
 
+viewTableRows: Model -> Html Msg
+viewTableRows model =
+    if model.expanded then
+        table
+            [ class "table table-bordered table-condensed" ]
+            [ thead
+                [ ]
+                [ tr
+                    []
+                    [ th [] [ text "Name" ]
+                    , th [] [ text "Full Name" ]
+                    , th [] [ text "Data Type" ]
+                    , th [] [ text "Description" ]
+                    ]
+                ]
+            , tbody
+                [ ]
+                (viewColumnsTableRow model)
+            ]
+    else div [] []
+
+
+
 lessPadding = style
     [ ("padding", "0px 0px")]
 
 
-viewColumns: Model -> Html Msg
-viewColumns model =
-    if model.expanded then
-        ul [ class "list-group" ]
-            (ArrayComponent.viewList Modify Column.view model.columns)
-    else
-        ul [ class "list-group hidden" ] []
+viewColumnsTableRow: Model -> List (Html Msg)
+viewColumnsTableRow model = ArrayComponent.viewList Modify Column.viewTableRow model.columns
 
 
 get: Int -> Cmd Msg

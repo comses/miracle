@@ -30,7 +30,7 @@ update: Msg -> Model -> Model
 update msg model =
     case msg of
 
-        Select index -> { model | currentSelectedIndex = Debug.log "Index" (Just index) }
+        Select index -> { model | currentSelectedIndex = Just index }
 
         Dirty -> { model | dirty = True }
 
@@ -39,20 +39,20 @@ update msg model =
         Save -> { model | oldSelectedIndex = model.currentSelectedIndex }
 
 
-view: List (Attribute Msg) -> Html Msg -> Model -> Html Msg
-view attributes label_name model =
-    let divClass = classList
-            [ ("form-group", True)
+viewSelectInTable: Model -> Html Msg
+viewSelectInTable model =
+    let tdClass = classList
+            [ ("metadata-td", True)
             , ("has-warning", model.dirty)
             ]
         options = List.map
             (\(id, (val, name)) -> option [ value val, selected (model.currentSelectedIndex == Just id) ] [ text name ])
             (Array.toIndexedList model.options)
     in
-        div [ Util.onChange Dirty, divClass ]
-            [ label [ class "col-sm-2 control-label" ] [ label_name ]
-            , div [ class "col-sm-10" ]
-                [ select ((Util.onChangeIndex Select) :: (class "form-control") :: attributes) options ]
+        td [ Util.onChange Dirty, tdClass ]
+            [ select
+                [ Util.onChangeIndex Select, class "form-control" ]
+                options
             ]
 
 
@@ -95,6 +95,3 @@ fromCancelableSelect model =
     model.currentSelectedIndex
         `Maybe.andThen` (\i -> Array.get i model.options)
         `Maybe.andThen` (\(val, text) -> Just val) |> Maybe.withDefault ""
-
-
-main = App.beginnerProgram { model = toCancelableSelect "text", view = view [ class "form-control" ] (text "Foo"), update = update }

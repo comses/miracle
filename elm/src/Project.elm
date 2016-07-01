@@ -123,8 +123,8 @@ view model =
             let indexed_model = Array.toIndexedList model'.data_table_groups
                 viewColumnForms = List.map viewDataTableGroupColumns indexed_model
                 viewForms = List.map viewDataTableGroup indexed_model
-                displayInPanel name view =
-                    div [ class "col-lg-6"]
+                displayInPanel width name view =
+                    div [ class ("col-lg-" ++ toString width) ]
                         [ div [ class "panel panel-primary" ]
                             [ div [ class "panel-heading" ]
                                 [ text name ]
@@ -134,8 +134,8 @@ view model =
                             ]
                 contents =
                     [ div [ class "row" ]
-                        [ displayInPanel "Data Table Groups" viewForms
-                        , displayInPanel "Data Table Group Columns" viewColumnForms
+                        [ displayInPanel 4 "Data Table Groups" viewForms
+                        , displayInPanel 8 "Data Table Group Columns" viewColumnForms
                         ]
                     ]
 
@@ -152,7 +152,7 @@ view model =
 
 viewDataTableGroupColumns: (Int, DataTableGroup.Model) -> Html Msg
 viewDataTableGroupColumns (id, model) = App.map (Modify id)
-    (DataTableGroup.view (DataTableGroup.viewColumns model) model)
+    (DataTableGroup.view (DataTableGroup.viewTableRows model) model)
 
 
 viewDataTableGroup: (Int, DataTableGroup.Model) -> Html Msg

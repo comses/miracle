@@ -121,16 +121,24 @@ pre.tree {
     line-height: 1.2;
 }
 
-.item-metadata {
-    padding: 0px 0px;
+.metadata-td {
+    display: block;
+    padding: 0;
+    margin: 0;
+    border: 0;
 }
-.item-metadata-header {
-    overflow-y: auto;
-    padding: 5px 5px;
+.metadata-td input {
+    display: block;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    width: 100%;
 }
-.item-metadata-header:hover {
-    background-color: lightskyblue;
-}
-.item-metadata-header-selected {
-    background-color: aliceblue;
+.metadata-td textarea {
+    display: block;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    width: 100%;
+    resize: vertical;
 }

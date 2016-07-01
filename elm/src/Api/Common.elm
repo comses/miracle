@@ -14,7 +14,7 @@ getTask url =
     , headers = headers
     , url = url
     , body = Http.empty
-    } `Task.andThen` (\res -> let _ = Debug.log "Headers" res.headers in Task.succeed res)
+    }
 
 
 setTask: Http.Body -> String -> Task.Task Http.RawError Http.Response
