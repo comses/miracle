@@ -2,7 +2,7 @@ module DataTableGroup exposing (..)
 
 import Html exposing (..)
 import Html.App as App
-import Html.Attributes exposing (type', value, class, classList, style)
+import Html.Attributes exposing (type', value, class, classList, style, attribute)
 import Html.Events exposing (onClick, onInput)
 
 import Platform.Cmd as Cmd
@@ -152,23 +152,25 @@ view subview model =
 
 viewForm: Model -> Html Msg
 viewForm model =
-    let btnClass = classList
-            [ ("btn btn-primary", True)
-            , ("invisible", not model.dirty)
-            ]
-    in
-        if model.expanded then
-            form [ class "form form-horizontal", Util.onChange Dirty ]
-                [ viewFullName model
-                , viewDescription model
-                , div
-                    [ class "btn-group btn-group-sm"]
-                    [ input [ type' "button", onClick Set, btnClass, value "Save"] []
-                    , input [ type' "button", onClick Reset, btnClass, value "Cancel"] []
+    if model.expanded then
+        form [ class "form form-horizontal", Util.onChange Dirty ]
+            [ viewFullName model
+            , viewDescription model
+            , div
+                [ class "form-group" ]
+                [ div
+                    [ class "col-lg-offset-2 btn-group btn-group-sm" ]
+                    [ button
+                        [ onClick Set, class "btn btn-primary" ]
+                        [ span [ class "fa fa-floppy-o", attribute "aria-hidden" "true" ] [ ] ]
+                    , button
+                        [ onClick Reset, class "btn btn-primary" ]
+                        [ span [ class "fa fa-undo", attribute "aria-hidden" "true" ] [ ]]
                     ]
                 ]
-        else
-            div [ class "hidden" ] []
+            ]
+    else
+        div [ class "hidden" ] []
 
 
 viewFullName: Model -> Html Msg

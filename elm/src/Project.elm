@@ -7,6 +7,7 @@ import Html.App as App
 
 import Array
 import Date
+import Json.Decode
 
 import Http
 import Task
@@ -111,10 +112,6 @@ update msg model =
 
                 _ -> (model, Cmd.none)
 
---fullHeight: Attribute Msg
---fullHeight = style
---    [ ("height", "55vh")
---    , ("overflow-y", "auto")]
 
 view: Model -> Html Msg
 view model =
@@ -160,8 +157,14 @@ viewDataTableGroup (id, model) = App.map (Modify id)
     (DataTableGroup.view (DataTableGroup.viewForm model) model)
 
 -- Todo: get slug
-init: (Model, Cmd Msg)
-init = (Splash { warning = "" }, get "luxedemo")
+init: String -> (Model, Cmd Msg)
+init project_incoming_str =
+    let project_incoming_result = Json.Decode.decodeString Raw.projectDecoder project_incoming_str
+    in
+        case project_incoming_result of
+            Ok project_incoming -> (fromRawProject project_incoming, Cmd.none)
+
+            Err message -> (Splash { warning = message }, Cmd.none)
 
 
 get: String -> Cmd Msg
@@ -172,4 +175,4 @@ get slug =
         (Api.Project.getTask slug |> (Http.fromJson Raw.projectDecoder))
 
 
-main = App.program { init = init, update = update, subscriptions = \_ -> Sub.none, view = view}
+main = App.programWithFlags { init = init, update = update, subscriptions = \_ -> Sub.none, view = view}
