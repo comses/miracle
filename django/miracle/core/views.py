@@ -58,6 +58,18 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class SurveyView(LoginRequiredMixin, TemplateView):
+    template_name = 'survey.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(SurveyView, self).get_context_data(**kwargs)
+        username = self.request.user.username
+        context.update(
+            surveyUrl="https://asu.co1.qualtrics.com/SE/?SID=SV_bpCMBE5PHiB9NaZ&UserName={0}".format(username)
+        )
+        return context
+
+
 class UserActivityView(generics.GenericAPIView):
     renderer_classes = (renderers.JSONRenderer,)
     # FIXME: need to revisit permissions
