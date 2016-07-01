@@ -106,78 +106,7 @@
                     </div>
                     <div role='tabpanel' class='tab-pane' id='data-groups'>
                         <h4><i class='fa fa-database'></i> Data Groups</h4>
-                        <div data-bind='if: data_table_groups().length === 0'>
-                            <div class='alert alert-info alert-block' role='alert'>
-                                <i class='fa fa-info-circle'></i> No data has been uploaded yet.
-                                <br> Select "Upload archive" on the left navbar to upload your data and script package.
-                            </div>
-                        </div>
-                        <div data-bind='if: data_table_groups().length > 0'>
-                            <p>
-                            A <b>data group</b> is a set of data files that conforms to the same schema or table structure.
-                            We detected the following groups in your archive upload:
-                            </p>
-                            <div class='panel-group' id='data-table-group-accordion' role='tablist' aria-multiselectable='true'>
-                                <div class='panel panel-default' data-bind='foreach: data_table_groups'>
-                                    <div class='panel-heading' role='tab' data-bind='attr: {id: "heading" + id()}'>
-                                        <h4 class='panel-title'>
-                                            <a role='button'
-                                                data-toggle='collapse'
-                                                data-parent='#data-table-group-accordion'
-                                                data-bind='attr: {href: "#collapse" + id(), "aria-controls": "collapse" + id()}'
-                                                aria-expanded='true'>
-                                                <span data-bind='if: full_name'>
-                                                    <mark data-bind='text: full_name'></mark>
-                                                </span>
-                                                <span data-bind='ifnot: full_name'>
-                                                    <mark data-bind='text: name'></mark>
-                                                </span>
-                                                Files: <span class='label label-badge label-success' data-bind='text: number_of_files'></span>,
-                                                Columns: <span class='label label-badge label-warning' data-bind='text: number_of_columns'></span>
-                                            </a>
-                                            <a class='pull-right' data-bind='attr: {href: url}'>
-                                                <i class='fa fa-eye'></i> View details
-                                            </a>
-                                        </h4>
-                                    </div>
-                                    <div data-bind='attr: {id: "collapse" + id(), "aria-labelledby": "heading" + id()}'
-                                        class='panel-collapse collapse in' role='tabpanel'>
-                                        <div class='panel-body' data-bind='foreach: columns'>
-                                            <form class='form form-horizontal' data-bind='submit: function() { $root.updateColumn($data) }'>
-                                                <input type='hidden' name='id' data-bind='value: id'>
-                                                <div class='form-group'>
-                                                    <label for='name' class='col-sm-2 control-label'>Column Name</label>
-                                                    <div class='col-sm-9'>
-                                                        <input name='name' type='text' class='form-control' data-bind='value: name'>
-                                                    </div>
-                                                </div>
-                                                <div class='form-group'>
-                                                    <label class='col-sm-2 control-label' for='description'>Description</label>
-                                                    <div class='col-sm-9'>
-                                                        <textarea class='form-control' name='description' data-bind='value: description' rows='3'></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class='form-group'>
-                                                    <label class='col-sm-2 control-label' for='dataType'>Data type</label>
-                                                    <div class='col-sm-9'>
-                                                        <select class='form-control'
-                                                            data-bind='options: $root.columnDataTypes, optionsText: "label",
-                                                            optionsValue: "name",
-                                                            value: data_type'></select>
-                                                    </div>
-                                                </div>
-                                                <div class='form-group'>
-                                                    <div class='col-sm-offset-2 col-sm-9'>
-                                                        <button type='submit' class='btn btn-default'>Update</button>
-                                                    </div>
-                                                </div>
-                                            </form>
-                                            <hr>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="elm-main"></div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='analysis'>
                         {# FIXME: should eventually extract into component (react or KO) #}
@@ -417,6 +346,9 @@ lump all your files together.
 {% include "includes/ko.js" %}
 {% include "includes/dropzone.js" %}
 {% include "includes/csrf.js" %}
+<script>
+{% include "includes/elm-project.js" %}
+</script>
 {% include "project/includes/detail-form.html" %}
 <script>
 var gm;
@@ -624,5 +556,9 @@ $(function() {
     var hash = window.location.hash;
     $('#project-tab a[href="' + hash + '"]').tab('show');
 });
+</script>
+<script>
+    var el = document.getElementById("elm-main");
+    var app = Elm.Project.embed(el);
 </script>
 {% endblock %}

@@ -12,7 +12,7 @@ import Api.DataColumn
 
 import Cancelable exposing (fromCancelable, toCancelable)
 import CancelableSelect exposing (fromCancelableSelect, toCancelableSelect)
-import StyledNodes as SN
+import Util
 import Csrf
 import Json.Encode as Encode
 import Raw
@@ -28,6 +28,7 @@ type alias Model =
     , table_order: Int
     , warning: String
     , dirty: Bool
+    , expanded: Bool
     }
 
 
@@ -39,6 +40,7 @@ type Msg
     | Warn String
     | Reset
     | Dirty
+    | Expand
     | Update Model
     | Set
     | FetchSucceed Raw.Column
@@ -56,6 +58,7 @@ fromColumn {id, name, full_name, description, data_table_group, data_type, table
     , table_order = table_order
     , warning = ""
     , dirty = False
+    , expanded = False
     }
 
 
@@ -92,6 +95,8 @@ update msg model =
 
         Dirty -> ({ model | dirty = True }, Cmd.none)
 
+        Expand -> ({ model | expanded = not model.expanded }, Cmd.none)
+
         Update model' -> (model', Cmd.none)
 
         Set -> (model, set model)
@@ -101,41 +106,71 @@ update msg model =
         FetchFail error -> ({ model | warning = error }, Cmd.none)
 
 
+lessPadding = style
+    [ ("padding", "5px 5px")]
+
 view: Model -> Html Msg
 view model = 
-    let view_name = h5 [] [ text model.name ]
-        view_full_name =
+    let view_full_name =
             App.map FullName
                 (Cancelable.viewTextField
-                    (SN.onChange Cancelable.Dirty)
+                    (Util.onChange Cancelable.Dirty)
                     model.full_name
                     (text "Full Name"))
         view_description =
             App.map Description
                 (Cancelable.viewTextArea
-                    (SN.onChange Cancelable.Dirty)
+                    (Util.onChange Cancelable.Dirty)
                     model.description
                     (text "Description"))
         view_data_type = App.map DataType (CancelableSelect.view [] (text "Data Type") model.data_type)
 
-        btnClass = classList
-            [ ("btn", True)
-            , ("btn-primary", True)
-            , ("invisible", not model.dirty)
-            ]
+        btnClass = class "btn btn-primary"
+        view_title_class = classList
+            [ ("text-primary", model.expanded)]
+        view_head_full_name = text (Cancelable.fromCancelable model.full_name)
+        view_head_name = text model.name
 
-    in div
-        [ SN.onChange Dirty
-        , class "form form-horizontal"
-        ]
+        form_body =
+            if model.expanded then
+                [ br [] []
+                , div
+                    [ Util.onChange Dirty
+                    , class "form form-horizontal"
+                    ]
 
-        [ view_name
-        , view_full_name
-        , view_description
-        , view_data_type
-        , input [ type' "button", onClick Set, btnClass, value "Save"] []
-        , input [ type' "button", onClick Reset, btnClass, value "Cancel" ] []
-        ]
+                    [ view_full_name
+                    , view_description
+                    , view_data_type
+                    , div [ class "form-group" ]
+                        [ div [ class "btn-group col-xs-offset-2" ]
+                            [ button [ onClick Set, btnClass ] [ text "Save" ]
+                            , button [ onClick Reset, btnClass ] [ text "Cancel" ]
+                            ]
+                        ]
+                    ]
+                ]
+            else []
+
+--style [ ("overflow-y", "auto"), ("padding", "5px 5px") ]
+    in
+        li  [ class "item-metadata list-group-item" ]
+            ([ div
+                [ onClick Expand
+                , classList
+                    [ ("item-metadata-header", True)
+                    , ("item-metadata-header-selected", model.expanded)
+                    ]
+                ]
+
+                [ div [ class "pull-left" ]
+                    [ view_head_name ]
+                , div [ class "pull-right" ]
+                    [ view_head_full_name ]
+                ]
+
+            ] ++ form_body)
+
 
 
 set: Model -> Cmd Msg

@@ -120,3 +120,17 @@ input#id_contact_number {
 pre.tree {
     line-height: 1.2;
 }
+
+.item-metadata {
+    padding: 0px 0px;
+}
+.item-metadata-header {
+    overflow-y: auto;
+    padding: 5px 5px;
+}
+.item-metadata-header:hover {
+    background-color: lightskyblue;
+}
+.item-metadata-header-selected {
+    background-color: aliceblue;
+}

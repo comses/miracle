@@ -1,7 +1,7 @@
 module Project exposing (..)
 
 import Html exposing (..)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, style)
 import Html.Events
 import Html.App as App
 
@@ -13,6 +13,8 @@ import Task
 
 import Api.Project
 import Analysis
+import ArrayComponent
+import Cancelable
 import DataTableGroup
 import Raw
 
@@ -82,6 +84,12 @@ type Msg
     | Modify Int DataTableGroup.Msg
 
 
+updateDataTableGroups:
+    Int -> DataTableGroup.Msg -> Array.Array DataTableGroup.Model -> (Array.Array DataTableGroup.Model, Cmd Msg)
+updateDataTableGroups =
+    ArrayComponent.updateChild Modify DataTableGroup.update
+
+
 update: Msg -> Model -> (Model, Cmd Msg)
 update msg model =
     case msg of
@@ -98,30 +106,37 @@ update msg model =
         Modify id datatablegroup_msg ->
             case model of
                 Main model' ->
-                    let datatablegroup = Array.get id model'.data_table_groups
-                        val = Maybe.map (DataTableGroup.update datatablegroup_msg) datatablegroup
-                    in case val of
-
-                        Just (datatablegroup', datatablegroup_msg') ->
-                            (Main { model' | data_table_groups =
-                                Array.set id datatablegroup' model'.data_table_groups }
-                            , Cmd.map (Modify id) datatablegroup_msg'
-                            )
-
-                        Nothing ->
-                            (model, Cmd.none)
+                    let (datatablegroups, msg') = updateDataTableGroups id datatablegroup_msg model'.data_table_groups
+                    in (Main { model' | data_table_groups = datatablegroups }, msg')
 
                 _ -> (model, Cmd.none)
 
+--fullHeight: Attribute Msg
+--fullHeight = style
+--    [ ("height", "55vh")
+--    , ("overflow-y", "auto")]
 
 view: Model -> Html Msg
 view model =
     case model of
         Main model' ->
-            let contents =
-                    [ h4 [] [ text "Metadata" ]
-                    , div []
-                        (List.map viewDataTableGroup (Array.toIndexedList model'.data_table_groups))
+            let indexed_model = Array.toIndexedList model'.data_table_groups
+                viewColumnForms = List.map viewDataTableGroupColumns indexed_model
+                viewForms = List.map viewDataTableGroup indexed_model
+                displayInPanel name view =
+                    div [ class "col-lg-6"]
+                        [ div [ class "panel panel-primary" ]
+                            [ div [ class "panel-heading" ]
+                                [ text name ]
+                                , div [ class "panel-body" ]
+                                    view
+                                ]
+                            ]
+                contents =
+                    [ div [ class "row" ]
+                        [ displayInPanel "Data Table Groups" viewForms
+                        , displayInPanel "Data Table Group Columns" viewColumnForms
+                        ]
                     ]
 
 
@@ -130,15 +145,21 @@ view model =
                     else contents
             in
 
-            div [ class "container"] contents_with_warning
+            div [ class "container-fluid"] contents_with_warning
 
         Splash model' -> div [ class "container" ] [ text model'.warning ]
 
 
+viewDataTableGroupColumns: (Int, DataTableGroup.Model) -> Html Msg
+viewDataTableGroupColumns (id, model) = App.map (Modify id)
+    (DataTableGroup.view (DataTableGroup.viewColumns model) model)
+
+
 viewDataTableGroup: (Int, DataTableGroup.Model) -> Html Msg
-viewDataTableGroup (id, model) = App.map (Modify id) (DataTableGroup.view model)
+viewDataTableGroup (id, model) = App.map (Modify id)
+    (DataTableGroup.view (DataTableGroup.viewForm model) model)
 
-
+-- Todo: get slug
 init: (Model, Cmd Msg)
 init = (Splash { warning = "" }, get "luxedemo")
 

@@ -6,7 +6,6 @@ import Html.Events exposing (..)
 
 import Json.Decode as Decode exposing ((:=))
 import DecodeExtra exposing (pure, apply)
-import StyledNodes as SN
 
 type alias Model a =
         { current: a
@@ -41,8 +40,8 @@ viewFormGroup node onEventDirty model label_name =
                 ]
     in
     div [ onEventDirty, textClass ]
-        [ label [ class "col-sm-2 control-label" ] [ label_name ]
-        , div [ class "col-sm-10" ]
+        [ label [ class "col-xs-2 control-label" ] [ label_name ]
+        , div [ class "col-xs-10" ]
             [ node.tag ((class "form-control") :: node.attributes) []
             ]
         ]

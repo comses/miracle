@@ -1,4 +1,4 @@
-module StyledNodes exposing (..)
+module Util exposing (..)
 
 import Html as H
 import Html.Attributes exposing (..)
@@ -14,6 +14,3 @@ onChangeIndex : (Int -> msg) -> H.Attribute msg
 onChangeIndex tagger =
     let value = Decode.at ["target", "selectedIndex"] Decode.int
     in on "change" (Decode.map tagger value)
-
-button_submit = [ ("btn", True), ("btn-primary", True) ]
-button_cancel = [ ("btn", True), ("btn-default", True) ]

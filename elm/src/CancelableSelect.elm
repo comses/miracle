@@ -7,7 +7,7 @@ import Html.App as App
 import Array
 
 import Cancelable
-import StyledNodes as SN
+import Util
 
 import Debug
 
@@ -49,10 +49,10 @@ view attributes label_name model =
             (\(id, (val, name)) -> option [ value val, selected (model.currentSelectedIndex == Just id) ] [ text name ])
             (Array.toIndexedList model.options)
     in
-        div [ SN.onChange Dirty, divClass ]
+        div [ Util.onChange Dirty, divClass ]
             [ label [ class "col-sm-2 control-label" ] [ label_name ]
             , div [ class "col-sm-10" ]
-                [ select ((SN.onChangeIndex Select) :: (class "form-control") :: attributes) options ]
+                [ select ((Util.onChangeIndex Select) :: (class "form-control") :: attributes) options ]
             ]
 
 

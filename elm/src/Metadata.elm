@@ -46,7 +46,9 @@ update msg model =
 
 view: Model -> Html Msg
 view model =
-    let contents =
+    let indexed_model = Array.toIndexedList model
+        viewColumnForms = List.map DataTableGroup.viewColumns
+        contents =
             [ h4 [] [ text "Metadata" ]
             , List.map viewDataTableGroup (Array.toIndexedList model)
             ]
