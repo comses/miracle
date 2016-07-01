@@ -28,6 +28,9 @@
             <li role='presentation'>
                 <a href='#upload' aria-controls='upload' role='tab' data-toggle='tab'><i class='fa fa-cloud-upload'></i> Upload</a>
             </li>
+            <li role='survey'>
+                <a href='#survey' aria-controls='survey' role='tab' data-toggle='tab'><i class='fa fa-clipboard'></i> IEMSS Survey</a>
+            </li>
         </ul>
         <br>
         <div class='panel panel-primary'>
@@ -90,6 +93,13 @@
                                 </form>
 
                             </div>
+                        </div>
+                    </div>
+                    {# XXX: remove after IEMSS 2016 #}
+                    <div role='tabpanel' class='tab-pane' id='survey'>
+                        <h4><i class='fa fa-clipboard'></i> IEMSS 2016 Survey</h4>
+                        <div class='embed-responsive embed-responsive-4by3'>
+                            <iframe id='survey-iframe' data-bind='attr: {src: iemssSurveyUrl}'></iframe>
                         </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='explorer'>
@@ -435,6 +445,9 @@ $(function() {
         this.label = label;
         this.name = name;
     };
+    model.iemssSurveyUrl = ko.pureComputed(function() {
+        return "https://asu.co1.qualtrics.com/SE/?SID=SV_bpCMBE5PHiB9NaZ&UserName={{ request.user.username }}";
+    });
     model.deleteArchive = function() {
         bootbox.confirm("Delete the project archive and files associated with this project? This action cannot be undone.",
                 function (result) {
