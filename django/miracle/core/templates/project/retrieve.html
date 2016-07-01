@@ -16,17 +16,25 @@
             <li role='presentation' class='active'>
                 <a href='#overview' aria-controls='overview' role='tab' data-toggle='tab'><i class='fa fa-table'></i> Overview</a>
             </li>
-            <li data-bind='visible: number_of_datasets() != 0' role='presentation'>
-                <a href='#explorer' aria-controls='explorer' role='tab' data-toggle='tab'><i class='fa fa-binoculars'></i> Data explorer</a>
-            </li>
             <li data-bind='visible: number_of_datasets() != 0'role='presentation'>
                 <a href='#data-groups' aria-controls='metadata' role='tab' data-toggle='tab'><i class='fa fa-database'></i> Metadata</a>
             </li>
             <li data-bind='visible: number_of_datasets() != 0' role='presentation'>
-                <a href='#analysis' aria-controls='analysis' role='tab' data-toggle='tab'><i class='fa fa-terminal'></i> Analysis scripts</a>
+                <a href='#explorer' aria-controls='explorer' role='tab' data-toggle='tab'><i class='fa fa-binoculars'></i> Data explorer</a>
+            </li>
+            <li data-bind='visible: number_of_datasets() != 0' role='presentation'>
+                <a href='#analysis' aria-controls='analysis' role='tab' data-toggle='tab'><i class='fa fa-terminal'></i> Analysis</a>
             </li>
             <li role='presentation'>
                 <a href='#upload' aria-controls='upload' role='tab' data-toggle='tab'><i class='fa fa-cloud-upload'></i> Upload</a>
+            </li>
+            <li data-bind='visible: apps().length != 0' role='presentation' class='dropdown'>
+                <a class='dropdown-toggle' data-toggle='dropdown' href='#' role='button' aria-haspopup='true'
+                    aria-expanded='false'>
+                    Apps <span class='caret'></span>
+                </a>
+                <ul class='dropdown-menu'>
+                </ul>
             </li>
         </ul>
         <br>
@@ -56,6 +64,12 @@
                             <div class='col-md-6'>
                                 <h5><i class='fa fa-history'></i> Recent Activity</h5>
                                 <div class='activitylog' data-bind='foreach: recent_activity'>
+                                    <div class='row'>
+                                        <div class='col-md-12'>
+                                            <span class='label label-primary' data-bind='text: date_created'></span>
+                                            <span class='label label-info' data-bind='text: creator'></span> <span class='text-info' data-bind='text: message'></span>
+                                        </div>
+                                    </div>
                                 </div>
                                 <h5><i class='fa fa-comment'></i> Comments</h5>
                                 <div class='comments' data-bind='foreach: comments'>
@@ -435,6 +449,7 @@ $(function() {
         this.label = label;
         this.name = name;
     };
+    model.apps = ko.observableArray();
     model.deleteArchive = function() {
         bootbox.confirm("Delete the project archive and files associated with this project? This action cannot be undone.",
                 function (result) {

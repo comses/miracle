@@ -57,7 +57,7 @@ class AnalyzerTest(BaseMiracleTest):
         data = extract_metadata(self.get_test_data("luxe.csv"))
         self.assertEqual(data.layers[0][1][0], ("agent_id", "bigint"))
 
-    @override_settings(MIRACLE_PROJECT_DIRECTORY=TEST_PROJECT_DIRECTORY)
+    @override_settings(PROJECT_DIRECTORY=TEST_PROJECT_DIRECTORY)
     def test_groups_shp(self):
         files = map(lambda x: self.get_test_data(x), ['cities.dbf', 'cities.prj', 'cities.shp', 'cities.shx'])
         project_grouped_file_paths = ProjectGroupedFilePaths(project_token="test",

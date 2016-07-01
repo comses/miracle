@@ -191,7 +191,7 @@ def group_files(project_file_paths):
     shapefile_grouper = ShapefileGrouper()
     otherfile = OtherFileGrouper()
 
-    with Chdir(os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, project_file_paths.project_token)):
+    with Chdir(os.path.join(settings.PROJECT_DIRECTORY, project_file_paths.project_token)):
         i = 0
         for file_path in project_file_paths.paths:
             shapefile_grouper.add(file_path, i) or otherfile.add(file_path, i)

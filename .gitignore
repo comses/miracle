@@ -7,6 +7,9 @@ docker-compose.yml
 *.crt
 *.key
 
+# redis
+dump.rdb
+
 # development data folders
 django/projects
 django/packrat

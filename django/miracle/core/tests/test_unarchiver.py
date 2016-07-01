@@ -20,8 +20,8 @@ class ArchiveExtractorTest(BaseMiracleTest):
     @staticmethod
     def cleanup(src, token):
         os.unlink(src)
-        project_folder = path.join(settings.MIRACLE_PROJECT_DIRECTORY, token)
-        packrat_folder = path.join(settings.MIRACLE_PACKRAT_DIRECTORY, token)
+        project_folder = path.join(settings.PROJECT_DIRECTORY, token)
+        packrat_folder = path.join(settings.PACKRAT_DIRECTORY, token)
         if path.exists(project_folder):
             shutil.rmtree(project_folder)
         if path.exists(packrat_folder):

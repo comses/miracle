@@ -331,8 +331,9 @@ class FileUploadView(APIView):
 
     def post(self, request):
         file_obj = request.FILES['file']
-        project = get_object_or_404(Project, pk=request.data.get('id'))
-        project.write_archive(file_obj)
+        project_id = request.data.get('id')
+        project = get_object_or_404(Project, pk=project_id)
+        project.archive(file_obj)
         # should analyze payload
         task = run_metadata_pipeline.delay(project, project.archive_path)
         response = Response(data=task.id, status=status.HTTP_202_ACCEPTED)

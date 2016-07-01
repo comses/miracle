@@ -1,3 +1,4 @@
+from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from miracle.core.tasks import run_metadata_pipeline
@@ -29,13 +30,11 @@ class Command(BaseCommand):
                             )
 
     def handle(self, *args, **options):
-        logger.debug(args)
-        logger.debug(options)
         creator_name = options['creator']
         project_shortname = options['project']
-        archive_path = options['archive_file']
+        archive_file = options['archive_file']
 
-        self.extract(creator_name, project_shortname, archive_path)
+        Command.extract(creator_name, project_shortname, archive_file)
 
     @staticmethod
     def create_user(username='testuser', email='miracle-test@mailinator.com',
@@ -56,18 +55,19 @@ class Command(BaseCommand):
             return user
 
     @staticmethod
-    def extract(creator_name, project_shortname, archive_path):
-        abs_archive_path = os.path.abspath(archive_path)
-        logger.debug("Extracting archive: {}".format(abs_archive_path))
-        logger.debug("Working Directory: {}".format(os.getcwd()))
-        logger.debug("project path: %s", settings.MIRACLE_PROJECT_DIRECTORY)
-
+    def extract(creator_name, project_shortname, archive_file):
+        abs_archive_path = os.path.abspath(archive_file)
+        logger.debug("Extracting archive %s", abs_archive_path)
+        logger.debug("Current working directory: %s", os.getcwd())
+        logger.debug("Project path: %s", settings.PROJECT_DIRECTORY)
         creator = Command.create_user(username=creator_name)
-        project, created = Project.objects.get_or_create(name=project_shortname, slug=project_shortname, creator=creator)
-
-        logger.debug(archive_path)
+        project, created = Project.objects.get_or_create(slug=project_shortname, creator=creator)
+        if created:
+            project.name = project_shortname
+        with open(abs_archive_path, 'rb') as f:
+            project.archive(File(f))
         try:
-            res = run_metadata_pipeline(project, archive_path, delete_archive_on_failure=False)
+            run_metadata_pipeline(project, archive_file, delete_archive_on_failure=False)
             logger.debug("Extraction succeeded for archive at %s", abs_archive_path)
         except Exception:
             logger.exception("Extraction failed for archive %s", abs_archive_path)

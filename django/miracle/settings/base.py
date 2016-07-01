@@ -260,6 +260,8 @@ REST_FRAMEWORK = {
 
 MEDIA_URL = '/data/'
 
+ARCHIVE_URL = '/archives/'
+
 # Celery settings: http://celery.readthedocs.org
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
@@ -272,12 +274,12 @@ def make_project_paths(project_directory):
 def make_archive_path(archive_directory):
     os.makedirs('archives')
 
-MIRACLE_PROJECT_DIRECTORY = safe_make_paths('/miracle/projects',
-                                            os.path.abspath('projects'), make_project_paths)
-MIRACLE_ARCHIVE_DIRECTORY = MEDIA_ROOT = safe_make_paths('/miracle/archives',
-                                                         os.path.abspath('archives'), make_archive_path)
-MIRACLE_PACKRAT_DIRECTORY = safe_make_paths('/miracle/packrat',
-                                            os.path.abspath('packrat'), make_project_paths)
+PROJECT_DIRECTORY = safe_make_paths('/miracle/projects',
+                                    os.path.abspath('projects'), make_project_paths)
+ARCHIVE_DIRECTORY = MEDIA_ROOT = safe_make_paths('/miracle/archives',
+                                                 os.path.abspath('archives'), make_archive_path)
+PACKRAT_DIRECTORY = safe_make_paths('/miracle/packrat',
+                                    os.path.abspath('packrat'), make_project_paths)
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
