@@ -2,7 +2,7 @@
 
 ### Testing
 
-- Run `./elm-deploy` in this directory. This will create a js file in the
+- Run `./elm-deploy Project project` in this directory. This will create a js file in the
   `django/miracle/core/templates/includes` directory.
 
 ### Setup
