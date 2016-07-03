@@ -219,7 +219,7 @@ class Project(MiracleMetadataMixin):
         self.submitted_archive.save(simplified_filename, incoming_file)
 
     def clear_archive(self, user):
-        self.log("Clearing project archive", user)
+        self.log("Clear project archive", user)
         # delete all data table groups, data analysis scripts, and files.
         with transaction.atomic():
             self.data_table_groups.all().delete()

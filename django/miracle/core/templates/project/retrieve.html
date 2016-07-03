@@ -66,8 +66,13 @@
                                 <div class='activitylog' data-bind='foreach: recent_activity'>
                                     <div class='row'>
                                         <div class='col-md-12'>
-                                            <span class='label label-primary' data-bind='text: date_created'></span>
-                                            <span class='label label-info' data-bind='text: creator'></span> <span class='text-info' data-bind='text: message'></span>
+                                            <mark data-bind='text: project'></mark>
+                                            <span class='label label-info' data-bind='text: creator'></span>
+                                            <span class='text-info'>
+                                                <span data-bind='text: message'></span>
+                                            </span>
+                                            </span>
+                                            <span class='pull-right label label-primary' data-bind='text: date_created'></span>
                                         </div>
                                     </div>
                                 </div>
@@ -195,96 +200,74 @@
                     </div>
                     <div role='tabpanel' class='tab-pane' id='analysis'>
                         {# FIXME: should eventually extract into component (react or KO) #}
-                        <h4><i class='fa fa-code'></i> Data Analysis Scripts</h4>
-                        <div data-bind='if: activeAnalysisScripts().length === 0'>
-                            <div class='alert alert-info alert-block' role='alert'>
-                                <i class='fa fa-info-circle'></i> No data analysis scripts found.
-                            </div>
-                        </div>
-                        <div data-bind='foreach: activeAnalysisScripts'>
-                            <div class='well' data-bind='if: enabled'>
-                                <h5><span data-bind='text: name'></span>
-                                    <small class='pull-right'><span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
-                                </h5>
-                                <div>
-                                    <strong>Status</strong>:
-                                    <mark data-bind='text: job_status'></mark>
-                                    <i class='fa fa-spinner fa-pulse' data-bind='visible: job_status() === "PROCESSING"'></i>
-                                </div>
-                                <div>
-                                    <strong>Description</strong>:
-                                    <span data-bind='text: description() || "No description entered."'></span>
-                                </div>
-                                <div>
-                                    <strong>Authors</strong>:
-                                    <span data-bind='if: authors().length'>
-                                        <span data-bind='foreach: authors'>
-                                            <mark data-bind='text: user.full_name'></mark>
-                                        </span>
-                                    </span>
-                                    <span data-bind='ifnot: authors().length'>
-                                        No authors listed.
-                                    </span>
-                                </div>
-                                <div>
-                                    <strong>Type</strong>: <span class='label label-warning' data-bind='text: file_type'></span>
-                                </div>
-                                <div class='btn-group' role='group'>
-                                    <button class='btn btn-sm btn-default' data-bind='click: $root.enterAnalysisParameters.bind($data)'><i class='fa fa-play'></i> Run script</button>
-                                    <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
-                                        <i class='fa fa-eye'></i> View details
-                                    </a>
-                                    <a class='btn btn-sm btn-default' data-bind='attr: {href: "/analyses/" + id() + "/download/"}'>
-                                        <i class='fa fa-download'></i> Download
-                                    </a>
-                                </div>
+                        <div class='row'>
+                            <div class='col-md-6 well-sm'>
+                                <h4><i class='fa fa-code'></i> Data Analysis Scripts</h4>
                                 <hr>
-                                <h5><i class='fa fa-area-chart'></i> Outputs <span class='pull-right label label-badge label-primary' data-bind='text: outputs().length'></span></h5>
-                                <hr>
-                                <div data-bind='ifnot: outputs().length'>
-                                    No recorded outputs.
+                                <div data-bind='if: activeAnalysisScripts().length === 0'>
+                                    <div class='alert alert-info alert-block' role='alert'>
+                                        <i class='fa fa-info-circle'></i> No data analysis scripts found.
+                                    </div>
                                 </div>
-                                <ul class='list-group' data-bind='foreach: outputs'>
-                                    <li class='list-group-item'>
-                                        <h5><span class='label label-primary' data-bind='text: creator'></span><span data-bind='text: name'></span>
+                                <div data-bind='foreach: activeAnalysisScripts'>
+                                    <div class='well' data-bind='if: enabled'>
+                                        <h5><span data-bind='text: name'></span>
                                             <small class='pull-right'><span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
                                         </h5>
-                                        <div class='collapse' data-bind='attr: {id: "collapseOutput" + id() }'>
-                                            <div class='well'>
-                                                <code>Parameters:</code>
-                                                <ul class='list-group' data-bind='foreach: parameter_values'>
-                                                    <li class='list-group-item'>
-                                                        <span data-bind='text: label'></span> (<i data-bind='text: name'></i>): <mark data-bind='text: value'></mark>
-                                                    </li>
-                                                </ul>
-                                                <code>Output files:</code>
-                                                <ul class='list-group' data-bind='foreach: files'>
-                                                    <li class='list-group-item'>
-                                                        <a class='list-group-item-text' data-bind='attr: {href: url}, text: name'></a>
-														<div data-bind='if: name().endsWith("png")'>
-															<img class='img-responsive img-thumbnail' data-bind='attr: {src: url}'>
-														</div>
-                                                    </li>
-                                                </ul>
+                                        <div>
+                                            <strong>Status</strong>:
+                                            <mark data-bind='text: job_status'></mark>
+                                            <i class='fa fa-spinner fa-pulse' data-bind='visible: job_status() === "PROCESSING"'></i>
+                                        </div>
+                                        <div>
+                                            <strong>Description</strong>:
+                                            <span data-bind='text: description() || "No description entered."'></span>
+                                        </div>
+                                        <div>
+                                            <strong>Authors</strong>:
+                                            <span data-bind='if: authors().length'>
+                                                <span data-bind='foreach: authors'>
+                                                    <mark data-bind='text: user.full_name'></mark>
+                                                </span>
+                                            </span>
+                                            <span data-bind='ifnot: authors().length'>
+                                                No authors listed.
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <strong>File Type</strong>: <span class='label label-warning' data-bind='text: file_type'></span>
+                                        </div>
+                                        <div>
+                                            <strong>Parameters</strong>:
+                                            <div data-bind='foreach: parameters'>
+                                                <div class='alert alert-info alert-sm'>
+                                                    <div><strong data-bind='text: label'></strong><i> (<small data-bind='text: name'></small>)</i></div>
+                                                    <div><strong>Data Type</strong>: <span data-bind='text: data_type'></span></div>
+                                                    <div><strong>Element Type</strong>: <span data-bind='text: html_input_type'></span></div>
+                                                    <div><strong>Allowed Values</strong>: <span data-bind='text: allowed_values'></span></div>
+                                                    <div><strong>Description</strong>: <span data-bind='text: description'></span></div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class='btn-group' role='group'>
-                                            <a class='btn btn-primary' role='button' data-toggle='collapse'
-                                                aria-expanded='false'
-                                                data-bind='attr: {href: "#collapseOutput" + id()}'>
-                                                <i class='fa fa-eye'></i> Details
+                                            <button class='btn btn-sm btn-primary' data-bind='click: $root.selectAnalysis.bind($data)'><i class='fa fa-crosshairs'></i>  Select</button>
+                                            <button class='btn btn-sm btn-default' data-bind='click: $root.enterAnalysisParameters.bind($data)'><i class='fa fa-play'></i> Run script</button>
+                                            <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
+                                                <i class='fa fa-eye'></i> View details
                                             </a>
-                                            <a class='btn btn-success' role='button' data-bind='click: $root.showShareOutputForm.bind($data)'>
-                                                <i class='fa fa-share'></i> Share
-                                            </a>
-                                        </div>
-                                        <div class='btn-group pull-right' role='group'>
-                                            <a class='btn btn-danger' role='button' data-bind='click: $root.deleteOutput.bind($data)'>
-                                                <i class='fa fa-trash'></i> Delete
+                                            <a class='btn btn-sm btn-default' data-bind='attr: {href: "/analyses/" + id() + "/download/"}'>
+                                                <i class='fa fa-download'></i> Download
                                             </a>
                                         </div>
-                                    </li>
-                                </ul>
+                                    </div>
+                                    <hr>
+                                </div>
+                            </div>
+                            <div class='col-md-6 well-sm'>
+                                <h4><i class='fa fa-area-chart'></i> Analysis Outputs for <span data-bind='text: selectedAnalysisScript().name' class='label label-primary'></span></h4>
+                                <hr>
+                                <div data-bind="template: { name: 'analysis-output-template', data: selectedAnalysisScript }">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -362,7 +345,7 @@ lump all your files together.
                                 <span class='label label-badge label-primary' data-bind='text: data_type'></span>
                             </label>
                             <div class='col-sm-7'>
-                                <input data-bind='attr: {id: name, type: html_input_type}, value: value' class='form-control' required placeholder='Value'>
+                                <input data-bind='attr: {id: name, type: html_input_type}, value: default_value' class='form-control' required placeholder='Value'>
                             </div>
                         </div>
                     </div>
@@ -420,8 +403,54 @@ lump all your files together.
             </div>
         </div>
     </div>
-
 </div>
+
+<script type='text/html' id='analysis-output-template'>
+    <div data-bind='ifnot: outputs().length'>
+        No recorded outputs.
+    </div>
+    <ul class='list-group' data-bind='foreach: outputs'>
+        <li class='list-group-item'>
+            <h5><span class='label label-primary' data-bind='text: creator'></span><span data-bind='text: name'></span>
+                <small class='pull-right'><span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
+            </h5>
+            <div class='collapse' data-bind='attr: {id: "collapseOutput" + id() }'>
+                <div class='well'>
+                    <code>Parameters:</code>
+                    <ul class='list-group' data-bind='foreach: parameter_values'>
+                        <li class='list-group-item'>
+                            <span data-bind='text: label'></span> (<i data-bind='text: name'></i>): <mark data-bind='text: value'></mark>
+                        </li>
+                    </ul>
+                    <code>Output files:</code>
+                    <ul class='list-group' data-bind='foreach: files'>
+                        <li class='list-group-item'>
+                            <a class='list-group-item-text' data-bind='attr: {href: url}, text: name'></a>
+                            <div data-bind='if: name().endsWith("png")'>
+                                <img class='img-responsive img-thumbnail' data-bind='attr: {src: url}'>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class='btn-group' role='group'>
+                <a class='btn btn-primary' role='button' data-toggle='collapse'
+                                      aria-expanded='false'
+                                      data-bind='attr: {href: "#collapseOutput" + id()}'>
+                    <i class='fa fa-eye'></i> Details
+                </a>
+                <a class='btn btn-success' role='button' data-bind='click: $root.showShareOutputForm.bind($data)'>
+                    <i class='fa fa-share'></i> Share
+                </a>
+            </div>
+            <div class='btn-group pull-right' role='group'>
+                <a class='btn btn-danger' role='button' data-bind='click: $root.deleteOutput.bind($data)'>
+                    <i class='fa fa-trash'></i> Delete
+                </a>
+            </div>
+        </li>
+    </ul>
+</script>
 
 {% endblock content %}
 
@@ -503,7 +532,24 @@ $(function() {
     };
     model.displayInputParameterForm = ko.observable(false);
     model.displayShareOutputForm = ko.observable(false);
+    model.selectAnalysis = function(analysis) {
+        console.debug("selecting: " + analysis.name());
+        console.debug(analysis.outputs());
+        model.selectedAnalysis(analysis);
+    }
     model.selectedAnalysis = ko.observable();
+    model.selectedAnalysisScript = ko.pureComputed(function() {
+        var selectedAnalysis = model.selectedAnalysis();
+        if (selectedAnalysis) {
+            return selectedAnalysis;
+        }
+        else {
+            console.debug("returning first active analysis script: ");
+            selectedAnalysis = model.activeAnalysisScripts()[0];
+            console.debug(selectedAnalysis);
+            return model.activeAnalysisScripts()[0]
+        }
+    });
     model.selectedOutput = ko.observable();
     model.analysisParameters = ko.observableArray();
     model.currentInterval = ko.observable();

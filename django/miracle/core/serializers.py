@@ -66,7 +66,7 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 
 class AnalysisParameterSerializer(serializers.ModelSerializer):
-    value = serializers.ReadOnlyField(source='default_value')
+    default_value = serializers.ReadOnlyField()
     html_input_type = serializers.SerializerMethodField()
     html_input_type_converter = defaultdict(lambda: 'text', {
         'integer': 'number',
@@ -74,14 +74,23 @@ class AnalysisParameterSerializer(serializers.ModelSerializer):
         'character': 'text',
         'logical': 'checkbox',  # FIXME: needs additional UI support for checkboxes
     })
+    allowed_values = serializers.SerializerMethodField()
+
+    def get_allowed_values(self, obj):
+        if obj.value_range:
+            return "From {0} - {1} with step sizes of {2}".format(*obj.value_range)
+        elif obj.value_list:
+            return ", ".join(map(str, obj.value_list))
+        else:
+            return "No additional restrictions"
 
     def get_html_input_type(self, obj):
         return AnalysisParameterSerializer.html_input_type_converter[obj.data_type]
 
     class Meta:
         model = AnalysisParameter
-        fields = ('id', 'name', 'label', 'data_type', 'description', 'value', 'html_input_type', 'value_list',
-                  'value_range')
+        fields = ('id', 'name', 'label', 'data_type', 'description', 'default_value', 'html_input_type', 'value_list',
+                  'value_range', 'allowed_values')
 
 
 class DataAnalysisScriptSerializer(serializers.HyperlinkedModelSerializer):
