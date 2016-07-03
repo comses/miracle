@@ -211,8 +211,11 @@
                                 </div>
                                 <div data-bind='foreach: activeAnalysisScripts'>
                                     <div class='well' data-bind='if: enabled'>
-                                        <h5><span data-bind='text: name'></span>
-                                            <small class='pull-right'><span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
+                                        <h5>
+                                            <a href='#' data-bind='click: $root.selectedAnalysis.bind($data)'>
+                                                <span data-bind='text: name'></span>
+                                                <small class='pull-right'><span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
+                                            </a>
                                         </h5>
                                         <div>
                                             <strong>Status</strong>:
@@ -250,7 +253,7 @@
                                             </div>
                                         </div>
                                         <div class='btn-group' role='group'>
-                                            <button class='btn btn-sm btn-primary' data-bind='click: $root.selectAnalysis.bind($data)'><i class='fa fa-crosshairs'></i>  Select</button>
+                                            <button class='btn btn-sm btn-primary' data-bind='click: $root.selectedAnalysis.bind($data)'><i class='fa fa-crosshairs'></i>  Select</button>
                                             <button class='btn btn-sm btn-default' data-bind='click: $root.enterAnalysisParameters.bind($data)'><i class='fa fa-play'></i> Run script</button>
                                             <a class='btn btn-sm btn-default' data-bind='attr: {href: url}'>
                                                 <i class='fa fa-eye'></i> View details
@@ -264,9 +267,60 @@
                                 </div>
                             </div>
                             <div class='col-md-6 well-sm'>
-                                <h4><i class='fa fa-area-chart'></i> Analysis Outputs for <span data-bind='text: selectedAnalysisScript().name' class='label label-primary'></span></h4>
+                                <h4><i class='fa fa-area-chart'></i> Analysis Outputs</h4>
                                 <hr>
-                                <div data-bind="template: { name: 'analysis-output-template', data: selectedAnalysisScript }">
+                                <div data-bind='ifnot: selectedAnalysis'>
+                                    Please select an analysis to view on the left to see its outputs.
+                                </div>
+                                <div data-bind='with: selectedAnalysis'>
+    <h4>Outputs for  <mark data-bind='text: name'></mark></h4>
+        <div data-bind='ifnot: outputs().length'>
+            No recorded outputs.
+        </div>
+        <ul class='list-group' data-bind='foreach: outputs'>
+            <li class='list-group-item'>
+                <h5><span class='label label-primary' data-bind='text: creator'></span><span data-bind='text: name'></span>
+                    <small class='pull-right'><span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
+                </h5>
+                <div class='collapse' data-bind='attr: {id: "collapseOutput" + id() }'>
+                    <div class='well'>
+                        <code>Parameters:</code>
+                        <ul class='list-group' data-bind='foreach: parameter_values'>
+                            <li class='list-group-item'>
+                                <span data-bind='text: label'></span> (<i data-bind='text: name'></i>): <mark data-bind='text: value'></mark>
+                            </li>
+                        </ul>
+                        <code>Output files:</code>
+                        <ul class='list-group' data-bind='foreach: files'>
+                            <li class='list-group-item'>
+                                <a class='list-group-item-text' data-bind='attr: {href: url}, text: name'></a>
+                                <div data-bind='if: name().endsWith("png")'>
+                                    <img class='img-responsive img-thumbnail' data-bind='attr: {src: url}'>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class='btn-group' role='group'>
+                    <a class='btn btn-primary' role='button' data-toggle='collapse'
+                                        aria-expanded='false'
+                                        data-bind='attr: {href: "#collapseOutput" + id()}'>
+                        <i class='fa fa-eye'></i> Details
+                    </a>
+                    <a class='btn btn-success' role='button' data-bind='click: $root.showShareOutputForm.bind($data)'>
+                        <i class='fa fa-share'></i> Share
+                    </a>
+                </div>
+                <div class='btn-group pull-right' role='group'>
+                    <a class='btn btn-danger' role='button' data-bind='click: $root.deleteOutput.bind($data)'>
+                        <i class='fa fa-trash'></i> Delete
+                    </a>
+                </div>
+            </li>
+        </ul>
+                                </div>
+
+                                {#<div data-bind="template: { name: 'analysis-output-template', data: selectedAnalysis, if: selectedAnalysis }">#}
                                 </div>
                             </div>
                         </div>
@@ -406,6 +460,7 @@ lump all your files together.
 </div>
 
 <script type='text/html' id='analysis-output-template'>
+<h4>Outputs for  <mark data-bind='text: name'></mark></h4>
     <div data-bind='ifnot: outputs().length'>
         No recorded outputs.
     </div>
@@ -462,7 +517,6 @@ lump all your files together.
 {% include "includes/csrf.js" %}
 {% include "project/includes/detail-form.html" %}
 <script>
-var gm;
 $(function() {
     var model = new ProjectModel({data: {{ project_json|safe}}} );
     Dropzone.options.projectArchiveDropzone = {
@@ -532,24 +586,7 @@ $(function() {
     };
     model.displayInputParameterForm = ko.observable(false);
     model.displayShareOutputForm = ko.observable(false);
-    model.selectAnalysis = function(analysis) {
-        console.debug("selecting: " + analysis.name());
-        console.debug(analysis.outputs());
-        model.selectedAnalysis(analysis);
-    }
     model.selectedAnalysis = ko.observable();
-    model.selectedAnalysisScript = ko.pureComputed(function() {
-        var selectedAnalysis = model.selectedAnalysis();
-        if (selectedAnalysis) {
-            return selectedAnalysis;
-        }
-        else {
-            console.debug("returning first active analysis script: ");
-            selectedAnalysis = model.activeAnalysisScripts()[0];
-            console.debug(selectedAnalysis);
-            return model.activeAnalysisScripts()[0]
-        }
-    });
     model.selectedOutput = ko.observable();
     model.analysisParameters = ko.observableArray();
     model.currentInterval = ko.observable();
@@ -596,13 +633,12 @@ $(function() {
                 console.debug("deleting output.");
                 $.ajax({
                     url: '/outputs/' + output.id(),
-                    method: "DELETE",
-                    data: {id: output.id()},
-                    success: function(response) {
-                        console.debug("deleted output: ");
-                        console.debug(output);
-                        model.refresh();
-                    }
+                    method: "DELETE"
+                })
+                .done(function(response) {
+                    console.debug("deleted output");
+                    console.debug(output);
+                    model.refresh();
                 })
                 .fail(function(response) {
                     console.error("DELETE OUTPUT FAILURE");
@@ -623,10 +659,12 @@ $(function() {
                 model.selectedAnalysis().job_status(status);
                 if (status === "SUCCESS") {
                     humane.log("Analysis run has completed, results are ready");
-                    // FIXME: refresh model results.
                     model.refresh();
                     model.clearCurrentInterval();
-                    model.selectedAnalysis(null);
+                }
+                else if (status === "FAILURE") {
+                    humane.log("Analysis run failed: " + response.error_message);
+                    model.clearCurrentInterval();
                 }
             }).fail(function(response) {
                 console.debug("FAIL response failed to check status of " + task_id + " -- clearing interval");
@@ -656,8 +694,12 @@ $(function() {
             return;
         }
         parameters = model.analysisParameters();
+        console.debug("running analysis with parameters: ");
+        console.debug(parameters);
         ko.utils.arrayForEach(parameters, function(parameter) {
-            parameter.value = parseFloat(parameter.value);
+            // set parameter value to KO model parameter's "default_value" bound in the form
+            // FIXME: type coercion needs to support other data types
+            parameter.value = parseFloat(parameter.default_value);
         });
         $.get("{% url 'core:run-analysis' %}", {pk: model.selectedAnalysis().id(), parameters: JSON.stringify(parameters)}, function(response) {
             model.selectedAnalysis().job_status("PROCESSING");
@@ -669,6 +711,7 @@ $(function() {
         }).fail(function() {
             console.debug("Failed to run analysis with parameters");
             console.debug(parameters);
+            model.clearCurrentInterval();
         }).always(function() {
             $('#analysis-input-modal').modal('hide');
         });

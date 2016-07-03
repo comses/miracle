@@ -114,8 +114,8 @@ class CheckAnalysisRunStatusView(APIView):
         if async_result.ready():
             result = async_result.result
             if isinstance(result, Exception):
-                logger.debug("raised error")
-                data.update(error_message=unicode(result))
+                logger.exception("raised error")
+                data.update(error_message=str(result))
             else:
                 # run succeeded, serialize the result
                 logger.debug("async result output: type(%s) - %s", type(result), result)

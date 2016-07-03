@@ -153,8 +153,11 @@ class Job(object):
         # retrieve results
         response = self.post(job_results_url, project=self.project_id)
         logger.debug("results response: %s", response.text)
-        self.results = self.get_results(response.json())
-        logger.debug("results: %s", self.results)
+        try:
+            self.results = self.get_results(response.json())
+            logger.debug("results: %s", self.results)
+        except:
+            logger.exception("No JSON response, other error occurred")
         self.response = response
         self.completed = completed
         return response
