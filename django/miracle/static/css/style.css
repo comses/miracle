@@ -122,10 +122,8 @@ pre.tree {
 }
 
 .metadata-td {
-    display: block;
     padding: 0;
     margin: 0;
-    border: 0;
 }
 .metadata-td input {
     display: block;
