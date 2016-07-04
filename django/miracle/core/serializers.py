@@ -177,6 +177,7 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     slug = serializers.CharField(allow_blank=True)
     recent_activity = ActivityLogSerializer(many=True, read_only=True, source='activity_logs')
+    submitted_archive_url = serializers.URLField(source='submitted_archive.url', read_only=True)
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)
@@ -264,7 +265,7 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
         model = Project
         fields = ('id', 'url', 'group_members', 'group', 'creator', 'published', 'published_on', 'date_created',
                   'status', 'number_of_datasets', 'data_table_groups', 'analyses', 'slug', 'description', 'name',
-                  'comments', 'recent_activity', 'submitted_archive'
+                  'comments', 'recent_activity', 'submitted_archive_url'
                   )
         extra_kwargs = {
             'url': {'view_name': 'core:project-detail', 'lookup_field': 'slug'},
