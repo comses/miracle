@@ -13,7 +13,9 @@ from django_extensions.db.fields import AutoSlugField
 from model_utils import Choices
 
 import logging
+import hashlib
 import os
+import pathlib2
 import re
 import shutil
 import utils
@@ -168,6 +170,11 @@ class ProjectQuerySet(ActivePublishedQuerySet):
                            (models.Q(deleted_on__isnull=True) & models.Q(published_on__isnull=False))).distinct()
 
 
+def project_archive_path(instance, filename):
+    slug = str(instance.slug)
+    hash_dir = hashlib.sha1(slug).hexdigest()
+    return os.path.join(hash_dir, filename)
+
 class Project(MiracleMetadataMixin):
 
     # FIXME: may need to replace this with a simple SlugField, see https://github.com/comses/miracle/issues/41
@@ -176,7 +183,9 @@ class Project(MiracleMetadataMixin):
                                  help_text=_("Members of this group can edit this project's datasets and metadata"),
                                  null=True)
     submitted_archive = models.FileField(help_text=_("The uploaded zipfile containing all data and scripts for this Project"), null=True, blank=True,
-                                         storage=FileSystemStorage(location=settings.MIRACLE_ARCHIVE_DIRECTORY))
+                                         upload_to=project_archive_path,
+                                         storage=FileSystemStorage(location=settings.ARCHIVE_DIRECTORY,
+                                                                   base_url=settings.ARCHIVE_URL))
     objects = ProjectQuerySet.as_manager()
 
     @property
@@ -189,11 +198,11 @@ class Project(MiracleMetadataMixin):
 
     @property
     def packrat_path(self):
-        return os.path.join(settings.MIRACLE_PACKRAT_DIRECTORY, str(self.slug))
+        return os.path.join(settings.PACKRAT_DIRECTORY, str(self.slug))
 
     @property
     def project_path(self):
-        return os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, str(self.slug))
+        return os.path.join(settings.PROJECT_DIRECTORY, str(self.slug))
 
     def package_dependencies(self):
         lock_file_path = os.path.join(self.packrat_path, 'packrat.lock')
@@ -204,16 +213,13 @@ class Project(MiracleMetadataMixin):
         else:
             return "No packrat.lock file found"
 
-    def write_archive(self, f):
-        """
-        :type f: UploadedFile
-        """
-        _, ext = self.splitext(f.name)
-        filename = os.path.join(settings.MIRACLE_ARCHIVE_DIRECTORY, str(self.pk), str(self.slug) + ext)
-        self.submitted_archive.save(name=filename, content=f)
+    def archive(self, incoming_file):
+        p = pathlib2.Path(incoming_file.name)
+        simplified_filename = ''.join([self.slug] + p.suffixes)
+        self.submitted_archive.save(simplified_filename, incoming_file)
 
     def clear_archive(self, user):
-        self.log("Clearing project archive", user)
+        self.log("Clear project archive", user)
         # delete all data table groups, data analysis scripts, and files.
         with transaction.atomic():
             self.data_table_groups.all().delete()
@@ -226,16 +232,6 @@ class Project(MiracleMetadataMixin):
         logger.debug("Deleting extracted packrat path %s", self.packrat_path)
         shutil.rmtree(self.packrat_path, True)
         DeployrAPI.clear_project_archive(self)
-
-    @staticmethod
-    def splitext(path):
-        """
-        Special splitext to handle .tar.gz files
-        """
-        ext = ".tar.gz"
-        if path.endswith(ext):
-            return path[:-len(ext)], path[-len(ext):]
-        return os.path.splitext(path)
 
     @property
     def group_name(self):
@@ -310,10 +306,6 @@ class Author(models.Model):
         return self.user.email
 
 
-def _local_analysis_path(analysis, filename):
-    return os.path.join(analysis.project.uploads_path, 'scripts', filename)
-
-
 class DataAnalysisScript(MiracleMetadataMixin):
 
     FileType = Choices(
@@ -385,11 +377,11 @@ class DataAnalysisScript(MiracleMetadataMixin):
 
     @property
     def path(self):
-        return os.path.join(settings.MIRACLE_PROJECT_DIRECTORY, self.project.slug, str(self.archived_file))
+        return os.path.join(settings.PROJECT_DIRECTORY, self.project.slug, str(self.archived_file))
 
     def archived_file_contents(self):
         code_path = self.path
-        with open(code_path) as f:
+        with open(code_path, 'rb') as f:
             code_file_contents = f.read()
         return code_file_contents
 
@@ -482,12 +474,12 @@ class ParameterValue(models.Model):
 def _analysis_output_path(instance, filename):
     return os.path.join(instance.folder, 'outputs', filename)
 
-MIRACLE_PROJECT_STORAGE = FileSystemStorage(location=settings.MIRACLE_PROJECT_DIRECTORY)
+PROJECT_STORAGE = FileSystemStorage(location=settings.PROJECT_DIRECTORY)
 
 class AnalysisOutputFile(models.Model):
 
     output = models.ForeignKey(AnalysisOutput, related_name='files')
-    output_file = models.FileField(upload_to=_analysis_output_path, storage=MIRACLE_PROJECT_STORAGE)
+    output_file = models.FileField(upload_to=_analysis_output_path, storage=PROJECT_STORAGE)
     metadata = JSONField(help_text=_("Additional metadata provided by analysis execution engine"), null=True, blank=True)
 
     @property
@@ -500,7 +492,7 @@ class AnalysisOutputFile(models.Model):
 
     @property
     def basename(self):
-        return os.path.basename(self.output_file.path)
+        return os.path.basename(self.path)
 
     @property
     def get_absolute_url(self):
@@ -537,14 +529,6 @@ class DataTableGroupManager(models.Manager):
             raise ValidationError("DataTableGroups must be associated with a Project")
         kwargs.setdefault('creator', project.creator)
         return DataTableGroup.objects.create(*args, **kwargs)
-
-
-def _local_dataset_path(dataset, filename):
-    return os.path.join(dataset.uploads_path, filename)
-
-
-def _local_datatable_path(datatable, filename):
-    return os.path.join(datatable.dataset.uploads_path, 'datatables', filename)
 
 
 class DataTableGroup(MiracleMetadataMixin):

@@ -26,8 +26,8 @@ def extract(project, archive):
     :rtype: ProjectFilePaths
     """
 
-    projects_folder = settings.MIRACLE_PROJECT_DIRECTORY
-    packrat_folder =  settings.MIRACLE_PACKRAT_DIRECTORY
+    projects_folder = settings.PROJECT_DIRECTORY
+    packrat_folder =  settings.PACKRAT_DIRECTORY
 
     tmpfolder = tempfile.mkdtemp()
     token = project.slug
@@ -55,7 +55,7 @@ def extract(project, archive):
         _validate_project_structure(project_folder, token)
         project_folder_src, paths = _get_and_add_paths(project, token, project_folder)
         _move_project_to_projects(project_folder_src, projects_folder)
-        _move_packrat_to_packrats(project_folder_src, settings.MIRACLE_PACKRAT_DIRECTORY)
+        _move_packrat_to_packrats(project_folder_src, settings.PACKRAT_DIRECTORY)
 
         return ProjectFilePaths(project_token=token, paths=paths)
 

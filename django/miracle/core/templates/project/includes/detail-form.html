@@ -64,7 +64,19 @@ function ProjectModel(params) {
     if (params.model) {
         return params.model;
     }
-    var model = ko.mapping.fromJS(params.data);
+    var mapping = {
+        'analyses': {
+            key: function (data) {
+                return ko.utils.unwrapObservable(data.id);
+            }
+        },
+        'data_table_groups': {
+            key: function (data) {
+                return ko.utils.unwrapObservable(data.id);
+            }
+        }
+    }
+    var model = ko.mapping.fromJS(params.data, mapping);
     model.users = ko.observableArray({{users_json|safe}})
     model.endpointUrl = ko.pureComputed(function() {
         return (model.id() === -1) ? {% url 'core:project-list' %} : model.url();

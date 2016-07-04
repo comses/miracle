@@ -7,6 +7,7 @@
 {% url 'core:report_bug' as issues_url %}
 {% url 'core:dashboard' as dashboard_url %}
 {% url 'core:project-list' as projects_url %}
+{% url 'core:survey' as survey_url %}
 {% url 'core:search' as search_url %}
 {% url 'core:profile' as profile_url %}
 
@@ -32,7 +33,6 @@
         <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/humane-js/{{HUMANE_JS_VERSION}}/themes/original.min.css'>
         <link rel="stylesheet" href="{% static 'css/style.css' %}" media="screen" />
         <link rel="stylesheet" href="{% static 'css/pygments.css' %}" media="screen" />
-
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/{{JQUERY_VERSION}}/jquery.min.js"></script>
         {% with 'js/jquery-'|add:JQUERY_VERSION|add:'.min.js' as jquery_static %}
         <script>window.jQuery || document.write('<script src="{% static jquery_static %}"><\/script>')</script>
@@ -58,9 +58,11 @@
                     <ul class='nav navbar-nav'>
                         {% if user.is_authenticated %}
                             <li class='{{ request|active_re:dashboard_url }}'><a href='{{ dashboard_url }}'><i class='fa fa-tachometer'></i> Dashboard</a></li>
-                            <li class='{{ request|active_re:search_url }}'><a href='{{ search_url }}'><i class='fa fa-search'></i> Search</a></li>
+                            {# <li class='{{ request|active_re:search_url }}'><a href='{{ search_url }}'><i class='fa fa-search'></i> Search</a></li> #}
+                            <li class='{{ request|active_re:survey_url }}'><a href='{{ survey_url }}'><i class='fa fa-clipboard'></i></i> IEMSS 2016 Survey</a></li>
                         {% endif %}
                         <li class='{{ request|active_re:contact_url }}'><a target='_blank' href='{{ contact_url }}'><i class='fa fa-bell-o'></i> Contact us</a></li>
+                        {# for IEMSS 2016 only #}
                         <li><a target='_blank' href='{{ issues_url }}'><i class='fa fa-bullhorn'></i> Report a bug</a></li>
                     </ul>
                     <ul class="nav navbar-nav pull-right">

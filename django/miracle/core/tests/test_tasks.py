@@ -26,8 +26,8 @@ class PipelineTaskTests(BaseMiracleTest):
         token = project.name
         src = project.archive_path
         os.unlink(src)
-        project_folder = path.join(settings.MIRACLE_PROJECT_DIRECTORY, token)
-        packrat_folder = path.join(settings.MIRACLE_PACKRAT_DIRECTORY, token)
+        project_folder = path.join(settings.PROJECT_DIRECTORY, token)
+        packrat_folder = path.join(settings.PACKRAT_DIRECTORY, token)
         if path.exists(project_folder):
             shutil.rmtree(project_folder)
         if path.exists(packrat_folder):

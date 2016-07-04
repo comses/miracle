@@ -58,6 +58,18 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
+class SurveyView(LoginRequiredMixin, TemplateView):
+    template_name = 'survey.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(SurveyView, self).get_context_data(**kwargs)
+        username = self.request.user.username
+        context.update(
+            surveyUrl="https://asu.co1.qualtrics.com/SE/?SID=SV_bpCMBE5PHiB9NaZ&UserName={0}".format(username)
+        )
+        return context
+
+
 class UserActivityView(generics.GenericAPIView):
     renderer_classes = (renderers.JSONRenderer,)
     # FIXME: need to revisit permissions
@@ -102,8 +114,8 @@ class CheckAnalysisRunStatusView(APIView):
         if async_result.ready():
             result = async_result.result
             if isinstance(result, Exception):
-                logger.debug("raised error")
-                data.update(error_message=unicode(result))
+                logger.exception("raised error")
+                data.update(error_message=str(result))
             else:
                 # run succeeded, serialize the result
                 logger.debug("async result output: type(%s) - %s", type(result), result)
@@ -321,8 +333,9 @@ class FileUploadView(APIView):
 
     def post(self, request):
         file_obj = request.FILES['file']
-        project = get_object_or_404(Project, pk=request.data.get('id'))
-        project.write_archive(file_obj)
+        project_id = request.data.get('id')
+        project = get_object_or_404(Project, pk=project_id)
+        project.archive(file_obj)
         # should analyze payload
         task = run_metadata_pipeline.delay(project, project.archive_path)
         response = Response(data=task.id, status=status.HTTP_202_ACCEPTED)
