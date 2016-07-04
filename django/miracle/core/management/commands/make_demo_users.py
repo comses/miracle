@@ -13,6 +13,7 @@ class Command(BaseCommand):
     help = ''' Manages creation and deletion of multiple demo users, associating them with a project, and emitting
     their credentials to a csv file'''
     DEFAULT_DEMO_GROUP = 'demo-group'
+    DEFAULT_PASSWORD_LENGTH = 6
 
     def add_arguments(self, parser):
         parser.add_argument('--purge',
@@ -28,6 +29,8 @@ class Command(BaseCommand):
         parser.add_argument('--suffix',
                             default='mailinator.com',
                             help='Base email suffix')
+        parser.add_argument('--infile',
+                            help='Input file with previously created demo user credentials')
         parser.add_argument('--outfile',
                             default='miracle-demo-users.csv',
                             help='Output file with created demo user credentials')
@@ -42,20 +45,38 @@ class Command(BaseCommand):
         email_suffix = options['suffix']
         outfile = options['outfile']
         slug = options['slug']
+        infile = options['infile']
+        fieldnames = ['username', 'password', 'email']
+
         if purge:
             output = User.objects.filter(groups__name=Command.DEFAULT_DEMO_GROUP).delete()
             logger.debug("Purged all demo users: %s", output)
             return
+
+        demo_group, created = Group.objects.get_or_create(name=Command.DEFAULT_DEMO_GROUP)
+        project = Project.objects.get(slug=slug)
+        if infile:
+            logger.debug("load demo users from infile with same format as outfile")
+            with open(infile, 'rb') as f:
+                reader = csv.DictReader(f)
+                for i, row in enumerate(reader):
+                    username = row['username']
+                    password = row['password']
+                    email = row['email']
+                    user = User.objects.create_user(username=username, password=password, email=email, first_name='Demo User',
+                                                    last_name='#{0}'.format(i))
+                    user.groups.add(demo_group)
+                    project.add_group_member(user)
+                    logger.debug("added user %s to project %s and demo group %s", user, project, demo_group)
         else:
-            demo_group, created = Group.objects.get_or_create(name=Command.DEFAULT_DEMO_GROUP)
-            project = Project.objects.get(slug=slug)
+            logger.debug("Create demo users")
             with open(outfile, 'wb') as f:
-                writer = csv.DictWriter(f, fieldnames=['username', 'password', 'email'])
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
                 writer.writeheader()
                 for i in range(0, number_of_users):
                     username = '{0}{1}'.format(prefix, i)
                     email = '{0}@{1}'.format(username, email_suffix)
-                    password = User.objects.make_random_password(length=6)
+                    password = User.objects.make_random_password(length=Command.DEFAULT_PASSWORD_LENGTH)
                     user = User.objects.create_user(username=username, password=password, email=email, first_name='Demo User',
                                                     last_name='#{0}'.format(i))
                     user.groups.add(demo_group)
