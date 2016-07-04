@@ -66,6 +66,7 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 
 class AnalysisParameterSerializer(serializers.ModelSerializer):
+    value = serializers.ReadOnlyField(source='default_value')
     default_value = serializers.ReadOnlyField()
     html_input_type = serializers.SerializerMethodField()
     html_input_type_converter = defaultdict(lambda: 'text', {
@@ -90,7 +91,7 @@ class AnalysisParameterSerializer(serializers.ModelSerializer):
     class Meta:
         model = AnalysisParameter
         fields = ('id', 'name', 'label', 'data_type', 'description', 'default_value', 'html_input_type', 'value_list',
-                  'value_range', 'allowed_values')
+                  'value_range', 'allowed_values', 'value')
 
 
 class DataAnalysisScriptSerializer(serializers.HyperlinkedModelSerializer):
