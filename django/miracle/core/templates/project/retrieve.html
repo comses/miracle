@@ -151,10 +151,10 @@
                                                 <span data-bind='ifnot: full_name'>
                                                     <mark data-bind='text: name'></mark>
                                                 </span>
-                                                Files: <span class='label label-badge label-success' data-bind='text: number_of_files'></span>,
-                                                Columns: <span class='label label-badge label-warning' data-bind='text: number_of_columns'></span>
+                                                <span class='label label-badge label-success'><span data-bind='text: number_of_files'></span> files</span>,
+                                                <span class='label label-badge label-warning'><span data-bind='text: number_of_columns'></span> columns</span>
                                             </a>
-                                            <a class='pull-right' data-bind='attr: {href: url}'>
+                                            <a class='pull-right btn btn-primary btn-xs' data-bind='attr: {href: url}'>
                                                 <i class='fa fa-eye'></i> View details
                                             </a>
                                         </h4>
@@ -211,12 +211,12 @@
                                 </div>
                                 <div data-bind='foreach: activeAnalysisScripts'>
                                     <div class='well' data-bind='if: enabled'>
-                                        <h5>
+                                        <h4>
                                             <a href='#' data-bind='click: $root.selectedAnalysis.bind($data)'>
-                                                <span data-bind='text: name'></span>
+                                                <i class='fa fa-crosshairs'></i> <span data-bind='text: name'></span>
                                                 <small class='pull-right'><span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
                                             </a>
-                                        </h5>
+                                        </h4>
                                         <div>
                                             <strong>Status</strong>:
                                             <mark data-bind='text: job_status'></mark>
@@ -265,6 +265,7 @@
                                     </div>
                                     <hr>
                                 </div>
+                                {# end foreach over active analysis scripts #}
                             </div>
                             <div class='col-md-6 well-sm'>
                                 <h4><i class='fa fa-area-chart'></i> Analysis Outputs</h4>
@@ -272,58 +273,10 @@
                                 <div data-bind='ifnot: selectedAnalysis'>
                                     Please select an analysis to view on the left to see its outputs.
                                 </div>
-                                <div data-bind='with: selectedAnalysis'>
-    <h4>Outputs for  <mark data-bind='text: name'></mark></h4>
-        <div data-bind='ifnot: outputs().length'>
-            No recorded outputs.
-        </div>
-        <ul class='list-group' data-bind='foreach: outputs'>
-            <li class='list-group-item'>
-                <h5><span class='label label-primary' data-bind='text: creator'></span><span data-bind='text: name'></span>
-                    <small class='pull-right'><span class='label label-primary' data-bind='text: moment(date_created())'></span></small>
-                </h5>
-                <div class='collapse' data-bind='attr: {id: "collapseOutput" + id() }'>
-                    <div class='well'>
-                        <code>Parameters:</code>
-                        <ul class='list-group' data-bind='foreach: parameter_values'>
-                            <li class='list-group-item'>
-                                <span data-bind='text: label'></span> (<i data-bind='text: name'></i>): <mark data-bind='text: value'></mark>
-                            </li>
-                        </ul>
-                        <code>Output files:</code>
-                        <ul class='list-group' data-bind='foreach: files'>
-                            <li class='list-group-item'>
-                                <a class='list-group-item-text' data-bind='attr: {href: url}, text: name'></a>
-                                <div data-bind='if: name().endsWith("png")'>
-                                    <img class='img-responsive img-thumbnail' data-bind='attr: {src: url}'>
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class='btn-group' role='group'>
-                    <a class='btn btn-primary' role='button' data-toggle='collapse'
-                                        aria-expanded='false'
-                                        data-bind='attr: {href: "#collapseOutput" + id()}'>
-                        <i class='fa fa-eye'></i> Details
-                    </a>
-                    <a class='btn btn-success' role='button' data-bind='click: $root.showShareOutputForm.bind($data)'>
-                        <i class='fa fa-share'></i> Share
-                    </a>
-                </div>
-                <div class='btn-group pull-right' role='group'>
-                    <a class='btn btn-danger' role='button' data-bind='click: $root.deleteOutput.bind($data)'>
-                        <i class='fa fa-trash'></i> Delete
-                    </a>
-                </div>
-            </li>
-        </ul>
-                                </div>
-
-                                {#<div data-bind="template: { name: 'analysis-output-template', data: selectedAnalysis, if: selectedAnalysis }">#}
-                                </div>
+                                <div data-bind="template: { name: 'analysis-output-template', data: selectedAnalysis, if: selectedAnalysis }"></div>
                             </div>
                         </div>
+                        {# end row #}
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
                         <h4><i class='fa fa-cloud-upload'></i> Upload project archive</h4>
