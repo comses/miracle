@@ -26,3 +26,4 @@ for dn in base r;
 done
 cd ..;
 docker-compose build
+chmod a+x django/entrypoint.sh

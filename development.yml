@@ -21,7 +21,7 @@ services:
   #### Only need a read_only user for the `miracle_metadata` database
 
   db:
-    image: sameersbn/postgresql:9.4-21
+    image: sameersbn/postgresql:9.4-22
     environment:
       DB_USER: miracle
       DB_PASS: changeme_db
