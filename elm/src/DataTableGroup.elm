@@ -159,7 +159,7 @@ viewForm model =
             , div
                 [ class "form-group" ]
                 [ div
-                    [ class "col-lg-offset-2 btn-group btn-group-sm" ]
+                    [ class "col-xs-offset-2 btn-group btn-group-sm" ]
                     [ button
                         [ onClick Set, class "btn btn-primary" ]
                         [ span [ class "fa fa-floppy-o", attribute "aria-hidden" "true" ] [ ] ]

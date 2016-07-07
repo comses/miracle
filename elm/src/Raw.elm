@@ -129,6 +129,82 @@ datatablegroupEx =
 --
 
 
+type alias AnalysisOutputParameter =
+    { id: Int
+    , name: String
+    , label: String
+    , value: String
+    }
+
+
+parametervalueDecoder: Decoder AnalysisOutputParameter
+parametervalueDecoder =
+    Decode.object4 AnalysisOutputParameter
+    ("id" := Decode.int)
+    ("name" := Decode.string)
+    ("label" := Decode.string)
+    ("value" := Decode.string)
+
+
+parametervalueEncoder: AnalysisOutputParameter -> Encode.Value
+parametervalueEncoder parametervalue =
+    Encode.object
+    [ ("id", Encode.int parametervalue.id)
+    , ("name", Encode.string parametervalue.name)
+    , ("label", Encode.string parametervalue.label)
+    , ("value", Encode.string parametervalue.value)
+    ]
+
+
+type alias AnalysisOutputFile =
+    { id: Int
+    , url: String
+    , name: String
+    }
+
+
+analysisoutputfileDecoder: Decoder AnalysisOutputFile
+analysisoutputfileDecoder =
+    Decode.object3 AnalysisOutputFile
+    ("id" := Decode.int)
+    ("url" := Decode.string)
+    ("name" := Decode.string)
+
+
+analysisoutputfileEncoder: AnalysisOutputFile -> Encode.Value
+analysisoutputfileEncoder analysisoutputfile =
+    Encode.object
+    [ ("id", Encode.int analysisoutputfile.id)
+    , ("url", Encode.string analysisoutputfile.url)
+    , ("name", Encode.string analysisoutputfile.name)
+    ]
+
+
+type alias AnalysisOutput =
+    { id: Int
+    , name: String
+    , date_created: Date.Date
+    , creator: String
+    , analysis: String
+    , parameter_values: Array.Array AnalysisOutputParameter
+    , files: Array.Array AnalysisOutputFile
+    }
+
+
+analysisoutputDecoder: Decoder AnalysisOutput
+analysisoutputDecoder =
+    let dateDecoder = Decode.customDecoder Decode.string Date.fromString
+    in
+    Decode.object7 AnalysisOutput
+    ("id" := Decode.int)
+    ("name" := Decode.string)
+    ("date_created" := dateDecoder)
+    ("creator" := Decode.string)
+    ("analysis" := Decode.string)
+    ("parameter_values" := Decode.array parametervalueDecoder)
+    ("files" := Decode.array analysisoutputfileDecoder)
+
+
 type alias Parameter =
     { id: Int
     , name: String
@@ -192,6 +268,7 @@ type alias Analysis =
     , project: String
     , file_type: String
     , parameters: Array.Array Parameter
+    , outputs: Array.Array AnalysisOutput
     }
 
 
@@ -209,6 +286,7 @@ analysisDecoder =
     `apply` ("project" := Decode.string)
     `apply` ("file_type" := Decode.string)
     `apply` ("parameters" := Decode.array parameterDecoder)
+    `apply` ("outputs" := Decode.array analysisoutputDecoder)
 
 
 analysisEncoder: Analysis -> Encode.Value
@@ -225,8 +303,6 @@ analysisEncoder { id
     [ ("id", Encode.int id)
     , ("name", Encode.string name)
     , ("full_name", Encode.string full_name)
---    , ("date_created", Encode.string date_created)
---    , ("last_modified", Encode.string last_modified)
     , ("description", Encode.string description)
     , ("project", Encode.string project)
     , ("file_type", Encode.string file_type)

@@ -20,45 +20,39 @@ import DataTableGroup
 import Raw
 
 
-type Model =
-    Main { id: Int
-        , url: String
-        , group_members: Array.Array String
-        , creator: String
-        , published: Bool
-        , published_on: Maybe Date.Date
-        , date_created: Date.Date
-        , number_of_datasets: Int
-        , data_table_groups: Array.Array DataTableGroup.Model
-        , analyses: Array.Array Analysis.Model
-        , slug: String
-        , description: String
-        , name: String
-        , comments: Array.Array String
+type alias Model =
+    { id: Int
+    , url: String
+    , group_members: Array.Array String
+    , creator: String
+    , published: Bool
+    , published_on: Maybe Date.Date
+    , date_created: Date.Date
+    , number_of_datasets: Int
+    , data_table_groups: Array.Array DataTableGroup.Model
+    , analyses: Array.Array Analysis.Model
+    , slug: String
+    , description: String
+    , name: String
+    , comments: Array.Array String
 --        , recent_activity: Array.Array String
-        , warning: String
-        }
-    | Splash { warning: String }
+    , warning: String
+    }
 
 
-toRawProject: Model -> Result String Raw.ProjectOutgoing
+toRawProject: Model -> Raw.ProjectOutgoing
 toRawProject model =
-    case model of
-        Main model' ->
-            Ok { id = model'.id
-                , creator = model'.creator
-                , published = model'.published
-                , slug = model'.slug
-                , description = model'.description
-                , name = model'.name
-                }
-
-        _ -> Err ""
+    { id = model.id
+    , creator = model.creator
+    , published = model.published
+    , slug = model.slug
+    , description = model.description
+    , name = model.name
+    }
 
 
 fromRawProject: Raw.ProjectIncoming -> Model
 fromRawProject raw_project =
-    Main
     { id = raw_project.id
     , url = raw_project.url
     , group_members = raw_project.group_members
@@ -82,13 +76,20 @@ type Msg
     = Get String
     | FetchSucceed Raw.ProjectIncoming
     | FetchFail String
-    | Modify Int DataTableGroup.Msg
+    | ModifyDataTableGroup Int DataTableGroup.Msg
+    | ModifyAnalysis Int Analysis.Msg
 
 
 updateDataTableGroups:
     Int -> DataTableGroup.Msg -> Array.Array DataTableGroup.Model -> (Array.Array DataTableGroup.Model, Cmd Msg)
 updateDataTableGroups =
-    ArrayComponent.updateChild Modify DataTableGroup.update
+    ArrayComponent.updateChild ModifyDataTableGroup DataTableGroup.update
+
+
+updateAnalyses:
+    Int -> Analysis.Msg -> Array.Array Analysis.Model -> (Array.Array Analysis.Model, Cmd Msg)
+updateAnalyses =
+    ArrayComponent.updateChild ModifyAnalysis Analysis.update
 
 
 update: Msg -> Model -> (Model, Cmd Msg)
@@ -99,64 +100,17 @@ update msg model =
         FetchSucceed raw_projectincoming -> (fromRawProject raw_projectincoming, Cmd.none)
 
         FetchFail err ->
-            case model of
-                Main model' -> (Main { model' | warning = err }, Cmd.none)
+                ({ model | warning = err }, Cmd.none)
 
-                Splash model' -> (Splash { model' | warning = err }, Cmd.none)
+        ModifyDataTableGroup id datatablegroup_msg ->
+            let (datatablegroups, msg') = updateDataTableGroups id datatablegroup_msg model.data_table_groups
+            in ({ model | data_table_groups = datatablegroups }, msg')
 
-        Modify id datatablegroup_msg ->
-            case model of
-                Main model' ->
-                    let (datatablegroups, msg') = updateDataTableGroups id datatablegroup_msg model'.data_table_groups
-                    in (Main { model' | data_table_groups = datatablegroups }, msg')
-
-                _ -> (model, Cmd.none)
+        ModifyAnalysis id analysis_msg ->
+            let (analyses, msg') = updateAnalyses id analysis_msg model.analyses
+            in ({ model | analyses = analyses }, msg')
 
 
-view: Model -> Html Msg
-view model =
-    case model of
-        Main model' ->
-            let indexed_model = Array.toIndexedList model'.data_table_groups
-                viewColumnForms = List.map viewDataTableGroupColumns indexed_model
-                viewForms = List.map viewDataTableGroup indexed_model
-                displayInPanel width name view =
-                    div [ class ("col-lg-" ++ toString width) ]
-                        [ div [ class "panel panel-primary" ]
-                            [ div [ class "panel-heading" ]
-                                [ text name ]
-                                , div [ class "panel-body" ]
-                                    view
-                                ]
-                            ]
-                contents =
-                    [ div [ class "row" ]
-                        [ displayInPanel 4 "Data Table Groups" viewForms
-                        , displayInPanel 8 "Data Table Group Columns" viewColumnForms
-                        ]
-                    ]
-
-
-                contents_with_warning = if model'.warning /= "" then
-                    contents ++ [ text model'.warning ]
-                    else contents
-            in
-
-            div [ class "container-fluid"] contents_with_warning
-
-        Splash model' -> div [ class "container" ] [ text model'.warning ]
-
-
-viewDataTableGroupColumns: (Int, DataTableGroup.Model) -> Html Msg
-viewDataTableGroupColumns (id, model) = App.map (Modify id)
-    (DataTableGroup.view (DataTableGroup.viewTableRows model) model)
-
-
-viewDataTableGroup: (Int, DataTableGroup.Model) -> Html Msg
-viewDataTableGroup (id, model) = App.map (Modify id)
-    (DataTableGroup.view (DataTableGroup.viewForm model) model)
-
--- Todo: get slug
 init: String -> (Model, Cmd Msg)
 init project_incoming_str =
     let project_incoming_result = Json.Decode.decodeString Raw.projectDecoder project_incoming_str
@@ -164,7 +118,7 @@ init project_incoming_str =
         case project_incoming_result of
             Ok project_incoming -> (fromRawProject project_incoming, Cmd.none)
 
-            Err message -> (Splash { warning = message }, Cmd.none)
+            Err message -> Debug.crash message
 
 
 get: String -> Cmd Msg
@@ -173,6 +127,3 @@ get slug =
         (toString >> FetchFail)
         FetchSucceed
         (Api.Project.getTask slug |> (Http.fromJson Raw.projectDecoder))
-
-
-main = App.programWithFlags { init = init, update = update, subscriptions = \_ -> Sub.none, view = view}

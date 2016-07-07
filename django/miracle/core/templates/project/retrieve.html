@@ -125,9 +125,10 @@
                     </div>
                     <div role='tabpanel' class='tab-pane' id='data-groups'>
                         <h4><i class='fa fa-database'></i> Data Groups</h4>
-                        <div id="elm-main"></div>
+                        <div id="elm-metadata"></div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='analysis'>
+                        <div id="elm-analysis"></div>
                         {# FIXME: getting large, extract into component (react or KO) #}
                         <div class='row'>
                             <div class='col-md-6 well-sm'>
@@ -394,11 +395,16 @@ lump all your files together.
 {% include "includes/dropzone.js" %}
 {% include "includes/csrf.js" %}
 <script>
-{% include "includes/elm-project.js" %}
+{% include "includes/elm-bundle.js" %}
 </script>
 {% include "project/includes/detail-form.html" %}
 <script>
 var project_data = {{ project_json | safe }};
+var metadata_el = document.getElementById("elm-metadata");
+var analysis_el = document.getElementById("elm-analysis");
+var metadata_app = Elm.MetadataTab.embed(metadata_el, JSON.stringify(project_data));
+var analysis_app = Elm.AnalysisTab.embed(analysis_el, JSON.stringify(project_data));
+
 $(function() {
     var model = new ProjectModel({data: project_data} );
     Dropzone.options.projectArchiveDropzone = {
@@ -613,8 +619,5 @@ $(function() {
     var hash = window.location.hash;
     $('#project-tab a[href="' + hash + '"]').tab('show');
 });
-
-var el = document.getElementById("elm-main");
-var app = Elm.Project.embed(el, JSON.stringify(project_data));
 </script>
 {% endblock %}

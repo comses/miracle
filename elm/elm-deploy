@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-elm make src/$1.elm --output elm-$2.js
-mv elm-$2.js ../django/miracle/core/templates/includes/.
+elm make src/{MetadataTab.elm,AnalysisTab.elm} --output elm-bundle.js
+mv elm-bundle.js ../django/miracle/core/templates/includes/.
 
 touch ../django/deploy/uwsgi/miracle.ini
