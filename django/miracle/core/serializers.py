@@ -177,7 +177,13 @@ class ProjectSerializer(serializers.HyperlinkedModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
     slug = serializers.CharField(allow_blank=True)
     recent_activity = ActivityLogSerializer(many=True, read_only=True, source='activity_logs')
-    submitted_archive_url = serializers.URLField(source='submitted_archive.url', read_only=True)
+    submitted_archive_url = serializers.SerializerMethodField()
+
+    def get_submitted_archive_url(self, obj):
+        if obj.submitted_archive:
+            return obj.submitted_archive.url
+        else:
+            return None
 
     def validate_group_members(self, value):
         logger.debug("validating group members with value: %s", value)
