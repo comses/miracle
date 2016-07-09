@@ -61,9 +61,12 @@ class Command(BaseCommand):
         logger.debug("Current working directory: %s", os.getcwd())
         logger.debug("Project path: %s", settings.PROJECT_DIRECTORY)
         creator = Command.create_user(username=creator_name)
-        project, created = Project.objects.get_or_create(slug=project_shortname, creator=creator)
-        if created:
-            project.name = project_shortname
+        if Project.objects.filter(slug=project_shortname).exists():
+            project = Project.objects.get(slug=project_shortname)
+        else:
+            project = Project.objects.create(name=project_shortname, creator=creator)
+            project.slug = project_shortname
+            project.save()
         with open(abs_archive_path, 'rb') as f:
             project.archive(File(f))
         try:
