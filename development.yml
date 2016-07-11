@@ -62,6 +62,7 @@ services:
             siteconf: "local.conf"
     volumes:
       - socket:/miracle/socket
+      - archives:/miracle/archives
       - static:/miracle/static
     ports:
       - "80:80"

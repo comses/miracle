@@ -63,6 +63,7 @@ services:
     volumes:
       - socket:/miracle/socket
       - static:/miracle/static
+      - archives:/miracle/archives
       - logs:/var/log/nginx
     ports:
       - "80:80"
