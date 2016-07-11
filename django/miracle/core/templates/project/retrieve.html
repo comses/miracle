@@ -282,7 +282,10 @@
                         <h4><i class='fa fa-cloud-upload'></i> Upload project archive</h4>
                         <section>
                             <div data-bind='if: submitted_archive_url'>
-                                <div data-bind='text: submitted_archive_url'></div>
+                                <div class='alert alert-info'>
+                                    This project already has an archived project bundle.
+                                    <mark><a data-bind='attr: {href: submitted_archive_url}'><i class='fa fa-download'></i> Click here to download</a></mark>
+                                </div>
                             </div>
                             <div class='well'>
                                 Please follow the guidelines at
