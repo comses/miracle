@@ -27,7 +27,7 @@ urlpatterns = [
     url(r'^account/profile/$', views.UserProfileView.as_view(), name='profile'),
     url(r'^projects/upload/$', views.FileUploadView.as_view(), name='upload'),
     url(r'^projects/upload/(?P<task_uuid>[0-9\-a-f]+)/$', views.FileUploadStatusView.as_view(), name='upload-status'),
-    url(r'^survey/$', views.SurveyView.as_view(), name='survey'),
+    url(r'^survey/$', views.qualtrics_survey_redirect, name='survey'),
 ]
 
 router = routers.DefaultRouter()

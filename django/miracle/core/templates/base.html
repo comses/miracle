@@ -59,7 +59,7 @@
                         {% if user.is_authenticated %}
                             <li class='{{ request|active_re:dashboard_url }}'><a href='{{ dashboard_url }}'><i class='fa fa-tachometer'></i> Dashboard</a></li>
                             {# <li class='{{ request|active_re:search_url }}'><a href='{{ search_url }}'><i class='fa fa-search'></i> Search</a></li> #}
-                            <li class='{{ request|active_re:survey_url }}'><a href='{{ survey_url }}'><i class='fa fa-clipboard'></i></i> IEMSS 2016 Survey</a></li>
+                            <li class='{{ request|active_re:survey_url }}'><a target='_blank' href='{{ survey_url }}'><i class='fa fa-clipboard'></i></i> IEMSS 2016 Survey</a></li>
                         {% endif %}
                         <li class='{{ request|active_re:contact_url }}'><a target='_blank' href='{{ contact_url }}'><i class='fa fa-bell-o'></i> Contact us</a></li>
                         {# for IEMSS 2016 only #}
