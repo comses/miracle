@@ -53,7 +53,7 @@ class PipelineTaskTests(BaseMiracleTest):
         src = path.join(self.TEST_PROJECT_DIRECTORY, "skeleton")
         archive = self.make_archive(src)
         file_archive = File(open(archive, 'r'))
-        project.write_archive(file_archive)
+        project.archive(file_archive)
 
         try:
             run_metadata_pipeline.delay(project, project.archive_path)
