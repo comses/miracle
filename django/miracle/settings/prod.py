@@ -11,18 +11,18 @@ CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
 
 os.environ.setdefault('DB_USER', 'miracle')
-os.environ.setdefault('DB_HOST', 'localhost')
+os.environ.setdefault('DB_HOST', 'db')
 os.environ.setdefault('DB_PORT', '5432')
+os.environ.setdefault('DB_NAME', 'miracle_metadata')
+os.environ.setdefault('DATASETS_DB', 'miracle_datasets')
 os.environ.setdefault('DEPLOYR_USER', 'miracle')
-os.environ.setdefault('DEPLOYR_URL', 'https://deployr.comses.net')
-os.environ.setdefault('DEPLOYR_HOST', 'deployr.comses.net')
+os.environ.setdefault('DEPLOYR_URL', 'http://deployr:8000')
 os.environ.setdefault('RADIANT_URL', 'https://miracle.comses.net/radiant/')
 
 # DeployR settings
 DEFAULT_DEPLOYR_USER = get_env_variable('DEPLOYR_USER')
-DEFAULT_DEPLOYR_PASSWORD = 'changeme_deployr'
+DEFAULT_DEPLOYR_PASSWORD = 'FIXME: change deployr user password'
 DEPLOYR_URL = get_env_variable('DEPLOYR_URL')
-DEPLOYR_HOST = get_env_variable('DEPLOYR_HOST')
 
 
 # Radiant settings
@@ -36,18 +36,18 @@ ALLOWED_HOSTS = ['.comses.net']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'miracle_metadata',
-        'USER': 'miracle',
-        'PASSWORD': '',
+        'NAME': os.environ.get('DB_NAME'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': 'FIXME: remember to edit this',
     },
     'datasets': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'miracle_data',
-        'USER': 'miracle',
-        'PASSWORD': '',
-    }
+        'NAME': os.environ.get('DATASETS_DB'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': 'FIXME: remember to edit this also',
+    },
 }
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 # disabling i18n until we need it
 USE_I18N = False

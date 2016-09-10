@@ -5,12 +5,18 @@ import os
 DEBUG = True
 
 os.environ.setdefault('DB_USER', 'miracle')
-os.environ.setdefault('DB_HOST', 'localhost')
+os.environ.setdefault('DB_HOST', 'db')
 os.environ.setdefault('DB_PORT', '5432')
+os.environ.setdefault('DB_NAME', 'miracle_metadata')
+os.environ.setdefault('DATASETS_DB', 'miracle_datasets')
 os.environ.setdefault('DEPLOYR_USER', 'miracle')
 os.environ.setdefault('DEPLOYR_URL', 'http://deployr:8000')
-os.environ.setdefault('DEPLOYR_HOST', 'deployr.comses.net')
 os.environ.setdefault('RADIANT_URL', 'https://miracle.comses.net/radiant/')
+
+# DeployR settings
+DEFAULT_DEPLOYR_USER = get_env_variable('DEPLOYR_USER')
+DEFAULT_DEPLOYR_PASSWORD = 'FIXME: change deployr password'
+DEPLOYR_URL = get_env_variable('DEPLOYR_URL')
 
 DATABASES = {
     'default': {
@@ -23,12 +29,10 @@ DATABASES = {
     },
     'datasets': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'miracle_data',
-        'USER': get_env_variable('DB_USER'),
-        'PASSWORD': 'changeme_db',
-        'HOST': get_env_variable('DB_HOST'),
-        'PORT': get_env_variable('DB_PORT'),
-    }
+        'NAME': os.environ.get('DATASETS_DB'),
+        'USER': os.environ.get('DB_USER'),
+        'PASSWORD': 'FIXME: remember to edit local.py datasets pw',
+    },
 }
 
 INSTALLED_APPS += (
@@ -45,7 +49,6 @@ USE_I18N = False
 DEFAULT_DEPLOYR_USER = get_env_variable('DEPLOYR_USER')
 DEFAULT_DEPLOYR_PASSWORD = 'changeme_deployr'
 DEPLOYR_URL = get_env_variable('DEPLOYR_URL')
-DEPLOYR_HOST = get_env_variable('DEPLOYR_HOST')
 
 # Radiant settings
 # The url to link to the radiant frame with

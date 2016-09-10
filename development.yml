@@ -2,33 +2,32 @@ version: '2'
 
 services:
   deployr:
-    build: deployr
+    image: comses/miracle-deployr
     volumes:
       - projects:/miracle/projects
       - packrat:/miracle/packrat
     environment:
   #### Variables below are used in deployr/addUser.py line 21
       DEPLOYR_USER: miracle
-
   radiant:
-    build: radiant
+    image: comses/miracle-radiant
     volumes:
       - projects:/miracle/projects
       - packrat:/miracle/packrat
-    depends_on:
+    links:
       - db
   #### Change radiant-mod:/srv/shiny-server/base/tools/data/manage_ui.R line 457
   #### Only need a read_only user for the `miracle_metadata` database
 
   db:
-    image: sameersbn/postgresql:9.4-22
+    image: postgres:9.5
+    volumes:
+      - data:/var/lib/postgresql/data
+      - ./deploy/db/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
     environment:
-      DB_USER: miracle
-      DB_PASS: changeme_db
-      DB_NAME: 'miracle_data,miracle_metadata'
-
+      POSTGRES_DB: 'miracle_metadata'
   django:
-    build: 
+    build:
         context: ./django
         args:
             reqfile: "local.txt"
@@ -41,43 +40,43 @@ services:
       - socket:/miracle/socket
       - logs:/miracle/logs
     environment:
-  #### Change settings/local.py file for DEPLOYR_PASS 
-  #### Default MIRACLE_USER is a Django admin user
-      DB_USER: miracle
-      DB_HOST: db
-      DB_PORT: 5432
-      DEPLOYR_USER: miracle 
+      #### IMPORTANT: Change settings/local.py file for deployr and postgres db passwords
+      #### Default MIRACLE_USER is a Django admin user
+      DEPLOYR_USER: miracle
       DEPLOYR_HOST: deployr
       DEPLOYR_URL: 'http://deployr:8000/deployr'
       MIRACLE_USER:  admin
-      MIRACLE_EMAIL: "miracle-admin@comses.net"
+      MIRACLE_EMAIL: "miracle@comses.net"
       RADIANT_URL: '/radiant/'
-    depends_on:
+    links:
       - db
+      - radiant
+      - deployr
+    command: python manage.py runserver 0.0.0.0:8000
 
   nginx:
-    build: 
-        context: ./nginx
-        args:
-            siteconf: "local.conf"
+    image: nginx:alpine
     volumes:
       - socket:/miracle/socket
-      - archives:/miracle/archives
       - static:/miracle/static
+      - archives:/miracle/archives
+      - logs:/var/log
     ports:
       - "80:80"
       - "443:443"
-    depends_on:
+    links:
       - django
-   
+
 volumes:
+  data:
+    driver: local
   projects:
     driver: local
   packrat:
     driver: local
-  static: 
+  static:
     driver: local
-  archives: 
+  archives:
     driver: local
   logs:
     driver: local

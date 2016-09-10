@@ -2,33 +2,33 @@ version: '2'
 
 services:
   deployr:
-    build: deployr
+    image: comses/miracle-deployr
     volumes:
       - projects:/miracle/projects
       - packrat:/miracle/packrat
     environment:
   #### Variables below are used in deployr/addUser.py line 21
       DEPLOYR_USER: miracle
-
   radiant:
-    build: radiant
+    image: comses/miracle-radiant
     volumes:
       - projects:/miracle/projects
       - packrat:/miracle/packrat
-    depends_on:
+    links:
       - db
-  #### Change radiant-mod:/srv/shiny-server/base/tools/data/manage_ui.R line 457
-  #### Only need a read_only user for the `miracle_metadata` database
+    #### FIXME: Edit radiant-mod:/srv/shiny-server/base/tools/data/manage_ui.R line 457
+    #### Only need a read_only user for the `miracle_metadata` database
 
   db:
-    image: sameersbn/postgresql:9.4-22
+    image: postgres:9.5
+    volumes:
+      - data:/var/lib/postgresql/data
+      - ./deploy/db/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
     environment:
-      DB_USER: miracle
-      DB_PASS: changeme_db
-      DB_NAME: 'miracle_data,miracle_metadata'
+      POSTGRES_DB: 'miracle_metadata'
 
   django:
-    build: 
+    build:
         context: ./django
         args:
             reqfile: "production.txt"
@@ -46,29 +46,27 @@ services:
       DB_USER: miracle
       DB_HOST: db
       DB_PORT: 5432
-      DEPLOYR_USER: miracle 
+      DEPLOYR_USER: miracle
       DEPLOYR_HOST: deployr
       DEPLOYR_URL: 'http://deployr:8000/deployr'
       MIRACLE_USER:  admin
-      MIRACLE_EMAIL: "miracle-admin@comses.net"
+      MIRACLE_EMAIL: "miracle@comses.net"
       RADIANT_URL: '/radiant/'
     depends_on:
       - db
 
   nginx:
-    build: 
-        context: ./nginx
-        args:
-            siteconf: "miracle.conf"
+    images: nginx:1.11.3-alpine
     volumes:
       - socket:/miracle/socket
       - static:/miracle/static
       - archives:/miracle/archives
       - logs:/var/log/nginx
+      - ./deploy/nginx/miracle.conf:/etc/nginx/conf.d/miracle.conf
     ports:
       - "80:80"
       - "443:443"
-    depends_on:
+    links:
       - django
     
 volumes:

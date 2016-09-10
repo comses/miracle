@@ -1,7 +1,0 @@
-#!/bin/bash
-INSTALL_FOLDER=/home/miracle/deployr/8.0.0
-$INSTALL_FOLDER/mongo/mongod.sh start
-$INSTALL_FOLDER/rserve/rserve.sh start
-python /home/miracle/addUser.py
-#yes | $INSTALL_FOLDER/deployr/tools/setWebContext.sh -ip 192.168.99.100 -disableauto
-$INSTALL_FOLDER/tomcat/tomcat7/bin/catalina.sh run > $INSTALL_FOLDER/tomcat/tomcat7/logs/tomcat.log 2>&1

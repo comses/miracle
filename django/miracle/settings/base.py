@@ -126,15 +126,9 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'miracle_metadata',
-        'USER': 'miracle',
+        'USER': 'comses',
         'PASSWORD': '',
     },
-    'datasets': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'miracle_data',
-        'USER': 'miracle',
-        'PASSWORD': '',
-    }
 }
 
 # Internationalization

@@ -14,7 +14,7 @@ images for the following:
 
 ### First steps
 
-* [Install the latest version of docker-compose and docker](https://docs.docker.com/compose/install/) - currently 1.7.1
+* [Install the latest version of docker-compose and docker](https://docs.docker.com/compose/install/)
 * Create a local user named 'miracle'. In order to handle file permissions on our shared volumes properly, make sure you
   create the user with a uid of 2000, or set the `MIRACLE_UID` build argument before building the Docker images, e.g.,
   `MIRACLE_UID=2772 sh build.sh`
@@ -22,13 +22,13 @@ images for the following:
 
 ### Local development
 
-* Copy `development.yml` to `docker-compose.yml
+* Copy `development.yml` to `docker-compose.yml`
 * Copy and edit the Django settings files `cp django/miracle/settings/local.py.example django/miracle/settings/local.py` 
 * Reload code in the uWSGI server via `touch django/miracle/deploy/uwsgi/miracle.ini` (lightweight) or `docker-compose restart miracle_django_1` (drastic)
 
 ### Production configuration and deployment
 
-* Copy `production.yml` to `docker-compose.yml` and edit the relevant environment variables for the MIRACLE_ADMIN
+* Copy `production.yml` to `docker-compose.yml` and edit the relevant environment variables for `MIRACLE_ADMIN`
 * Copy SSL certs and private key into the nginx directory as `server.crt` and `server.key`, respectively
 
 ### Edit secrets
@@ -51,7 +51,7 @@ downloading the `packrat.tar.gz` files into the `django` directory (this project
 /code/ in the Django container by default) and performing the following steps:
 
 ```
-% docker exec -it miracle_django_1 bash # login to the container
+% docker-compose exec django bash # login to the container
 % cd django;
 % ./manage.py load_project luxedemo.packrat.tar.gz --creator=<username> --project=luxedemo
 % ./manage.py load_project rhea.packrat.tar.gz --creator=<username> --project=rhea
