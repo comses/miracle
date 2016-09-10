@@ -66,9 +66,8 @@ class ShapefileFileGroup(FileGroup):
         self._metadata = metadata or self._analyze()
 
     def __eq__(self, other):
-        return isinstance(other, ShapefileFileGroup) and \
-               self._file_paths == other._file_paths and \
-               self._inds == other._inds
+        return isinstance(other, ShapefileFileGroup) and self._file_paths == other._file_paths \
+            and self._inds == other._inds
 
     def _analyze(self):
         metadata = OGRLoader.from_file(self.group_name)
@@ -138,9 +137,8 @@ class OtherFile(FileGroup):
         self._metadata = metadata or self._analyze()
 
     def __eq__(self, other):
-        return isinstance(other, OtherFile) and \
-               self._file_path == other._file_path and \
-               self._ind == other._ind
+        return isinstance(other, OtherFile) and self._file_path == other._file_path \
+            and self._ind == other._ind
 
     def _analyze(self):
         metadata = FORMAT_DISPATCH[self.dispatch](self.group_name)
@@ -325,7 +323,7 @@ class TabularLoader(object):
         else:
             row_types = cls._take_up_to_n_rows(reader, cls.ROW_SAMPLE_SIZE)
             n = len(row_types)
-            for col in xrange(n):
+            for col in range(n):
                 layer.append((None, TabularLoader._guess_type(row_types[col])))
 
         layers = [(None, tuple(layer))]
@@ -335,15 +333,16 @@ class TabularLoader(object):
     PATTERN_BIGINT = re.compile(r'^[+\-]?(?:0|[1-9]\d*)$')
     # following the specification at www.json.org
     PATTERN_DECIMAL = re.compile(r'^[+\-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+\-]?\d+)?$')
-    PATTERN_BOOLEAN = re.compile(r'^[\'"]?(true|false|t|f|yes|no)[\'"]?$',re.IGNORECASE)
+    PATTERN_BOOLEAN = re.compile(r'^[\'"]?(true|false|t|f|yes|no)[\'"]?$', re.IGNORECASE)
 
     @classmethod
     def _guess_type(cls, elements):
         # strip leading and trailing spaces
         elements = [re.sub(r'^ *| *$', '', el) for el in elements]
-        datatype = cls._try_type(cls.PATTERN_BIGINT, elements, "bigint") or\
-                   cls._try_type(cls.PATTERN_DECIMAL, elements, "decimal") or\
-                   cls._try_type(cls.PATTERN_BOOLEAN, elements, "boolean")
+        datatype = cls._try_type(cls.PATTERN_BIGINT, elements, "bigint") \
+            or cls._try_type(cls.PATTERN_DECIMAL, elements, "decimal") \
+            or cls._try_type(cls.PATTERN_BOOLEAN, elements, "boolean")
+
         if datatype:
             return datatype
 
@@ -384,36 +383,28 @@ class TabularLoader(object):
         has_netlogo_in_second_row = False
         has_ragged_columns = False
 
-        try:
-            reader = csv.reader(f)
-            i = 0
+        reader = csv.reader(f)
+        i = 0
 
-            row_len = 1
+        row_len = 1
+        row = next(reader)
+
+        if len(row) == 1:
+            has_netlogo_in_first_row = row[0].find("(NetLogo") > 0
+
+        row = next(reader)
+        if len(row) == 1:
+            has_netlogo_in_second_row = row[0].find(".nlogo") > 0
+
+        while i < 5:
             row = next(reader)
+            n = len(row)
+            if n != row_len:
+                has_ragged_columns = True
+                break
 
-            if len(row) == 1:
-                has_netlogo_in_first_row = row[0].find("(NetLogo") > 0
-
-            row = next(reader)
-            if len(row) == 1:
-                has_netlogo_in_second_row = row[0].find(".nlogo") > 0
-
-            while i < 5:
-                row = next(reader)
-                n = len(row)
-                if n != row_len:
-                    has_ragged_columns = True
-                    break
-
-                i += 1
-
-        except StopIteration:
-            pass
-
-        finally:
-            return has_netlogo_in_first_row and \
-                   has_netlogo_in_second_row and \
-                   has_ragged_columns
+            i += 1
+        return has_netlogo_in_first_row and has_netlogo_in_second_row and has_ragged_columns
 
 
 class RLoader(object):
@@ -426,7 +417,7 @@ class RLoader(object):
     @staticmethod
     def _process_matches(regex, contents):
         matches = re.findall(regex, contents, flags=re.MULTILINE)
-        for i in xrange(len(matches)):
+        for i in range(len(matches)):
             matches[i] = matches[i][2:-2]
         return matches
 
@@ -453,11 +444,10 @@ class RLoader(object):
         """
         :type input_param: dict
         """
-        return input_param.has_key("name") and \
-               input_param.has_key("label") and \
-               input_param.has_key("render") and \
-               input_param.has_key("default")
-
+        return 'name' in input_param \
+            and 'label' in input_param \
+            and 'render' in input_param \
+            and 'default' in input_param
 
     @classmethod
     def _get_dependencies(cls, contents):

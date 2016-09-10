@@ -35,7 +35,9 @@ def response200orError(response):
 def get_auth_tuple(user=None):
     # FIXME: currently using a single sandbox user - at some point we may want to switch to 1:1 deployr user <-> miracle
     # users
-    return (settings.DEFAULT_DEPLOYR_USER, settings.DEFAULT_DEPLOYR_PASSWORD)
+    if user is None:
+        return (settings.DEFAULT_DEPLOYR_USER, settings.DEFAULT_DEPLOYR_PASSWORD)
+    return (user.username, user.password)
 
 
 def login(user=None):
@@ -94,7 +96,7 @@ class DeployrAPI(object):
             execute_script_data.update(inputs=json.dumps(parameters))
         job = Job(session)
         job.submit(execute_script_data)
-        logger.debug("JOB SUBMITTED: %s" % job_name)
+        logger.debug("JOB SUBMITTED: %s", job_name)
         return job
 
 
