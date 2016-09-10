@@ -2,13 +2,13 @@
 requests==2.11.1
 Django==1.10.1
 djangorestframework==3.4.6
-django-contrib-comments==1.7.1
+django-contrib-comments==1.7.2
 celery-with-redis==3.0
 django-bootstrap3==7.0.1
-django-model-utils==2.5
+django-model-utils==2.5.2
 psycopg2==2.6.2
-python-social-auth==0.2.19
-django-extensions==1.6.7
+python-social-auth==0.2.21
+django-extensions==1.7.4
 django-extra-views==0.8.0
 raven==5.26.0
 dealer==2.0.5
