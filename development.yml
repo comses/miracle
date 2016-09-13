@@ -7,7 +7,7 @@ services:
       - projects:/miracle/projects
       - packrat:/miracle/packrat
     environment:
-  #### Variables below are used in deployr/addUser.py line 21
+      #### Variables below are used in deployr/addUser.py line 21
       DEPLOYR_USER: miracle
   radiant:
     image: comses/miracle-radiant
@@ -18,7 +18,10 @@ services:
       - db
   #### Change radiant-mod:/srv/shiny-server/base/tools/data/manage_ui.R line 457
   #### Only need a read_only user for the `miracle_metadata` database
-
+  redis:
+    image: redis:3-alpine
+    volumes:
+      - redisdata:/data
   db:
     image: postgres:9.5
     volumes:
@@ -28,9 +31,9 @@ services:
       POSTGRES_DB: 'miracle_metadata'
   django:
     build:
-        context: ./django
-        args:
-            reqfile: "local.txt"
+      context: ./django
+      args:
+        reqfile: "local.txt"
     volumes:
       - .:/code
       - projects:/miracle/projects
@@ -38,7 +41,7 @@ services:
       - static:/miracle/static
       - archives:/miracle/archives
       - socket:/miracle/socket
-      - logs:/miracle/logs
+      - ./logs:/miracle/logs
     environment:
       #### IMPORTANT: Change settings/local.py file for deployr and postgres db passwords
       #### Default MIRACLE_USER is a Django admin user
@@ -48,11 +51,14 @@ services:
       MIRACLE_USER:  admin
       MIRACLE_EMAIL: "miracle@comses.net"
       RADIANT_URL: '/radiant/'
+    ports:
+      - "8000:8000"
     links:
       - db
       - radiant
       - deployr
-    command: python manage.py runserver 0.0.0.0:8000
+      - redis
+    command: /code/deploy/docker/dev.sh
 
   nginx:
     image: nginx:alpine
@@ -68,6 +74,8 @@ services:
       - django
 
 volumes:
+  redisdata:
+    driver: local
   data:
     driver: local
   projects:

@@ -19,6 +19,11 @@ services:
     #### FIXME: Edit radiant-mod:/srv/shiny-server/base/tools/data/manage_ui.R line 457
     #### Only need a read_only user for the `miracle_metadata` database
 
+  redis:
+    image: redis:3-alpine
+    volumes:
+      - redisdata:/data
+
   db:
     image: postgres:9.5
     volumes:
@@ -52,8 +57,10 @@ services:
       MIRACLE_USER:  admin
       MIRACLE_EMAIL: "miracle@comses.net"
       RADIANT_URL: '/radiant/'
-    depends_on:
+    command: "/code/deploy/docker/prod.sh"
+    links:
       - db
+      - redis
 
   nginx:
     images: nginx:1.11.3-alpine
@@ -70,6 +77,8 @@ services:
       - django
     
 volumes:
+  redisdata:
+    driver: local
   projects:
     driver: local
   packrat:

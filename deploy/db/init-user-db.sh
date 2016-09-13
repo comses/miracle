@@ -2,7 +2,7 @@
 set -e
 
 db_user=${DB_USER:-comses}
-db_name=${POSTGRES_DB:-comses_db}
+db_name=${POSTGRES_DB:-miracle_metadata}
 datasets_db=${MIRACLE_DATASETS_DB_NAME:-miracle_datasets}
 
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL

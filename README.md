@@ -4,34 +4,33 @@
 We use [docker compose](https://docs.docker.com/compose/) to organize MIRACLE's components. These consist of Docker
 images for the following:
 
-* One container for a Django uWSGI application server, Celery, and Redis, all running under supervisord. We are
+* Container for a Django uWSGI application server and Celery running under supervisord. We are
   aware that [Docker best practices](https://docs.docker.com/engine/userguide/eng-image/dockerfile_best-practices/) call
   for one process per container, but in the interests of expediency and limited development resources we've bundled
-  these all together for the interim. If you'd like to help split them out, please send us a PR!
+  Django and celery together for the interim. If you'd like to help split them out, please send us a PR!
 * One container for an nginx reverse proxy
-* One container for a modified version of the [Radiant](https://github.com/vnijs/radiant) business analytics Shiny app
-* One container for [DeployR](https://deployr.revolutionanalytics.com/) that provides our R script execution environment
+* Container for a modified version of the [Radiant](https://github.com/vnijs/radiant) business analytics Shiny app
+* Container for [DeployR](https://deployr.revolutionanalytics.com/) that provides our R script execution environment
 
 ### First steps
 
 * [Install the latest version of docker-compose and docker](https://docs.docker.com/compose/install/)
-* Create a local user named 'miracle'. In order to handle file permissions on our shared volumes properly, make sure you
-  create the user with a uid of 2000, or set the `MIRACLE_UID` build argument before building the Docker images, e.g.,
-  `MIRACLE_UID=2772 sh build.sh`
+* Create a local user named 'comses'. In order to handle file permissions on our shared volumes properly, make sure you
+  create the user with a uid of 2000
 * add yourself to the docker group
 
 ### Local development
 
 * Copy `development.yml` to `docker-compose.yml`
 * Copy and edit the Django settings files `cp django/miracle/settings/local.py.example django/miracle/settings/local.py` 
-* Reload code in the uWSGI server via `touch django/miracle/deploy/uwsgi/miracle.ini` (lightweight) or `docker-compose restart miracle_django_1` (drastic)
+* Running `docker-compose build && docker-compose up django` will start a Django development server on port 8000
 
 ### Production configuration and deployment
 
 * Copy `production.yml` to `docker-compose.yml` and edit the relevant environment variables for `MIRACLE_ADMIN`
 * Copy SSL certs and private key into the nginx directory as `server.crt` and `server.key`, respectively
 
-### Edit secrets
+### Edit secrets manually
 * Set `deployr_pass` and `deployr_pass_admin` in `deployr/addUser.py` 
 * Set `DB_PASS` in docker-compose.yml
 * Make sure to mirror these changes to `deployr_pass`, and the postgres database passwords in
