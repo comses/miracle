@@ -41,7 +41,7 @@ with open(deployr_groovy_file, 'r') as f:
 
 
 config = ConfigParser.RawConfigParser({'user': os.environ.get('DEPLOYR_USER')})
-config.read('deployr.conf')
+config.read('/opt/deployr/deployr.conf')
 deployr_user = config.get('deployr', 'user')
 deployr_password = config.get('deployr', 'password')
 deployr_admin_password = config.get('deployr', 'admin_password')

@@ -31,10 +31,9 @@ images for the following:
 * Copy SSL certs and private key into the nginx directory as `server.crt` and `server.key`, respectively
 
 ### Edit secrets manually
-* Set `deployr_pass` and `deployr_pass_admin` in `deployr/addUser.py` 
-* Set `DB_PASS` in docker-compose.yml
-* Make sure to mirror these changes to `deployr_pass`, and the postgres database passwords in
-  `django/miracle/settings/local.py` under the `DEFAULT_DEPLOYR_PASSWORD` and `DATABASES` variables, respectively.
+* Copy `deploy/deployr/deployr.conf.example` to `deploy/deployr/deployr.conf` and change the username / passwords
+  so that the deployr container will create a custom user that can be accessed from Django.
+* set matching postgresql user password in `deploy/db/init-db-user.sh` and `django/miracle/settings/local.py`
 
 ### Build the images and spin up the docker containers
 

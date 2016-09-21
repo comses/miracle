@@ -2,6 +2,7 @@
 set -e
 
 db_user=${DB_USER:-comses}
+db_pass=changeme_db
 db_name=${POSTGRES_DB:-miracle_metadata}
 datasets_db=${MIRACLE_DATASETS_DB_NAME:-miracle_datasets}
 
