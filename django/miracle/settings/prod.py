@@ -1,6 +1,7 @@
 # Production Django settings
 from .base import *
 import os
+import ConfigParser
 
 # security settings
 DEBUG = False
@@ -20,8 +21,10 @@ os.environ.setdefault('DEPLOYR_URL', 'http://deployr:8000')
 os.environ.setdefault('RADIANT_URL', 'https://miracle.comses.net/radiant/')
 
 # DeployR settings
-DEFAULT_DEPLOYR_USER = get_env_variable('DEPLOYR_USER')
-DEFAULT_DEPLOYR_PASSWORD = 'FIXME: change deployr user password'
+config = ConfigParser.RawConfigParser({'user': get_env_variable('DEPLOYR_USER')})
+config.read('/code/deploy/deployr/deployr.conf')
+DEFAULT_DEPLOYR_USER = config.get('deployr', 'user')
+DEFAULT_DEPLOYR_PASSWORD = config.get('deployr', 'password')
 DEPLOYR_URL = get_env_variable('DEPLOYR_URL')
 
 

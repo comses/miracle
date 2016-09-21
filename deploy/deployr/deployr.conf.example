@@ -1,0 +1,4 @@
+[deployr]
+user=miracle
+password=CHANGEME_DEPLOYR_USER_PASSWORD
+admin_password=ADMIN_CHANGEME_DEPLOYR_PASSWORD

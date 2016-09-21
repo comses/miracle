@@ -1,5 +1,6 @@
 # docker compose is split into development and production
 docker-compose.yml
+deployr.conf
 
 # generated files
 *.pem

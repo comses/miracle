@@ -4,6 +4,7 @@ services:
   deployr:
     image: comses/miracle-deployr
     volumes:
+      - ./deploy/deployr:/opt/deployr
       - projects:/miracle/projects
       - packrat:/miracle/packrat
     environment:
@@ -16,6 +17,8 @@ services:
       - packrat:/miracle/packrat
     links:
       - db
+    ports:
+      - "localhost:3838:3838"
     #### FIXME: Edit radiant-mod:/srv/shiny-server/base/tools/data/manage_ui.R line 457
     #### Only need a read_only user for the `miracle_metadata` database
 
@@ -56,7 +59,7 @@ services:
       DEPLOYR_URL: 'http://deployr:8000/deployr'
       MIRACLE_USER:  admin
       MIRACLE_EMAIL: "miracle@comses.net"
-      RADIANT_URL: '/radiant/'
+      RADIANT_URL: 'http://localhost:3838/radiant/'
     command: "/code/deploy/docker/prod.sh"
     links:
       - db

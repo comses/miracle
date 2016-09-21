@@ -524,7 +524,7 @@ class DataTableGroupManager(models.Manager):
     use_for_related_fields = True
 
     def create_data_group(self, *args, **kwargs):
-        project = kwargs.get('project', None)
+        project = kwargs.get('project')
         if project is None:
             raise ValidationError("DataTableGroups must be associated with a Project")
         kwargs.setdefault('creator', project.creator)
