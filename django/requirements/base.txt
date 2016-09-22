@@ -21,3 +21,5 @@ patool==1.12
 python-dateutil==2.5.3
 uwsgi==2.0.13.1
 pathlib2==2.1.0
+django-revproxy==0.9.12
+

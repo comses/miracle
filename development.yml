@@ -11,7 +11,7 @@ services:
       #### Variables below are used in deployr/addUser.py line 21
       DEPLOYR_USER: miracle
     ports:
-      - "localhost:8000:8000"
+      - "127.0.0.1:8000:8000"
   radiant:
     image: comses/miracle-radiant
     volumes:
@@ -20,7 +20,7 @@ services:
     links:
       - db
     ports:
-      - "localhost:3838:3838"
+      - "127.0.0.1:3838:3838"
   #### Change radiant-mod:/srv/shiny-server/base/tools/data/manage_ui.R line 457
   #### Only need a read_only user for the `miracle_metadata` database
   redis:
@@ -55,9 +55,9 @@ services:
       DEPLOYR_URL: 'http://deployr:8000/deployr'
       MIRACLE_USER:  admin
       MIRACLE_EMAIL: "miracle@comses.net"
-      RADIANT_URL: 'http://localhost:3838/'
+      RADIANT_URL: '/radiant/'
     ports:
-      - "localhost:8080:8000"
+      - "8080:8000"
     links:
       - db
       - radiant
@@ -72,6 +72,7 @@ services:
       - static:/miracle/static
       - archives:/miracle/archives
       - logs:/var/log
+      - ./deploy/nginx/miracle.conf:/etc/nginx/conf.d/miracle.conf
     ports:
       - "80:80"
       - "443:443"

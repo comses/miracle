@@ -3,5 +3,5 @@
 python manage.py migrate
 python manage.py collectstatic --no-input -c
 python manage.py initadmin
-mkdir -p /miracle/logs/supervisor
-/usr/bin/supervisord -c /code/deploy/supervisord/dev.conf
+mkdir -p /miracle/logs/supervisor && chown $USERNAME: /miracle/logs/supervisor
+/usr/bin/supervisord -u $USERNAME -c /code/deploy/supervisord/dev.conf

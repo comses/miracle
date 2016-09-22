@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.renderers import JSONRenderer
 from rest_framework.views import APIView
 from rest_framework.decorators import detail_route
+from revproxy.views import ProxyView
 
 
 from .models import (Project, ActivityLog, MiracleUser, DataTableGroup, DataAnalysisScript, AnalysisOutput, DataColumn,
@@ -38,6 +39,17 @@ class LoginRequiredMixin(object):
         view = super(LoginRequiredMixin, cls).as_view(*args, **kwargs)
         return login_required(view)
 
+
+class RadiantProxyView(ProxyView):
+    upstream = 'http://radiant:3838/base/'
+    add_remote_user = True
+
+    def get_request_headers(self):
+        headers = super(RadiantProxyView, self).get_request_headers()
+        logger.debug("headers: %s", headers)
+        # headers['Upgrade'] = 'websocket'
+        # headers['Connection'] = 'Upgrade'
+        return headers
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'dashboard.html'

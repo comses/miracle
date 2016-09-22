@@ -16,6 +16,5 @@ RUN yum install -y epel-release && yum install -y python-pip python-setuptools p
 COPY requirements/base.txt requirements/$reqfile /tmp/
 RUN pip install -q -r /tmp/$reqfile
 
-USER $USERNAME
 WORKDIR /code/django
 CMD ["/code/deploy/docker/$cmd"]

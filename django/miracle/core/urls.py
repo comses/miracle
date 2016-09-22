@@ -17,7 +17,7 @@ urlpatterns = [
     url(r'^report-bug/$', RedirectView.as_view(url='https://github.com/comses/miracle/issues/new', permanent=False),
         name='report_bug'),
     url(r'^dashboard/$', views.DashboardView.as_view(), name='dashboard'),
-
+    url(r'^radiant/(?P<path>.*)$', views.RadiantProxyView.as_view()),
     url(r'^search/$', TemplateView.as_view(template_name='search.html'), name='search'),
     # FIXME: consider merging these one-off /analysis endpoints into a single endpoint with an action parameter
     url(r'^analysis/run/$', views.RunAnalysisView.as_view(), name='run-analysis'),

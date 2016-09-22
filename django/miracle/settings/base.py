@@ -49,6 +49,7 @@ THIRD_PARTY_APPS = (
     'social.apps.django_app.default',
     'raven.contrib.django.raven_compat',
     'django_comments',
+    'revproxy',
 )
 
 MIRACLE_APPS = (

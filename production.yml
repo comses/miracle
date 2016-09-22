@@ -18,7 +18,7 @@ services:
     links:
       - db
     ports:
-      - "localhost:3838:3838"
+      - "127.0.0.1:3838:3838"
     #### FIXME: Edit radiant-mod:/srv/shiny-server/base/tools/data/manage_ui.R line 457
     #### Only need a read_only user for the `miracle_metadata` database
 
@@ -51,7 +51,7 @@ services:
     environment:
   #### Change local.py file for DEPLOYR_PASS, change entrypoint.sh file for MIRACLE_PASS
   #### Default MIRACLE_USER is a Django admin user
-      DB_USER: miracle
+      DB_USER: comses
       DB_HOST: db
       DB_PORT: 5432
       DEPLOYR_USER: miracle
@@ -59,28 +59,32 @@ services:
       DEPLOYR_URL: 'http://deployr:8000/deployr'
       MIRACLE_USER:  admin
       MIRACLE_EMAIL: "miracle@comses.net"
-      RADIANT_URL: 'http://localhost:3838/radiant/'
+      RADIANT_URL: '/radiant/'
     command: "/code/deploy/docker/prod.sh"
     links:
       - db
       - redis
 
   nginx:
-    images: nginx:1.11.3-alpine
+    image: nginx:1.11.3-alpine
     volumes:
       - socket:/miracle/socket
       - static:/miracle/static
       - archives:/miracle/archives
       - logs:/var/log/nginx
+      - ./deploy/nginx/ssl:/etc/nginx/ssl
       - ./deploy/nginx/miracle.conf:/etc/nginx/conf.d/miracle.conf
     ports:
       - "80:80"
       - "443:443"
     links:
       - django
+      - radiant
     
 volumes:
   redisdata:
+    driver: local
+  data:
     driver: local
   projects:
     driver: local
