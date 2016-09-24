@@ -35,9 +35,9 @@ def response200orError(response):
 def get_auth_tuple(user=None):
     # FIXME: currently using a single sandbox user - at some point we may want to switch to 1:1 deployr user <-> miracle
     # users
-    if user is None:
-        return (settings.DEFAULT_DEPLOYR_USER, settings.DEFAULT_DEPLOYR_PASSWORD)
-    return (user.username, user.password)
+    # if user is not None:
+    # return (user.username, user.password)
+    return (settings.DEFAULT_DEPLOYR_USER, settings.DEFAULT_DEPLOYR_PASSWORD)
 
 
 def login(user=None):
@@ -213,7 +213,7 @@ def run_script(script_name=None, workdir=DEFAULT_WORKING_DIRECTORY, parameters=N
     """
     :param script_name: Script name (such as "Figure1.R")
     :param workdir: Working directory (corresponds to project slug)
-    :param parameters: Parameters to run the R script with (such as [{"value": 30, "id": 1, "label": "x", "rclass": "integer", "description": "helllo"}])
+    :param parameters: Parameters to run the R script with (e.g [{"value": 30, "id": 1, "label": "x", "rclass": "integer", "description": "helllo"}])
     :param user: User to run the R script as (currently this does nothing)
     :param job_name: Name of job to run for later retrieval
     :return: DeployR Job
