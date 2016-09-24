@@ -180,6 +180,7 @@ class Job(object):
             url = result['url']
             if settings.DEPLOYR_HOST is not 'localhost':
                 url = re.sub('localhost', settings.DEPLOYR_HOST, url)
+                logger.debug("changed url from %s to %s", result['url'], url)
             filename = result['filename']
             response = self.get(url, stream=True)
             if not response.ok:

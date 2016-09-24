@@ -7,7 +7,6 @@ import os
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'miracle.settings')
 
 app = Celery('miracle',
-             broker=settings.CELERY_BROKER_URL,
              backend=settings.CELERY_RESULT_BACKEND)
 
 app.config_from_object('django.conf:settings')
