@@ -5,12 +5,12 @@ import os
 
 DEBUG = True
 
-os.environ.setdefault('DB_USER', 'miracle')
+os.environ.setdefault('DB_USER', 'comses')
 os.environ.setdefault('DB_HOST', 'db')
 os.environ.setdefault('DB_PORT', '5432')
 os.environ.setdefault('DB_NAME', 'miracle_metadata')
 os.environ.setdefault('DATASETS_DB', 'miracle_datasets')
-os.environ.setdefault('DEPLOYR_USER', 'miracle')
+os.environ.setdefault('DEPLOYR_USER', 'comses')
 os.environ.setdefault('DEPLOYR_URL', 'http://deployr:8000')
 os.environ.setdefault('RADIANT_URL', 'http://localhost:3838/base/')
 

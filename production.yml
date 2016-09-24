@@ -56,7 +56,7 @@ services:
       DB_USER: comses
       DB_HOST: db
       DB_PORT: 5432
-      DEPLOYR_USER: miracle
+      DEPLOYR_USER: comses
       DEPLOYR_HOST: deployr
       DEPLOYR_URL: 'http://deployr:8000/deployr'
       MIRACLE_USER:  admin

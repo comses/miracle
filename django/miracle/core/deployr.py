@@ -135,6 +135,7 @@ class Job(object):
         logger.debug("checking status of job %s with counter %s", job_id, counter)
         response = self.post(job_status_url, job=job_id)
         response_json = response.json()
+        logger.debug("response was %s", response)
         completed = self.is_job_completed(response_json)
         while not completed:
             logger.debug("job was completed? %s with response %s", completed, response.text)
@@ -145,6 +146,7 @@ class Job(object):
                 counter += 1
                 response = self.post(job_status_url, job=job_id)
                 response_json = response.json()
+                logger.debug("response json: %s", response_json)
                 completed = self.is_job_completed(response_json)
             else:
                 logger.warning("job %s failed to complete in %s retries - aborting", job_id, limit)
