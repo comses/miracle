@@ -18,7 +18,7 @@ os.environ.setdefault('DB_NAME', 'miracle_metadata')
 os.environ.setdefault('DATASETS_DB', 'miracle_datasets')
 os.environ.setdefault('DEPLOYR_USER', 'miracle')
 os.environ.setdefault('DEPLOYR_URL', 'http://deployr:8000')
-os.environ.setdefault('RADIANT_URL', 'https://miracle.comses.net/radiant/')
+os.environ.setdefault('RADIANT_URL', '/radiant/')
 
 # DeployR settings
 config = ConfigParser.RawConfigParser({'user': get_env_variable('DEPLOYR_USER')})
