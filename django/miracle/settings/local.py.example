@@ -42,16 +42,10 @@ INSTALLED_APPS += (
     'debug_toolbar',
 )
 
-
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # disabling i18n until we need it
 USE_I18N = False
-
-# DeployR settings
-DEFAULT_DEPLOYR_USER = get_env_variable('DEPLOYR_USER')
-DEFAULT_DEPLOYR_PASSWORD = 'changeme_deployr'
-DEPLOYR_URL = get_env_variable('DEPLOYR_URL')
 
 # Radiant settings
 # The url to link to the radiant frame with

@@ -25,9 +25,14 @@
             <li data-bind='visible: number_of_datasets() != 0' role='presentation'>
                 <a href='#analysis' aria-controls='analysis' role='tab' data-toggle='tab'><i class='fa fa-terminal'></i> Analysis</a>
             </li>
+            <li data-bind='visible: number_of_datasets() > 0' role='presentation'>
+                <a href='#apps' aria-controls='apps' role='tab' data-toggle='tab'><i class='fa fa-rocket'></i> Apps</a>
+            </li>
             <li role='presentation'>
                 <a href='#upload' aria-controls='upload' role='tab' data-toggle='tab'><i class='fa fa-cloud-upload'></i> Upload</a>
             </li>
+            {% comment %}
+            use iframe first, this requires DB schema support
             <li data-bind='visible: apps().length != 0' role='presentation' class='dropdown'>
                 <a class='dropdown-toggle' data-toggle='dropdown' href='#' role='button' aria-haspopup='true'
                     aria-expanded='false'>
@@ -36,6 +41,7 @@
                 <ul class='dropdown-menu'>
                 </ul>
             </li>
+            {% endcomment %}
         </ul>
         <br>
         <div class='panel panel-primary'>
@@ -277,6 +283,12 @@
                             </div>
                         </div>
                         {# end row #}
+                    </div>
+                    <div role='tabpanel' class='tab-pane' id='apps'>
+                        <h4>Apps</h4>
+                        <div class='embed-responsive embed-responsive-4by3'>
+                            <iframe id='shiny-app-iframe' data-src='/apps/{{ project.slug }}/apps/'></iframe>
+                        </div>
                     </div>
                     <div role='tabpanel' class='tab-pane' id='upload'>
                         <h4><i class='fa fa-cloud-upload'></i> Upload project archive</h4>
@@ -550,6 +562,10 @@ $(function() {
         var radiantIframe = $('#radiant-iframe');
         radiantIframe.attr('src', radiantIframe.data('src'));
     }
+    model.loadApps = function() {
+        var shinyAppIframe = $('#shiny-app-iframe');
+        shinyAppIframe.attr('src', shinyAppIframe.data('src'));
+    }
     model.postComment = function() {
         var formData = $('#project-comment-form').serialize();
         console.debug(formData);
@@ -681,6 +697,9 @@ $(function() {
         var hash = $(e.target).attr('href');
         if (hash === "#explorer") {
             model.loadRadiant();
+        }
+        else if (hash === "#apps") {
+            model.loadApps();
         }
         history.pushState(null, null, hash);
     });

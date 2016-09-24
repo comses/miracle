@@ -66,13 +66,16 @@ services:
     command: /code/deploy/docker/dev.sh
 
   nginx:
-    image: nginx:alpine
+    image: comses/nginx
     volumes:
       - socket:/miracle/socket
       - static:/miracle/static
       - archives:/miracle/archives
       - logs:/var/log
-      - ./deploy/nginx/miracle.conf:/etc/nginx/conf.d/miracle.conf
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./deploy/nginx/ssl:/etc/nginx/ssl
+      - ./deploy/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d
     ports:
       - "80:80"
       - "443:443"

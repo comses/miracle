@@ -88,12 +88,11 @@
         {% endblock header %}
 
         <section id="content" class="container-fluid">
-            <div class='alert alert-danger alert-block devserver'>
-                <h2>Beta Service</h2>
+            <div class='alert alert-danger alert-block devserver alert-dismissable' role='alert'>
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h3>Beta Service</h3>
                 <i class='fa fa-exclamation-triangle fa-2x'></i> This project is still in beta and under active
-                development. Any data you upload or generate on this site is not persistent. If you are looking for a
-                place to permanently archive your work, please consider <a href='https://www.openabm.org'>OpenABM</a> or
-                the <a href='https://osf.io'>Open Science Framework</a>.
+                development. Any data you upload or generate on this site will not be preserved. 
             </div>
             {% block content %}
             {% endblock content %}

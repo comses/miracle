@@ -10,6 +10,8 @@ services:
     environment:
   #### Variables below are used in deployr/addUser.py line 21
       DEPLOYR_USER: miracle
+    ports:
+      - "127.0.0.1:8000:8000"
   radiant:
     image: comses/miracle-radiant
     volumes:
@@ -64,19 +66,23 @@ services:
     links:
       - db
       - redis
+      - deployr
 
   nginx:
-    image: nginx:1.11.3-alpine
+    image: comses/nginx
     volumes:
       - socket:/miracle/socket
       - static:/miracle/static
       - archives:/miracle/archives
       - logs:/var/log/nginx
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./deploy/nginx/ssl:/etc/nginx/ssl
-      - ./deploy/nginx/miracle.conf:/etc/nginx/conf.d/miracle.conf
+      - ./deploy/nginx/sites-enabled:/etc/nginx/sites-enabled
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d
     ports:
       - "80:80"
       - "443:443"
+
     links:
       - django
       - radiant

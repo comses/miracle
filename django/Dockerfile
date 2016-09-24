@@ -9,7 +9,7 @@ RUN yum install -y epel-release && yum install -y python-pip python-setuptools p
         libffi-devel libcurl-devel gcc cronie which \
 # set up shared volumes permissions - we create them and chown them because mounted volumes inherit the ownership
 # and permissions set prior
-        && for d in projects packrat static archives socket logs; do mkdir -p /miracle/$d; done \
+        && for d in projects packrat static archives socket logs/supervisor; do mkdir -p /miracle/$d; done \
             && chown -R $USERNAME: /miracle;
 
 
@@ -17,4 +17,4 @@ COPY requirements/base.txt requirements/$reqfile /tmp/
 RUN pip install -q -r /tmp/$reqfile
 
 WORKDIR /code/django
-CMD ["/code/deploy/docker/$cmd"]
+CMD ["/code/deploy/docker/dev.sh"]

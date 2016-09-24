@@ -3,6 +3,6 @@
 python manage.py migrate
 python manage.py collectstatic --noinput
 python manage.py initadmin
-mkdir -p /miracle/logs/supervisor
 crond
+chown -R $USERNAME: /miracle
 /usr/bin/supervisord -u $USERNAME -c /code/deploy/supervisord/prod.conf
